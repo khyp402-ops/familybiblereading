@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --orange: #ff4b12;
+      --orange-dark: #c93607;
+      --brown-dark: #2b1a0f;
+      --brown-mid: #4a3426;
+      --cream: #f6ead8;
+      --white: #ffffff;
+      --black: #050505;
+      --glass: rgba(0, 0, 0, 0.48);
+      --line: rgba(255, 255, 255, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family:
+        "Noto Serif TC",
+        "PMingLiU",
+        "Times New Roman",
+        serif;
+      color: var(--brown-dark);
+      background: #f2e6d8;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    .page {
+      min-height: 100vh;
+      position: relative;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          #f2e6d8 0px,
+          #e8d8c6 40px,
+          #d9c3ab 44px,
+          #f5eadf 90px,
+          #e6d4bf 96px
+        );
+      overflow: hidden;
+    }
+
+    .page::before,
+    .page::after {
+      display: none;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 5;
+      height: 96px;
+      background: linear-gradient(90deg, #6b3e1f, #8a552a);
+      display: flex;
+      align-items: center;
+      padding: 0 8.5vw;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .logo {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: #050505;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.28);
+    }
+
+    .brand-text {
+      color: #ffffff;
+      font-size: 30px;
+      font-style: italic;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 2;
+      min-height: calc(100vh - 96px);
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      align-items: center;
+      gap: 4vw;
+      padding: 58px 8.5vw 52px;
+    }
+
+    .visual {
+      position: relative;
+      min-height: 590px;
+    }
+
+    .bible {
+      position: absolute;
+      left: -4vw;
+      top: 42px;
+      width: min(670px, 48vw);
+      height: 505px;
+      transform: rotate(-10deg);
+      filter: drop-shadow(0 32px 38px rgba(0,0,0,0.32));
+    }
+
+    .bible-cover {
+      position: absolute;
+      inset: 0;
+      background: #e8d8b8;
+      border-radius: 18px 34px 34px 18px;
+      transform: skewY(-1deg);
+    }
+
+    .pages {
+      position: absolute;
+      inset: 16px 18px 22px 22px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 12px 28px 28px 12px;
+      overflow: hidden;
+    }
+
+    .page-left,
+    .page-right {
+      position: relative;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,0.06), transparent 16%, transparent 82%, rgba(0,0,0,0.08)),
+        #f8f1e5;
+      border: 1px solid rgba(80,55,35,0.16);
+      overflow: hidden;
+    }
+
+    .page-left {
+      border-radius: 12px 0 0 12px;
+    }
+
+    .page-right {
+      border-radius: 0 28px 28px 0;
+    }
+
+    .spine {
+      position: absolute;
+      top: 16px;
+      bottom: 22px;
+      left: 50%;
+      width: 22px;
+      transform: translateX(-50%);
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0,0,0,0.26),
+          rgba(255,255,255,0.72),
+          rgba(0,0,0,0.16)
+        );
+      z-index: 4;
+    }
+
+    .text-columns {
+      position: absolute;
+      inset: 58px 38px 44px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      opacity: 0.56;
+    }
+
+    .text-columns span {
+      display: block;
+      height: 100%;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(60, 46, 32, 0.62) 0,
+          rgba(60, 46, 32, 0.62) 3px,
+          transparent 3px,
+          transparent 8px
+        );
+    }
+
+    .chapter {
+      position: absolute;
+      font-size: 22px;
+      color: rgba(45, 35, 26, 0.76);
+      font-weight: 700;
+      bottom: 64px;
+      left: 48px;
+    }
+
+    .ribbon {
+      position: absolute;
+      left: 49%;
+      top: 70px;
+      width: 14px;
+      height: 415px;
+      background: linear-gradient(#c8a37a, #7a4c31);
+      opacity: 0.72;
+      z-index: 5;
+      transform: rotate(-1deg);
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+
+    .coffee {
+      position: absolute;
+      right: 2vw;
+      bottom: 40px;
+      width: 172px;
+      height: 172px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 44% 42%, #d2913e 0 16%, #8c541d 17% 45%, #f1c06c 46% 51%, #fff5dd 52% 67%, transparent 68%),
+        #f4ead8;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.32);
+      opacity: 0.92;
+    }
+
+    .coffee::after {
+      content: "";
+      position: absolute;
+      width: 52px;
+      height: 36px;
+      border: 12px solid #f4ead8;
+      border-left: 0;
+      border-radius: 0 40px 40px 0;
+      right: -40px;
+      top: 66px;
+    }
+
+    .content {
+      position: relative;
+      z-index: 6;
+      max-width: 620px;
+      padding: 20px 0 0;
+    }
+
+    .eyebrow {
+      color: #c24510;
+      font-family: Arial, sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 7px;
+      margin-bottom: 22px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::after {
+      content: "";
+      display: block;
+      width: 72px;
+      height: 4px;
+      background: var(--orange);
+      margin-top: 16px;
+    }
+
+    h1 {
+      margin: 0 0 28px;
+      font-size: clamp(48px, 5vw, 78px);
+      line-height: 1.13;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 2px;
+      color: #2b1a0f;
+      text-shadow: 0 4px 10px rgba(255,255,255,0.58);
+      white-space: pre-line;
+    }
+
+    .subtitle {
+      margin: 0 0 32px;
+      font-size: 23px;
+      line-height: 1.85;
+      color: #4a3426;
+      letter-spacing: 1px;
+      max-width: 550px;
+      text-shadow: none;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      max-width: 475px;
+    }
+
+    .system-link {
+      min-height: 65px;
+      padding: 0 30px;
+      display: grid;
+      grid-template-columns: 56px 1fr 38px;
+      align-items: center;
+      gap: 16px;
+      color: #2b1a0f;
+      text-decoration: none;
+      border: 2px solid rgba(255, 75, 18, 0.92);
+      background: rgba(255, 255, 255, 0.62);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.35),
+        0 12px 28px rgba(0,0,0,0.16);
+      transition: 0.2s ease;
+      backdrop-filter: blur(3px);
+    }
+
+    .system-link:hover {
+      background: rgba(255, 75, 18, 0.16);
+      transform: translateX(10px);
+    }
+
+    .icon {
+      font-size: 34px;
+      color: var(--orange);
+      line-height: 1;
+    }
+
+    .label {
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: #2b1a0f;
+    }
+
+    .arrow {
+      font-size: 34px;
+      color: var(--orange);
+      font-family: Arial, sans-serif;
+      text-align: right;
+    }
+
+    .verse {
+      position: absolute;
+      z-index: 6;
+      left: 8.5vw;
+      bottom: 24px;
+      color: #4a3426;
+      font-size: 24px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: "Noto Serif TC", serif;
+    }
+
+    .verse::before {
+      content: "✚";
+      color: var(--orange);
+      font-size: 26px;
+      flex: 0 0 auto;
+    }
+
+    .loading,
+    .error {
+      color: #4a3426;
+      font-size: 22px;
+      padding: 22px 0;
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        height: 82px;
+        padding: 0 24px;
+      }
+
+      .logo {
+        width: 58px;
+        height: 58px;
+        font-size: 15px;
+      }
+
+      .brand {
+        gap: 16px;
+      }
+
+      .brand-text {
+        font-size: 30px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 44px 24px 92px;
+        gap: 16px;
+      }
+
+      .content {
+        order: 1;
+      }
+
+      .visual {
+        order: 2;
+        min-height: 390px;
+      }
+
+      .bible {
+        left: -26px;
+        top: 20px;
+        width: 480px;
+        max-width: 100vw;
+        height: 360px;
+      }
+
+      .coffee {
+        width: 112px;
+        height: 112px;
+        right: 14px;
+        bottom: 20px;
+      }
+
+      .coffee::after {
+        width: 34px;
+        height: 24px;
+        border-width: 8px;
+        right: -27px;
+        top: 43px;
+      }
+
+      h1 {
+        font-size: 44px;
+      }
+
+      .subtitle {
+        font-size: 19px;
+      }
+
+      .system-link {
+        min-height: 72px;
+        grid-template-columns: 46px 1fr 30px;
+        padding: 0 20px;
+      }
+
+      .label {
+        font-size: 23px;
+      }
+
+      .verse {
+        left: 24px;
+        right: 24px;
+        bottom: 20px;
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .brand-text {
+        font-size: 17px;
+      }
+
+      h1 {
+        font-size: 36px;
+        letter-spacing: 1px;
+      }
+
+      .eyebrow {
+        font-size: 24px;
+        letter-spacing: 5px;
+      }
+
+      .subtitle {
+        font-size: 17px;
+      }
+
+      .links {
+        gap: 14px;
+      }
+
+      .system-link {
+        min-height: 66px;
+      }
+
+      .icon {
+        font-size: 28px;
+      }
+
+      .label {
+        font-size: 21px;
+      }
+
+      .visual {
+        min-height: 330px;
+      }
+
+      .bible {
+        width: 390px;
+        height: 292px;
+      }
+
+      .text-columns {
+        inset: 42px 26px 34px;
+        gap: 9px;
+      }
+
+      .coffee {
+        right: 2px;
+        bottom: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">KHYP</div>
+        <div class="brand-text">Let's read the Bible！</div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="visual" aria-hidden="true">
+        <div class="bible">
+          <div class="bible-cover"></div>
+
+          <div class="pages">
+            <div class="page-left">
+              <div class="text-columns">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="chapter"></div>
+            </div>
+
+            <div class="page-right">
+              <div class="text-columns">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="chapter"></div>
+            </div>
+          </div>
+
+          <div class="spine"></div>
+          <div class="ribbon"></div>
+        </div>
+
+        <div class="coffee"></div>
+      </div>
+
+      <div class="content">
+        <div class="eyebrow">高雄市召會青少年</div>
+
+        <h1 id="siteTitle">載入中</h1>
+
+        <p id="subtitleText" class="subtitle"></p>
+
+        <div id="linkList" class="links">
+          <div class="loading">正在讀取系統連結...</div>
+        </div>
+      </div>
+    </section>
+
+    <div id="footerText" class="verse"></div>
+  </main>
+
+  <script>
+    const GAS_WEB_APP_URL = '請貼上你的 GAS 網頁應用程式網址';
+
+    function initPortal() {
+      loadPortalData()
+        .then(renderPortal)
+        .catch(showError);
+    }
+
+    function loadPortalData() {
+      return new Promise(function(resolve, reject) {
+        if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === '請貼上你的 GAS 網頁應用程式網址') {
+          reject(new Error('尚未設定 GAS_WEB_APP_URL'));
+          return;
+        }
+
+        const callbackName =
+          'portalCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('讀取逾時，請確認 Google Apps Script 網頁應用程式網址是否正確'));
+        }, 15000);
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = function(data) {
+          cleanup();
+
+          if (data && data.error) {
+            reject(new Error(data.message || '讀取失敗'));
+            return;
+          }
+
+          resolve(data);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Google Apps Script，請確認部署權限與網址'));
+        };
+
+        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+
+        script.src =
+          GAS_WEB_APP_URL +
+          separator +
+          'action=getPortalLinks&callback=' +
+          encodeURIComponent(callbackName) +
+          '&_=' +
+          Date.now();
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function renderPortal(data) {
+      const siteTitle = document.getElementById('siteTitle');
+      const subtitleText = document.getElementById('subtitleText');
+      const footerText = document.getElementById('footerText');
+      const linkList = document.getElementById('linkList');
+
+      const title = data && data.siteTitle ? data.siteTitle : '入口網頁';
+
+      siteTitle.textContent = formatTitle(title);
+      document.title = title;
+
+      subtitleText.textContent =
+        data && data.subtitle ? data.subtitle : '';
+
+      footerText.textContent =
+        data && data.footerText ? data.footerText : '';
+
+      linkList.innerHTML = '';
+
+      if (!data || !Array.isArray(data.systems) || data.systems.length === 0) {
+        linkList.innerHTML = '<div class="error">尚未設定系統連結</div>';
+        return;
+      }
+
+      data.systems.forEach(function(item, index) {
+        const a = document.createElement('a');
+        a.className = 'system-link';
+        a.href = item.url || '#';
+        a.target = '_blank';
+        a.rel = 'noopener';
+
+        const icons = ['☑', '✎', '⌨︎', '◆'];
+        const icon = icons[index] || '➤';
+
+        a.innerHTML =
+          '<span class="icon">' + icon + '</span>' +
+          '<span class="label">' + escapeHtml(item.title || '未命名系統') + '</span>' +
+          '<span class="arrow">→</span>';
+
+        linkList.appendChild(a);
+      });
+    }
+
+    function formatTitle(title) {
+      const text = String(title || '').trim();
+
+      if (text.length >= 12 && !text.includes('\n')) {
+        return text.replace('青少年', '青少年\n');
+      }
+
+      return text;
+    }
+
+    function showError(err) {
+      document.getElementById('siteTitle').textContent = '讀取失敗';
+      document.getElementById('linkList').innerHTML =
+        '<div class="error">' + escapeHtml(err && err.message ? err.message : String(err)) + '</div>';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('load', initPortal);
+  </script>
+</body>
+</html>
