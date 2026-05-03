@@ -1,410 +1,1291 @@
-<script>
-  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  let systemData = {
-    groups: [],
-    books: [],
-    totalChapters: 0,
-    expectedProgress: null
-  };
+  <style>
+    :root {
+      --bg: #f5f2ea;
+      --bg-deep: #e4ddcf;
+      --card: rgba(255, 253, 248, 0.96);
 
-  let currentProgress = null;
-  let selectedCompleted = 0;
-  let lockedCompleted = 0;
+      --sage: #8fa47c;
+      --sage-dark: #536844;
+      --sage-deep: #33482f;
+      --sage-soft: #eef3e8;
+      --sage-pale: #f7faf4;
 
-  window.onload = function() {
-    callGasApi('getReportSystemInitData')
-      .then(function(data) {
-        systemData = data;
-        renderGroupOptions();
-        renderBookOptions();
-        document.getElementById('formStatus').textContent = '';
-      })
-      .catch(function(err) {
-        showError(err);
-      });
-  };
+      --wood: #c8aa7a;
+      --wood-dark: #8a6a3d;
+      --wood-mid: #d8bf93;
+      --wood-soft: #eadbc1;
 
-  function callGasApi(action, payload) {
-    return new Promise(function(resolve, reject) {
-      const callbackName =
-        'reportCallback_' +
-        Date.now() +
-        '_' +
-        Math.random().toString(36).slice(2);
+      --text: #2f362c;
+      --muted: #747b6b;
+      --border: #ddd4c3;
+      --line: #e8e1d5;
 
-      const script = document.createElement('script');
-
-      const timer = setTimeout(function() {
-        cleanup();
-        reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-      }, 20000);
-
-      function cleanup() {
-        clearTimeout(timer);
-
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-
-        try {
-          delete window[callbackName];
-        } catch (e) {
-          window[callbackName] = undefined;
-        }
-      }
-
-      window[callbackName] = function(response) {
-        cleanup();
-
-        if (!response || response.success !== true) {
-          reject(new Error(response && response.message ? response.message : '讀取失敗'));
-          return;
-        }
-
-        resolve(response.data);
-      };
-
-      script.onerror = function() {
-        cleanup();
-        reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-      };
-
-      const params = [
-        'action=' + encodeURIComponent(action),
-        'callback=' + encodeURIComponent(callbackName),
-        '_=' + Date.now()
-      ];
-
-      if (payload !== undefined) {
-        params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-      }
-
-      const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-      script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-      document.body.appendChild(script);
-    });
-  }
-
-  function renderGroupOptions() {
-    const select = document.getElementById('groupSelect');
-    select.innerHTML = '<option value="">請選擇報名小組編號</option>';
-
-    systemData.groups.forEach(function(item) {
-      const option = document.createElement('option');
-      option.value = item.group;
-      option.textContent = item.displayText;
-      select.appendChild(option);
-    });
-  }
-
-  function renderBookOptions() {
-    const select = document.getElementById('bookSelect');
-    select.innerHTML = '<option value="">請選擇卷名</option>';
-
-    systemData.books.forEach(function(item) {
-      const option = document.createElement('option');
-      option.value = item.book;
-      option.textContent = item.book + '（共 ' + item.totalChapters + ' 章）';
-      option.dataset.total = item.totalChapters;
-      select.appendChild(option);
-    });
-  }
-
-  function handleGroupChange() {
-    const group = document.getElementById('groupSelect').value;
-
-    selectedCompleted = 0;
-    lockedCompleted = 0;
-    renderChapterCircles();
-
-    if (group) {
-      queryProgress(function() {
-        renderChapterCircles();
-      });
-    }
-  }
-
-  function handleBookChange() {
-    selectedCompleted = 0;
-    renderChapterCircles();
-  }
-
-  function renderChapterCircles() {
-    const grid = document.getElementById('chapterGrid');
-    const hint = document.getElementById('chapterHint');
-    const book = document.getElementById('bookSelect').value;
-    const group = document.getElementById('groupSelect').value;
-
-    grid.innerHTML = '';
-
-    if (!group || !book) {
-      hint.textContent = '請先選擇報名小組編號與卷名';
-      return;
+      --locked: #a9afa3;
+      --red: #b42318;
+      --shadow: rgba(70, 58, 40, 0.14);
     }
 
-    const bookData = systemData.books.find(function(item) {
-      return item.book === book;
-    });
-
-    if (!bookData) {
-      hint.textContent = '找不到卷名資料';
-      return;
+    * {
+      box-sizing: border-box;
     }
 
-    lockedCompleted = getLockedCompleted(book);
-    selectedCompleted = Math.max(selectedCompleted, lockedCompleted);
+    html {
+      min-height: 100%;
+    }
 
-    for (let i = 1; i <= bookData.totalChapters; i++) {
-      const circle = document.createElement('div');
-      circle.className = 'chapter-circle';
-      circle.textContent = i;
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        linear-gradient(135deg, #f8f6f1 0%, #f0eadf 46%, #e4d9c7 100%);
+      overflow-x: hidden;
+    }
 
-      if (i <= lockedCompleted) {
-        circle.classList.add('locked');
-      } else if (i <= selectedCompleted) {
-        circle.classList.add('selected');
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 6% 18%, rgba(143,164,124,0.20), transparent 20%),
+        radial-gradient(circle at 96% 14%, rgba(200,170,122,0.22), transparent 18%),
+        linear-gradient(90deg, rgba(143,164,124,0.18), transparent 28%, transparent 72%, rgba(200,170,122,0.18)),
+        linear-gradient(180deg, rgba(255,255,255,0.52), transparent 48%, rgba(83,104,68,0.06));
+      z-index: -3;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      left: 50%;
+      top: 0;
+      width: min(1080px, 94vw);
+      height: 100%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(143,164,124,0.10) 0%, transparent 18%, transparent 82%, rgba(200,170,122,0.12) 100%);
+      z-index: -2;
+    }
+
+    .page {
+      position: relative;
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 34px 18px 80px;
+    }
+
+    .page::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 28px;
+      transform: translateX(-50%);
+      width: min(1020px, calc(100% - 24px));
+      height: calc(100% - 40px);
+      background:
+        linear-gradient(180deg, rgba(255,253,248,0.44), rgba(255,253,248,0.16));
+      border: 1px solid rgba(255,255,255,0.52);
+      border-radius: 34px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.78),
+        0 24px 70px rgba(70,58,40,0.12);
+      z-index: -1;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 250px;
+      margin: 0 0 26px;
+      padding: 54px 26px 50px;
+      text-align: center;
+      overflow: hidden;
+      border-radius: 34px;
+      background:
+        linear-gradient(180deg, rgba(255,253,248,0.92), rgba(246,241,232,0.88));
+      border: 1px solid rgba(221,212,195,0.72);
+      box-shadow:
+        0 18px 42px rgba(70,58,40,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.86);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      left: -86px;
+      top: -44px;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, rgba(234,219,193,0.92), rgba(234,219,193,0.46) 62%, transparent 63%);
+      z-index: 0;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -78px;
+      top: 58px;
+      width: 260px;
+      height: 260px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, rgba(143,164,124,0.34), rgba(143,164,124,0.20) 64%, transparent 65%);
+      z-index: 0;
+    }
+
+    .hero-left-panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 150px;
+      height: 100%;
+      background:
+        linear-gradient(180deg, rgba(143,164,124,0.42), rgba(143,164,124,0.18));
+      clip-path: polygon(0 0, 80% 0, 46% 100%, 0% 100%);
+      z-index: 0;
+    }
+
+    .hero-wood-shape {
+      position: absolute;
+      left: 70px;
+      bottom: -82px;
+      width: 210px;
+      height: 210px;
+      border-radius: 999px;
+      background:
+        linear-gradient(135deg, rgba(200,170,122,0.68), rgba(234,219,193,0.34));
+      z-index: 0;
+    }
+
+    .hero-sage-shape {
+      position: absolute;
+      right: 0;
+      bottom: -36px;
+      width: 210px;
+      height: 170px;
+      border-radius: 100px 0 0 0;
+      background:
+        linear-gradient(135deg, rgba(143,164,124,0.42), rgba(143,164,124,0.18));
+      z-index: 0;
+    }
+
+    .hero-line-left {
+      position: absolute;
+      left: 42px;
+      top: 42px;
+      width: 2px;
+      height: 150px;
+      background: rgba(255,253,248,0.82);
+      box-shadow: 24px 38px 0 rgba(255,253,248,0.58);
+      z-index: 1;
+    }
+
+    .hero-line-right {
+      position: absolute;
+      right: 46px;
+      top: 120px;
+      width: 2px;
+      height: 90px;
+      background: rgba(255,253,248,0.76);
+      box-shadow: -34px 38px 0 rgba(255,253,248,0.44);
+      z-index: 1;
+    }
+
+    .hero-dots {
+      position: absolute;
+      right: 86px;
+      top: 38px;
+      width: 86px;
+      height: 74px;
+      background-image: radial-gradient(rgba(83,104,68,0.70) 2.3px, transparent 2.3px);
+      background-size: 16px 16px;
+      opacity: 0.58;
+      z-index: 1;
+    }
+
+    .hero-arc {
+      position: absolute;
+      left: 96px;
+      top: 58px;
+      width: 250px;
+      height: 250px;
+      border: 2px solid rgba(200,170,122,0.46);
+      border-radius: 999px;
+      clip-path: inset(0 42% 30% 0);
+      z-index: 1;
+    }
+
+    .hero-small-dot {
+      position: absolute;
+      left: 278px;
+      top: 126px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: rgba(83,104,68,0.74);
+      box-shadow: 0 0 0 12px rgba(143,164,124,0.12);
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 46px;
+      line-height: 1.18;
+      font-weight: 900;
+      margin: 0;
+      color: var(--sage-deep);
+      letter-spacing: 3px;
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.8),
+        0 8px 22px rgba(51,72,47,0.10);
+    }
+
+    .title span {
+      display: block;
+    }
+
+    .title-accent {
+      width: 148px;
+      height: 2px;
+      margin: 18px auto 14px;
+      background: var(--wood);
+      position: relative;
+    }
+
+    .title-accent::before,
+    .title-accent::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--wood);
+      transform: translateY(-50%);
+    }
+
+    .title-accent::before {
+      left: -4px;
+      opacity: 0.55;
+    }
+
+    .title-accent::after {
+      right: -4px;
+      opacity: 0.55;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 18px;
+      color: var(--muted);
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .card {
+      position: relative;
+      background: var(--card);
+      border-radius: 24px;
+      padding: 0;
+      margin-bottom: 26px;
+      border: 1px solid var(--border);
+      box-shadow:
+        0 18px 42px var(--shadow),
+        inset 0 1px 0 rgba(255,255,255,0.82);
+      overflow: hidden;
+      backdrop-filter: blur(5px);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.34), transparent 22%, transparent 78%, rgba(143,164,124,0.08));
+    }
+
+    .card-title {
+      position: relative;
+      font-size: 25px;
+      font-weight: 900;
+      color: var(--sage-deep);
+      padding: 22px 24px;
+      margin-bottom: 0;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(143,164,124,0.20), rgba(255,253,248,0.94));
+    }
+
+    .card-title::before {
+      content: "";
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      margin-right: 12px;
+      vertical-align: -6px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,253,248,0.92) 0 34%, transparent 35%),
+        linear-gradient(135deg, var(--sage), var(--sage-dark));
+      box-shadow:
+        0 0 0 8px rgba(143,164,124,0.16),
+        inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+
+    label {
+      position: relative;
+      display: block;
+      font-size: 16px;
+      font-weight: 800;
+      margin: 16px 0 8px;
+      color: var(--text);
+    }
+
+    select {
+      position: relative;
+      width: 100%;
+      font-size: 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fffdf8;
+      color: var(--text);
+      outline: none;
+      box-shadow:
+        inset 0 1px 3px rgba(70,58,40,0.06),
+        0 1px 0 rgba(255,255,255,0.72);
+    }
+
+    select:focus {
+      border-color: var(--sage);
+      box-shadow:
+        0 0 0 4px rgba(143,164,124,0.22),
+        inset 0 1px 3px rgba(70,58,40,0.06);
+    }
+
+    button {
+      position: relative;
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 18px;
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--sage), var(--sage-dark));
+      color: #fff;
+      margin-top: 20px;
+      box-shadow:
+        0 8px 18px rgba(83,104,68,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    button:hover {
+      filter: brightness(0.96);
+    }
+
+    button:disabled {
+      background: #a9afa3;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .card > label,
+    .card > select,
+    .card > .chapter-area,
+    .card > button,
+    .card > .status,
+    .card > #resultArea {
+      margin-left: 24px;
+      margin-right: 24px;
+    }
+
+    .card > label:first-of-type {
+      margin-top: 24px;
+    }
+
+    .card > .status,
+    .card > #resultArea {
+      margin-bottom: 24px;
+    }
+
+    .chapter-area {
+      position: relative;
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid #dce6d3;
+      background:
+        linear-gradient(180deg, #fbfcf8, #f1f6ec);
+      border-radius: 17px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.78),
+        0 8px 18px rgba(70,58,40,0.08);
+    }
+
+    .chapter-title {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--sage-deep);
+      margin-bottom: 14px;
+    }
+
+    .chapter-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chapter-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1.5px solid var(--sage);
+      background: #fffdf8;
+      color: var(--sage-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      box-shadow:
+        0 3px 8px rgba(70,58,40,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+
+    .chapter-circle.selected {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: white;
+    }
+
+    .chapter-circle.locked {
+      background: var(--locked);
+      border-color: var(--locked);
+      color: white;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .chapter-hint {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .summary-item {
+      background:
+        linear-gradient(180deg, #fffdf8, #f5efe3);
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      padding: 18px;
+      text-align: center;
+      box-shadow:
+        0 6px 16px rgba(70,58,40,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.72);
+    }
+
+    .summary-item.expected {
+      background:
+        linear-gradient(180deg, #f8fbf4, #edf4e6);
+      border-color: #cfddc2;
+    }
+
+    .summary-number {
+      font-size: 31px;
+      font-weight: 900;
+      color: var(--sage-deep);
+    }
+
+    .summary-label {
+      font-size: 15px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-weight: 700;
+    }
+
+    .summary-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .progress-wrap {
+      width: 100%;
+      background: #e1ded7;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 16px;
+      margin-top: 10px;
+      box-shadow: inset 0 1px 4px rgba(70,58,40,0.12);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--sage-dark), var(--sage));
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18px;
+      background: #fffdf8;
+      border-radius: 15px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 22px rgba(70,58,40,0.08);
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 10px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    th {
+      background:
+        linear-gradient(180deg, #edf2e7, #e1ead8);
+      color: var(--sage-deep);
+      font-weight: 900;
+    }
+
+    td:first-child,
+    th:first-child {
+      text-align: left;
+    }
+
+    .small-progress {
+      width: 100%;
+      height: 11px;
+      background: #e1ded7;
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 4px rgba(70,58,40,0.10);
+    }
+
+    .small-progress-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--sage-dark), var(--sage));
+      width: 0%;
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 17px;
+      font-weight: 800;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .status.error {
+      color: var(--red);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(47, 54, 44, 0.54);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay-box {
+      width: 100%;
+      max-width: 520px;
+      background: #fffdf8;
+      border-radius: 25px;
+      padding: 36px 28px;
+      text-align: center;
+      box-shadow:
+        0 24px 70px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.76);
+      border: 1px solid var(--border);
+    }
+
+    .overlay-title {
+      font-size: 34px;
+      font-weight: 900;
+      color: var(--sage-deep);
+      margin-bottom: 20px;
+    }
+
+    .overlay-text {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: var(--muted);
+    }
+
+    .overlay-progress {
+      width: 100%;
+      height: 28px;
+      background: #e1ded7;
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 4px rgba(70,58,40,0.12);
+    }
+
+    .overlay-progress-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--sage-dark), var(--sage));
+      width: 0%;
+      transition: width 0.8s ease;
+    }
+
+    .overlay-percent {
+      margin-top: 12px;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--sage-deep);
+    }
+
+    @media (max-width: 900px) {
+      .summary-box {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 18px 12px 56px;
       }
 
-      if (i > lockedCompleted) {
-        circle.onclick = function() {
-          selectedCompleted = i;
-          renderChapterCircles();
+      .page::before {
+        width: calc(100% - 14px);
+        border-radius: 26px;
+      }
+
+      .hero {
+        min-height: 230px;
+        padding: 48px 16px 42px;
+        border-radius: 26px;
+      }
+
+      .hero::before {
+        left: -110px;
+        top: -54px;
+        width: 230px;
+        height: 230px;
+      }
+
+      .hero::after {
+        right: -120px;
+        top: 76px;
+        width: 230px;
+        height: 230px;
+      }
+
+      .hero-left-panel {
+        width: 92px;
+      }
+
+      .hero-wood-shape {
+        left: 28px;
+        bottom: -92px;
+        width: 170px;
+        height: 170px;
+      }
+
+      .hero-sage-shape {
+        width: 145px;
+        height: 145px;
+      }
+
+      .hero-line-left {
+        left: 24px;
+        top: 40px;
+        height: 116px;
+        box-shadow: 18px 30px 0 rgba(255,253,248,0.46);
+      }
+
+      .hero-line-right {
+        display: none;
+      }
+
+      .hero-dots {
+        right: 28px;
+        top: 24px;
+        width: 72px;
+        height: 56px;
+        background-size: 14px 14px;
+      }
+
+      .hero-arc {
+        left: 28px;
+        top: 58px;
+        width: 180px;
+        height: 180px;
+      }
+
+      .hero-small-dot {
+        display: none;
+      }
+
+      .title {
+        font-size: 32px;
+        letter-spacing: 1px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+      }
+
+      .card {
+        border-radius: 22px;
+      }
+
+      .card-title {
+        font-size: 23px;
+        padding: 20px;
+      }
+
+      .card > label,
+      .card > select,
+      .card > .chapter-area,
+      .card > button,
+      .card > .status,
+      .card > #resultArea {
+        margin-left: 18px;
+        margin-right: 18px;
+      }
+
+      select {
+        font-size: 18px;
+      }
+
+      .summary-box {
+        grid-template-columns: 1fr;
+      }
+
+      th,
+      td {
+        font-size: 14px;
+        padding: 10px 6px;
+      }
+
+      .chapter-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-left-panel"></div>
+      <div class="hero-wood-shape"></div>
+      <div class="hero-sage-shape"></div>
+      <div class="hero-line-left"></div>
+      <div class="hero-line-right"></div>
+      <div class="hero-dots"></div>
+      <div class="hero-arc"></div>
+      <div class="hero-small-dot"></div>
+
+      <div class="hero-content">
+        <div class="title">
+          <span>青少年共讀聖經</span>
+          <span>回報及查詢系統</span>
+        </div>
+        <div class="title-accent"></div>
+        <div class="subtitle">依報名小組回報完成章數，並查詢各卷與新約總進度</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">一、回報進度</div>
+
+      <label for="groupSelect">報名小組編號</label>
+      <select id="groupSelect" onchange="handleGroupChange()">
+        <option value="">資料載入中...</option>
+      </select>
+
+      <label for="bookSelect">卷名</label>
+      <select id="bookSelect" onchange="handleBookChange()">
+        <option value="">請選擇卷名</option>
+      </select>
+
+      <div class="chapter-area">
+        <div class="chapter-title">完成章數</div>
+        <div id="chapterGrid" class="chapter-grid"></div>
+        <div id="chapterHint" class="chapter-hint">請先選擇報名小組編號與卷名</div>
+      </div>
+
+      <button id="submitBtn" onclick="submitReport()">送出回報</button>
+
+      <div id="formStatus" class="status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">二、查詢進度</div>
+
+      <button onclick="queryProgress()">查詢目前進度</button>
+
+      <div id="resultArea"></div>
+    </div>
+  </div>
+
+  <div id="doneOverlay" class="overlay">
+    <div class="overlay-box">
+      <div class="overlay-title">回報完成</div>
+      <div class="overlay-text">目前新約總完成進度</div>
+      <div class="overlay-progress">
+        <div id="overlayProgressInner" class="overlay-progress-inner"></div>
+      </div>
+      <div id="overlayPercent" class="overlay-percent">0%</div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    let systemData = {
+      groups: [],
+      books: [],
+      totalChapters: 0,
+      expectedProgress: null
+    };
+
+    let currentProgress = null;
+    let selectedCompleted = 0;
+    let lockedCompleted = 0;
+
+    window.onload = function() {
+      callGasApi('getReportSystemInitData')
+        .then(function(data) {
+          systemData = data;
+          renderGroupOptions();
+          renderBookOptions();
+          document.getElementById('formStatus').textContent = '';
+        })
+        .catch(function(err) {
+          showError(err);
+        });
+    };
+
+    function callGasApi(action, payload) {
+      return new Promise(function(resolve, reject) {
+        const callbackName =
+          'reportCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
+        }, 20000);
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = function(response) {
+          cleanup();
+
+          if (!response || response.success !== true) {
+            reject(new Error(response && response.message ? response.message : '讀取失敗'));
+            return;
+          }
+
+          resolve(response.data);
         };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
+        };
+
+        const params = [
+          'action=' + encodeURIComponent(action),
+          'callback=' + encodeURIComponent(callbackName),
+          '_=' + Date.now()
+        ];
+
+        if (payload !== undefined) {
+          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+        }
+
+        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+        script.src = GAS_WEB_APP_URL + separator + params.join('&');
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function renderGroupOptions() {
+      const select = document.getElementById('groupSelect');
+      select.innerHTML = '<option value="">請選擇報名小組編號</option>';
+
+      systemData.groups.forEach(function(item) {
+        const option = document.createElement('option');
+        option.value = item.group;
+        option.textContent = item.displayText;
+        select.appendChild(option);
+      });
+    }
+
+    function renderBookOptions() {
+      const select = document.getElementById('bookSelect');
+      select.innerHTML = '<option value="">請選擇卷名</option>';
+
+      systemData.books.forEach(function(item) {
+        const option = document.createElement('option');
+        option.value = item.book;
+        option.textContent = item.book + '（共 ' + item.totalChapters + ' 章）';
+        option.dataset.total = item.totalChapters;
+        select.appendChild(option);
+      });
+    }
+
+    function handleGroupChange() {
+      const group = document.getElementById('groupSelect').value;
+
+      selectedCompleted = 0;
+      lockedCompleted = 0;
+      renderChapterCircles();
+
+      if (group) {
+        queryProgress(function() {
+          renderChapterCircles();
+        });
+      }
+    }
+
+    function handleBookChange() {
+      selectedCompleted = 0;
+      renderChapterCircles();
+    }
+
+    function renderChapterCircles() {
+      const grid = document.getElementById('chapterGrid');
+      const hint = document.getElementById('chapterHint');
+      const book = document.getElementById('bookSelect').value;
+      const group = document.getElementById('groupSelect').value;
+
+      grid.innerHTML = '';
+
+      if (!group || !book) {
+        hint.textContent = '請先選擇報名小組編號與卷名';
+        return;
       }
 
-      grid.appendChild(circle);
-    }
-
-    if (lockedCompleted > 0) {
-      hint.textContent = '已回報到第 ' + lockedCompleted + ' 章；灰色章數不能更改。';
-    } else {
-      hint.textContent = '請點選已完成到第幾章。';
-    }
-  }
-
-  function getLockedCompleted(book) {
-    if (!currentProgress || !currentProgress.bookProgress) return 0;
-
-    const item = currentProgress.bookProgress.find(function(row) {
-      return row.book === book;
-    });
-
-    return item ? Number(item.completedChapters || 0) : 0;
-  }
-
-  function submitReport() {
-    const group = document.getElementById('groupSelect').value.trim();
-    const book = document.getElementById('bookSelect').value.trim();
-
-    if (!group) {
-      setStatus('請選擇報名小組編號', true);
-      return;
-    }
-
-    if (!book) {
-      setStatus('請選擇卷名', true);
-      return;
-    }
-
-    if (!selectedCompleted || selectedCompleted <= lockedCompleted) {
-      setStatus('請點選新的完成章數', true);
-      return;
-    }
-
-    document.getElementById('submitBtn').disabled = true;
-    setStatus('送出中...', false);
-
-    callGasApi('submitReadingReport', {
-      group: group,
-      book: book,
-      completedChapters: selectedCompleted
-    })
-      .then(function(progressData) {
-        document.getElementById('submitBtn').disabled = false;
-        currentProgress = progressData;
-
-        renderProgress(progressData);
-        showDoneOverlay(progressData.totalPercent);
-
-        resetReportFormAfterSubmit();
-      })
-      .catch(function(err) {
-        document.getElementById('submitBtn').disabled = false;
-        showError(err);
+      const bookData = systemData.books.find(function(item) {
+        return item.book === book;
       });
-  }
 
-  function resetReportFormAfterSubmit() {
-    document.getElementById('groupSelect').value = '';
-    document.getElementById('bookSelect').value = '';
+      if (!bookData) {
+        hint.textContent = '找不到卷名資料';
+        return;
+      }
 
-    selectedCompleted = 0;
-    lockedCompleted = 0;
-    currentProgress = null;
+      lockedCompleted = getLockedCompleted(book);
+      selectedCompleted = Math.max(selectedCompleted, lockedCompleted);
 
-    document.getElementById('chapterGrid').innerHTML = '';
-    document.getElementById('chapterHint').textContent = '請先選擇報名小組編號與卷名';
-    setStatus('', false);
-  }
+      for (let i = 1; i <= bookData.totalChapters; i++) {
+        const circle = document.createElement('div');
+        circle.className = 'chapter-circle';
+        circle.textContent = i;
 
-  function queryProgress(callback) {
-    const group = document.getElementById('groupSelect').value.trim();
-
-    if (!group) {
-      setStatus('請先選擇報名小組編號', true);
-      return;
-    }
-
-    setStatus('查詢中...', false);
-
-    callGasApi('getProgressByGroup', { group: group })
-      .then(function(data) {
-        currentProgress = data;
-        setStatus('', false);
-        renderProgress(data);
-        renderChapterCircles();
-
-        if (typeof callback === 'function') {
-          callback();
+        if (i <= lockedCompleted) {
+          circle.classList.add('locked');
+        } else if (i <= selectedCompleted) {
+          circle.classList.add('selected');
         }
-      })
-      .catch(function(err) {
-        showError(err);
-      });
-  }
 
-  function renderProgress(data) {
-    const area = document.getElementById('resultArea');
-    const expected = data.expectedProgress || systemData.expectedProgress || null;
+        if (i > lockedCompleted) {
+          circle.onclick = function() {
+            selectedCompleted = i;
+            renderChapterCircles();
+          };
+        }
 
-    let html = '';
+        grid.appendChild(circle);
+      }
 
-    html += '<div class="summary-box">';
-
-    html += '<div class="summary-item">';
-    html += '<div class="summary-number">' + data.completedTotal + '</div>';
-    html += '<div class="summary-label">新約已完成章數</div>';
-    html += '</div>';
-
-    html += '<div class="summary-item">';
-    html += '<div class="summary-number">' + data.totalChapters + '</div>';
-    html += '<div class="summary-label">新約總章數</div>';
-    html += '</div>';
-
-    html += '<div class="summary-item">';
-    html += '<div class="summary-number">' + data.totalPercent + '%</div>';
-    html += '<div class="summary-label">新約總完成百分比</div>';
-    html += '<div class="progress-wrap">';
-    html += '<div class="progress-bar" style="width:' + safePercent(data.totalPercent) + '%"></div>';
-    html += '</div>';
-    html += '</div>';
-
-    html += renderExpectedProgressItem(expected);
-
-    html += '</div>';
-
-    html += '<table>';
-    html += '<thead>';
-    html += '<tr>';
-    html += '<th>卷名</th>';
-    html += '<th>完成章數</th>';
-    html += '<th>總章數</th>';
-    html += '<th>百分比</th>';
-    html += '<th>進度</th>';
-    html += '</tr>';
-    html += '</thead>';
-    html += '<tbody>';
-
-    data.bookProgress.forEach(function(item) {
-      html += '<tr>';
-      html += '<td>' + escapeHtml(item.book) + '</td>';
-      html += '<td>' + item.completedChapters + '</td>';
-      html += '<td>' + item.totalChapters + '</td>';
-      html += '<td>' + item.percent + '%</td>';
-      html += '<td>';
-      html += '<div class="small-progress">';
-      html += '<div class="small-progress-inner" style="width:' + safePercent(item.percent) + '%"></div>';
-      html += '</div>';
-      html += '</td>';
-      html += '</tr>';
-    });
-
-    html += '</tbody>';
-    html += '</table>';
-
-    area.innerHTML = html;
-  }
-
-  function renderExpectedProgressItem(expected) {
-    let html = '';
-
-    html += '<div class="summary-item expected">';
-
-    if (expected && expected.available) {
-      html += '<div class="summary-number">' + expected.expectedPercent + '%</div>';
-      html += '<div class="summary-label">今日正常進度</div>';
-      html += '<div class="progress-wrap">';
-      html += '<div class="progress-bar" style="width:' + safePercent(expected.expectedPercent) + '%"></div>';
-      html += '</div>';
-      html += '<div class="summary-note">';
-      html += '依進度，本週應完成共 ' + expected.expectedChapters + ' 章';
-      html += '</div>';
-    } else {
-      html += '<div class="summary-number">-</div>';
-      html += '<div class="summary-label">今日正常進度</div>';
-      html += '<div class="summary-note">' + escapeHtml(expected && expected.message ? expected.message : '無法讀取讀經進度表') + '</div>';
+      if (lockedCompleted > 0) {
+        hint.textContent = '已回報到第 ' + lockedCompleted + ' 章；灰色章數不能更改。';
+      } else {
+        hint.textContent = '請點選已完成到第幾章。';
+      }
     }
 
-    html += '</div>';
+    function getLockedCompleted(book) {
+      if (!currentProgress || !currentProgress.bookProgress) return 0;
 
-    return html;
-  }
+      const item = currentProgress.bookProgress.find(function(row) {
+        return row.book === book;
+      });
 
-  function safePercent(value) {
-    const n = Number(value || 0);
-    if (n < 0) return 0;
-    if (n > 100) return 100;
-    return n;
-  }
+      return item ? Number(item.completedChapters || 0) : 0;
+    }
 
-  function showDoneOverlay(percent) {
-    const overlay = document.getElementById('doneOverlay');
-    const bar = document.getElementById('overlayProgressInner');
-    const percentText = document.getElementById('overlayPercent');
+    function submitReport() {
+      const group = document.getElementById('groupSelect').value.trim();
+      const book = document.getElementById('bookSelect').value.trim();
 
-    overlay.style.display = 'flex';
-    bar.style.width = '0%';
-    percentText.textContent = '0%';
+      if (!group) {
+        setStatus('請選擇報名小組編號', true);
+        return;
+      }
 
-    setTimeout(function() {
-      bar.style.width = safePercent(percent) + '%';
-      percentText.textContent = percent + '%';
-    }, 100);
+      if (!book) {
+        setStatus('請選擇卷名', true);
+        return;
+      }
 
-    setTimeout(function() {
-      overlay.style.display = 'none';
-    }, 2200);
-  }
+      if (!selectedCompleted || selectedCompleted <= lockedCompleted) {
+        setStatus('請點選新的完成章數', true);
+        return;
+      }
 
-  function setStatus(message, isError) {
-    const status = document.getElementById('formStatus');
-    status.textContent = message || '';
-    status.className = isError ? 'status error' : 'status';
-  }
+      document.getElementById('submitBtn').disabled = true;
+      setStatus('送出中...', false);
 
-  function showError(err) {
-    const message = err && err.message ? err.message : String(err);
-    setStatus(message, true);
-  }
+      callGasApi('submitReadingReport', {
+        group: group,
+        book: book,
+        completedChapters: selectedCompleted
+      })
+        .then(function(progressData) {
+          document.getElementById('submitBtn').disabled = false;
+          currentProgress = progressData;
 
-  function escapeHtml(text) {
-    return String(text || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-</script>
+          renderProgress(progressData);
+          showDoneOverlay(progressData.totalPercent);
+
+          resetReportFormAfterSubmit();
+        })
+        .catch(function(err) {
+          document.getElementById('submitBtn').disabled = false;
+          showError(err);
+        });
+    }
+
+    function resetReportFormAfterSubmit() {
+      document.getElementById('groupSelect').value = '';
+      document.getElementById('bookSelect').value = '';
+
+      selectedCompleted = 0;
+      lockedCompleted = 0;
+      currentProgress = null;
+
+      document.getElementById('chapterGrid').innerHTML = '';
+      document.getElementById('chapterHint').textContent = '請先選擇報名小組編號與卷名';
+      setStatus('', false);
+    }
+
+    function queryProgress(callback) {
+      const group = document.getElementById('groupSelect').value.trim();
+
+      if (!group) {
+        setStatus('請先選擇報名小組編號', true);
+        return;
+      }
+
+      setStatus('查詢中...', false);
+
+      callGasApi('getProgressByGroup', { group: group })
+        .then(function(data) {
+          currentProgress = data;
+          setStatus('', false);
+          renderProgress(data);
+          renderChapterCircles();
+
+          if (typeof callback === 'function') {
+            callback();
+          }
+        })
+        .catch(function(err) {
+          showError(err);
+        });
+    }
+
+    function renderProgress(data) {
+      const area = document.getElementById('resultArea');
+      const expected = data.expectedProgress || systemData.expectedProgress || null;
+
+      let html = '';
+
+      html += '<div class="summary-box">';
+
+      html += '<div class="summary-item">';
+      html += '<div class="summary-number">' + data.completedTotal + '</div>';
+      html += '<div class="summary-label">新約已完成章數</div>';
+      html += '</div>';
+
+      html += '<div class="summary-item">';
+      html += '<div class="summary-number">' + data.totalChapters + '</div>';
+      html += '<div class="summary-label">新約總章數</div>';
+      html += '</div>';
+
+      html += '<div class="summary-item">';
+      html += '<div class="summary-number">' + data.totalPercent + '%</div>';
+      html += '<div class="summary-label">新約總完成百分比</div>';
+      html += '<div class="progress-wrap">';
+      html += '<div class="progress-bar" style="width:' + safePercent(data.totalPercent) + '%"></div>';
+      html += '</div>';
+      html += '</div>';
+
+      html += renderExpectedProgressItem(expected);
+
+      html += '</div>';
+
+      html += '<table>';
+      html += '<thead>';
+      html += '<tr>';
+      html += '<th>卷名</th>';
+      html += '<th>完成章數</th>';
+      html += '<th>總章數</th>';
+      html += '<th>百分比</th>';
+      html += '<th>進度</th>';
+      html += '</tr>';
+      html += '</thead>';
+      html += '<tbody>';
+
+      data.bookProgress.forEach(function(item) {
+        html += '<tr>';
+        html += '<td>' + escapeHtml(item.book) + '</td>';
+        html += '<td>' + item.completedChapters + '</td>';
+        html += '<td>' + item.totalChapters + '</td>';
+        html += '<td>' + item.percent + '%</td>';
+        html += '<td>';
+        html += '<div class="small-progress">';
+        html += '<div class="small-progress-inner" style="width:' + safePercent(item.percent) + '%"></div>';
+        html += '</div>';
+        html += '</td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody>';
+      html += '</table>';
+
+      area.innerHTML = html;
+    }
+
+    function renderExpectedProgressItem(expected) {
+      let html = '';
+
+      html += '<div class="summary-item expected">';
+
+      if (expected && expected.available) {
+        html += '<div class="summary-number">' + expected.expectedPercent + '%</div>';
+        html += '<div class="summary-label">今日正常進度</div>';
+        html += '<div class="progress-wrap">';
+        html += '<div class="progress-bar" style="width:' + safePercent(expected.expectedPercent) + '%"></div>';
+        html += '</div>';
+        html += '<div class="summary-note">';
+        html += '依進度，本週應完成共 ' + expected.expectedChapters + ' 章';
+        html += '</div>';
+      } else {
+        html += '<div class="summary-number">-</div>';
+        html += '<div class="summary-label">今日正常進度</div>';
+        html += '<div class="summary-note">' + escapeHtml(expected && expected.message ? expected.message : '無法讀取讀經進度表') + '</div>';
+      }
+
+      html += '</div>';
+
+      return html;
+    }
+
+    function safePercent(value) {
+      const n = Number(value || 0);
+      if (n < 0) return 0;
+      if (n > 100) return 100;
+      return n;
+    }
+
+    function showDoneOverlay(percent) {
+      const overlay = document.getElementById('doneOverlay');
+      const bar = document.getElementById('overlayProgressInner');
+      const percentText = document.getElementById('overlayPercent');
+
+      overlay.style.display = 'flex';
+      bar.style.width = '0%';
+      percentText.textContent = '0%';
+
+      setTimeout(function() {
+        bar.style.width = safePercent(percent) + '%';
+        percentText.textContent = percent + '%';
+      }, 100);
+
+      setTimeout(function() {
+        overlay.style.display = 'none';
+      }, 2200);
+    }
+
+    function setStatus(message, isError) {
+      const status = document.getElementById('formStatus');
+      status.textContent = message || '';
+      status.className = isError ? 'status error' : 'status';
+    }
+
+    function showError(err) {
+      const message = err && err.message ? err.message : String(err);
+      setStatus(message, true);
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
