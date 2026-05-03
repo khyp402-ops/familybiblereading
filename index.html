@@ -573,7 +573,7 @@
   </main>
 
   <script>
-    const GAS_WEB_APP_URL = '請貼上你的 GAS 網頁應用程式網址';
+    const GAS_WEB_APP_URL = '請貼上你的 Apps Script /exec 網址';
 
     function initPortal() {
       loadPortalData()
@@ -583,7 +583,7 @@
 
     function loadPortalData() {
       return new Promise(function(resolve, reject) {
-        if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === '請貼上你的 GAS 網頁應用程式網址') {
+        if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === '請貼上你的 Apps Script /exec 網址') {
           reject(new Error('尚未設定 GAS_WEB_APP_URL'));
           return;
         }
@@ -598,7 +598,7 @@
 
         const timer = setTimeout(function() {
           cleanup();
-          reject(new Error('讀取逾時，請確認 Google Apps Script 網頁應用程式網址是否正確'));
+          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址是否正確'));
         }, 15000);
 
         function cleanup() {
@@ -628,7 +628,7 @@
 
         script.onerror = function() {
           cleanup();
-          reject(new Error('無法連線到 Google Apps Script，請確認部署權限與網址'));
+          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
         };
 
         const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
