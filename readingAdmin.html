@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #f59e0b;
+      --soft-blue: #eff6ff;
+      --soft-green: #ecfdf5;
+      --soft-amber: #fffbeb;
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(22, 163, 74, 0.10), transparent 36%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb 55%, #38bdf8);
+      color: #fff;
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(37, 99, 235, 0.22);
+      margin-bottom: 22px;
+    }
+
+    .hero .eyebrow {
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      font-size: 16px;
+      opacity: 0.92;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 42px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 0 12px;
+      font-size: 15px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus {
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+      border-color: var(--primary);
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button.secondary {
+      background: #475569;
+      box-shadow: 0 10px 24px rgba(71, 85, 105, 0.18);
+    }
+
+    button.green {
+      background: var(--green);
+      box-shadow: 0 10px 24px rgba(22, 163, 74, 0.20);
+    }
+
+    .notice {
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-top: 14px;
+      font-size: 15px;
+      line-height: 1.6;
+      background: var(--soft-blue);
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      white-space: pre-wrap;
+    }
+
+    .notice.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .notice.success {
+      background: var(--soft-green);
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .summary .item {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .summary .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .summary .value {
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 900;
+      color: #334155;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .table-wrap {
+      max-height: 560px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .stage-table input,
+    .stage-table select {
+      height: 38px;
+      font-size: 14px;
+      padding: 0 8px;
+      border-radius: 10px;
+    }
+
+    .stage-table .stage-name {
+      min-width: 130px;
+    }
+
+    .stage-table .stage-manual-exhibition-date {
+      min-width: 145px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .badge.buffer {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .login {
+      max-width: 520px;
+      margin: 72px auto;
+    }
+
+    .url-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .url-box input {
+      flex: 1;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        width: min(100% - 20px, 1240px);
+        padding-top: 16px;
+      }
+
+      .hero {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .hero h1 {
+        font-size: 26px;
+      }
+
+      .grid,
+      .grid-2,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .table-wrap {
+        max-height: 520px;
+      }
+
+      th,
+      td {
+        font-size: 13px;
+        padding: 9px 7px;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .url-box {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="eyebrow">READING PLAN ADMIN</div>
+      <h1>讀經進度設定</h1>
+      <p>設定讀經節奏、緩衝週與展覽聚會日期；參加者頁面只顯示進度，不處理回報。</p>
+    </section>
+
+    <section id="loginCard" class="card login">
+      <h2>管理者登入</h2>
+      <div>
+        <label>管理密碼</label>
+        <input id="loginPassword" type="password" placeholder="請輸入管理密碼">
+      </div>
+      <div class="btns">
+        <button id="loginBtn" onclick="login()">進入設定頁</button>
+      </div>
+      <div id="loginMsg" class="notice hidden"></div>
+    </section>
+
+    <main id="adminArea" class="hidden">
+      <section class="card">
+        <h2>基本設定</h2>
+        <div class="grid">
+          <div>
+            <label>計畫名稱</label>
+            <input id="planName" type="text">
+          </div>
+          <div>
+            <label>開始日</label>
+            <input id="startDate" type="date">
+          </div>
+          <div>
+            <label>指定結束日（可空白）</label>
+            <input id="targetEndDate" type="date">
+          </div>
+          <div>
+            <label>每週開始日</label>
+            <select id="weekStartDay">
+              <option value="1">週一</option>
+              <option value="2">週二</option>
+              <option value="3">週三</option>
+              <option value="4">週四</option>
+              <option value="5">週五</option>
+              <option value="6">週六</option>
+              <option value="0">主日</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>讀經範圍</h2>
+        <div class="grid">
+          <div>
+            <label>起始卷</label>
+            <select id="startBook" onchange="syncChapterOptions()"></select>
+          </div>
+          <div>
+            <label>起始章</label>
+            <select id="startChapter"></select>
+          </div>
+          <div>
+            <label>結束卷</label>
+            <select id="endBook" onchange="syncChapterOptions()"></select>
+          </div>
+          <div>
+            <label>結束章</label>
+            <select id="endChapter"></select>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>階段設定</h2>
+
+        <div class="grid-2" style="margin-bottom:16px;">
+          <div>
+            <label>展覽模式說明</label>
+            <input type="text" readonly value="選「無」：這個階段不安排展覽聚會">
+            <input id="exhibitionWeekday" type="hidden" value="0">
+          </div>
+          <div>
+            <label>指定日期說明</label>
+            <input type="text" readonly value="選「指定日期」：必須填寫右側指定展覽日期">
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="stage-table">
+            <thead>
+              <tr>
+                <th>啟用</th>
+                <th>階段名稱</th>
+                <th>開始月</th>
+                <th>結束月</th>
+                <th>每週章數</th>
+                <th>緩衝週數</th>
+                <th>展覽模式</th>
+                <th>指定展覽日期</th>
+              </tr>
+            </thead>
+            <tbody id="stageBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>管理設定</h2>
+        <div class="grid-2">
+          <div>
+            <label>變更管理密碼（不改可空白）</label>
+            <input id="newAdminPassword" type="password" placeholder="空白則維持原密碼">
+          </div>
+          <div>
+            <label>參加者進度表連結</label>
+            <div class="url-box">
+              <input id="publicUrl" type="text" readonly>
+              <button class="secondary" onclick="copyPublicUrl()">複製</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="secondary" onclick="loadDefault()">載入預設節奏</button>
+          <button onclick="generatePreview()">產生預覽</button>
+          <button class="green" onclick="saveSchedule()">寫入讀經進度表</button>
+        </div>
+
+        <div id="actionMsg" class="notice hidden"></div>
+      </section>
+
+      <section id="summaryCard" class="card hidden">
+        <h2>產生結果</h2>
+        <div class="summary">
+          <div class="item">
+            <div class="label">總週數</div>
+            <div id="sumTotalWeeks" class="value">0</div>
+          </div>
+          <div class="item">
+            <div class="label">讀經週</div>
+            <div id="sumReadingWeeks" class="value">0</div>
+          </div>
+          <div class="item">
+            <div class="label">緩衝展覽週</div>
+            <div id="sumBufferWeeks" class="value">0</div>
+          </div>
+          <div class="item">
+            <div class="label">總章數</div>
+            <div id="sumTotalChapters" class="value">0</div>
+          </div>
+          <div class="item">
+            <div class="label">完成日</div>
+            <div id="sumCompletionDate" class="value" style="font-size:20px;">-</div>
+          </div>
+        </div>
+        <div id="summaryWarning" class="notice hidden"></div>
+      </section>
+
+      <section id="previewCard" class="card hidden">
+        <h2>進度表預覽</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>週次</th>
+                <th>日期</th>
+                <th>階段</th>
+                <th>類型</th>
+                <th>讀經範圍</th>
+                <th>章數</th>
+                <th>展覽日</th>
+              </tr>
+            </thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    let adminPassword = '';
+    let books = [];
+    let currentConfig = null;
+    let latestPreviewRows = [];
+
+    function callGasApi(action, payload) {
+      return new Promise(function(resolve, reject) {
+        const callbackName =
+          'readingAdminCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
+        }, 20000);
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = function(response) {
+          cleanup();
+
+          if (!response || response.success !== true) {
+            reject(new Error(response && response.message ? response.message : '讀取失敗'));
+            return;
+          }
+
+          resolve(response.data);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
+        };
+
+        const params = [
+          'action=' + encodeURIComponent(action),
+          'callback=' + encodeURIComponent(callbackName),
+          '_=' + Date.now()
+        ];
+
+        if (payload !== undefined) {
+          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+        }
+
+        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+        script.src = GAS_WEB_APP_URL + separator + params.join('&');
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'notice ' + (type || '');
+      el.classList.remove('hidden');
+    }
+
+    function hideMsg(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function toDateInput(value) {
+      if (!value) return '';
+      return String(value).replace(/\//g, '-');
+    }
+
+    function fromDateInput(value) {
+      if (!value) return '';
+      return String(value).replace(/-/g, '/');
+    }
+
+    function login() {
+      adminPassword = document.getElementById('loginPassword').value.trim();
+
+      if (!adminPassword) {
+        showMsg('loginMsg', '請輸入管理密碼。', 'error');
+        return;
+      }
+
+      const loginBtn = document.getElementById('loginBtn');
+      loginBtn.disabled = true;
+      loginBtn.textContent = '驗證中...';
+
+      showMsg('loginMsg', '驗證中...', '');
+
+      callGasApi('readingVerifyAdminPassword', {
+        password: adminPassword
+      })
+        .then(function(res) {
+          if (!res || !res.success) {
+            showMsg('loginMsg', res && res.message ? res.message : '驗證失敗。', 'error');
+            loginBtn.disabled = false;
+            loginBtn.textContent = '進入設定頁';
+            return;
+          }
+
+          books = res.books || [];
+          currentConfig = res.config;
+
+          document.getElementById('loginCard').classList.add('hidden');
+          document.getElementById('adminArea').classList.remove('hidden');
+
+          buildBookOptions();
+          fillConfig(currentConfig);
+
+          document.getElementById('publicUrl').value =
+            'https://khyp402-ops.github.io/familybiblereading/readingSchedule.html';
+
+          hideMsg('loginMsg');
+        })
+        .catch(function(err) {
+          showMsg('loginMsg', err && err.message ? err.message : String(err), 'error');
+          loginBtn.disabled = false;
+          loginBtn.textContent = '進入設定頁';
+        });
+    }
+
+    function copyPublicUrl() {
+      const input = document.getElementById('publicUrl');
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      showMsg('actionMsg', '已複製參加者進度表連結。', 'success');
+    }
+
+    function buildBookOptions() {
+      const startBook = document.getElementById('startBook');
+      const endBook = document.getElementById('endBook');
+
+      startBook.innerHTML = '';
+      endBook.innerHTML = '';
+
+      books.forEach(function(book) {
+        const option1 = document.createElement('option');
+        option1.value = book.chineseName;
+        option1.textContent = book.chineseName;
+        startBook.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = book.chineseName;
+        option2.textContent = book.chineseName;
+        endBook.appendChild(option2);
+      });
+    }
+
+    function buildChapterOptions(selectId, bookName, selectedChapter) {
+      const select = document.getElementById(selectId);
+      const book = books.find(function(item) {
+        return item.chineseName === bookName;
+      });
+
+      select.innerHTML = '';
+
+      if (!book) return;
+
+      for (let i = 1; i <= Number(book.chapters); i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i + '章';
+        select.appendChild(option);
+      }
+
+      select.value = String(selectedChapter || 1);
+    }
+
+    function syncChapterOptions() {
+      const startBook = document.getElementById('startBook').value;
+      const endBook = document.getElementById('endBook').value;
+
+      const oldStartChapter = document.getElementById('startChapter').value || 1;
+      const oldEndChapter = document.getElementById('endChapter').value || 1;
+
+      buildChapterOptions('startChapter', startBook, oldStartChapter);
+      buildChapterOptions('endChapter', endBook, oldEndChapter);
+    }
+
+    function fillConfig(config) {
+      document.getElementById('planName').value = config.planName || '';
+      document.getElementById('startDate').value = toDateInput(config.startDate);
+      document.getElementById('targetEndDate').value = toDateInput(config.targetEndDate);
+      document.getElementById('weekStartDay').value = String(config.weekStartDay);
+      document.getElementById('startBook').value = config.startBook || '馬太福音';
+      document.getElementById('endBook').value = config.endBook || '啟示錄';
+      document.getElementById('exhibitionWeekday').value = String(config.exhibitionWeekday || 0);
+
+      syncChapterOptions();
+
+      document.getElementById('startChapter').value = String(config.startChapter || 1);
+      document.getElementById('endChapter').value = String(config.endChapter || 22);
+
+      renderStages(config.stages || []);
+    }
+
+    function normalizeExhibitionMode(value) {
+      const text = String(value || '').trim();
+
+      if (text === '指定日期' || text === '手動指定日期') {
+        return '指定日期';
+      }
+
+      return '無';
+    }
+
+    function renderStages(stages) {
+      const tbody = document.getElementById('stageBody');
+      tbody.innerHTML = '';
+
+      stages.forEach(function(stage, index) {
+        const tr = document.createElement('tr');
+        tr.dataset.index = index;
+
+        tr.innerHTML = `
+          <td><input type="checkbox" class="stage-enabled" ${stage.enabled === false ? '' : 'checked'}></td>
+          <td><input type="text" class="stage-name" value="${escapeHtml(stage.name || '')}"></td>
+          <td>${monthSelect('stage-start-month', stage.startMonth)}</td>
+          <td>${monthSelect('stage-end-month', stage.endMonth)}</td>
+          <td><input type="number" class="stage-chapters" min="1" value="${Number(stage.chaptersPerWeek || 3)}"></td>
+          <td><input type="number" class="stage-buffer" min="0" value="${Number(stage.bufferWeeks || 0)}"></td>
+          <td>
+            <select class="stage-exhibition-mode" onchange="toggleManualDate(this)">
+              <option value="無" ${normalizeExhibitionMode(stage.exhibitionMode || '無') === '無' ? 'selected' : ''}>無</option>
+              <option value="指定日期" ${normalizeExhibitionMode(stage.exhibitionMode || '') === '指定日期' ? 'selected' : ''}>指定日期</option>
+            </select>
+          </td>
+          <td>
+            <input type="date" class="stage-manual-exhibition-date" value="${toDateInput(stage.manualExhibitionDate || '')}">
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+
+        const modeSelect = tr.querySelector('.stage-exhibition-mode');
+        toggleManualDate(modeSelect);
+      });
+    }
+
+    function toggleManualDate(select) {
+      const tr = select.closest('tr');
+      const dateInput = tr.querySelector('.stage-manual-exhibition-date');
+
+      if (select.value === '指定日期') {
+        dateInput.disabled = false;
+      } else {
+        dateInput.disabled = true;
+        dateInput.value = '';
+      }
+    }
+
+    function monthSelect(className, value) {
+      let html = `<select class="${className}">`;
+
+      for (let i = 1; i <= 12; i++) {
+        html += `<option value="${i}" ${Number(value) === i ? 'selected' : ''}>${i}月</option>`;
+      }
+
+      html += '</select>';
+      return html;
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function collectConfig() {
+      const stages = Array.from(document.querySelectorAll('#stageBody tr')).map(function(tr, index) {
+        const exhibitionMode = tr.querySelector('.stage-exhibition-mode').value;
+        const manualDate = tr.querySelector('.stage-manual-exhibition-date').value;
+
+        return {
+          id: currentConfig && currentConfig.stages && currentConfig.stages[index] ? currentConfig.stages[index].id : 'stage_' + (index + 1),
+          name: tr.querySelector('.stage-name').value.trim(),
+          startMonth: Number(tr.querySelector('.stage-start-month').value),
+          endMonth: Number(tr.querySelector('.stage-end-month').value),
+          chaptersPerWeek: Number(tr.querySelector('.stage-chapters').value),
+          bufferWeeks: Number(tr.querySelector('.stage-buffer').value),
+          exhibitionMode: exhibitionMode,
+          manualExhibitionDate: exhibitionMode === '指定日期' ? fromDateInput(manualDate) : '',
+          enabled: tr.querySelector('.stage-enabled').checked
+        };
+      });
+
+      return {
+        planId: currentConfig && currentConfig.planId ? currentConfig.planId : 'PLAN001',
+        planName: document.getElementById('planName').value.trim(),
+        startDate: fromDateInput(document.getElementById('startDate').value),
+        targetEndDate: fromDateInput(document.getElementById('targetEndDate').value),
+        weekStartDay: Number(document.getElementById('weekStartDay').value),
+        rangeType: '自訂範圍',
+        startBook: document.getElementById('startBook').value,
+        startChapter: Number(document.getElementById('startChapter').value),
+        endBook: document.getElementById('endBook').value,
+        endChapter: Number(document.getElementById('endChapter').value),
+        exhibitionWeekday: Number(document.getElementById('exhibitionWeekday').value),
+        adminPassword: currentConfig && currentConfig.adminPassword ? currentConfig.adminPassword : '',
+        newAdminPassword: document.getElementById('newAdminPassword').value.trim(),
+        stages: stages
+      };
+    }
+
+    function validateConfig(config) {
+      const manualMissing = config.stages.filter(function(stage) {
+        return stage.enabled && stage.exhibitionMode === '指定日期' && !stage.manualExhibitionDate;
+      });
+
+      if (manualMissing.length) {
+        return '以下階段選了「指定日期」，但沒有填展覽日：\n' +
+          manualMissing.map(function(stage) {
+            return '・' + stage.name;
+          }).join('\n');
+      }
+
+      return '';
+    }
+
+    function loadDefault() {
+      callGasApi('readingLoadDefaultConfig')
+        .then(function(res) {
+          if (!res || !res.success) {
+            showMsg('actionMsg', '載入預設失敗。', 'error');
+            return;
+          }
+
+          currentConfig = res.config;
+          books = res.books || books;
+          buildBookOptions();
+          fillConfig(currentConfig);
+          showMsg('actionMsg', '已載入預設節奏。尚未寫入試算表。', 'success');
+        })
+        .catch(function(err) {
+          showMsg('actionMsg', err && err.message ? err.message : String(err), 'error');
+        });
+    }
+
+    function generatePreview() {
+      const config = collectConfig();
+      const error = validateConfig(config);
+
+      if (error) {
+        showMsg('actionMsg', error, 'error');
+        return;
+      }
+
+      showMsg('actionMsg', '正在產生預覽...', '');
+
+      callGasApi('readingGeneratePreview', {
+        config: config
+      })
+        .then(function(res) {
+          if (!res || !res.success) {
+            showMsg('actionMsg', '產生失敗。', 'error');
+            return;
+          }
+
+          latestPreviewRows = res.rows || [];
+          renderSummary(res.summary || {});
+          renderPreview(latestPreviewRows);
+
+          document.getElementById('summaryCard').classList.remove('hidden');
+          document.getElementById('previewCard').classList.remove('hidden');
+
+          showMsg('actionMsg', '預覽已產生。確認後可寫入讀經進度表。', 'success');
+        })
+        .catch(function(err) {
+          showMsg('actionMsg', err && err.message ? err.message : String(err), 'error');
+        });
+    }
+
+    function saveSchedule() {
+      const config = collectConfig();
+      const error = validateConfig(config);
+
+      if (error) {
+        showMsg('actionMsg', error, 'error');
+        return;
+      }
+
+      if (!confirm('確認要寫入讀經進度表？原本的讀經進度表會被覆蓋。')) {
+        return;
+      }
+
+      showMsg('actionMsg', '正在寫入讀經進度表...', '');
+
+      callGasApi('readingSavePlanAndSchedule', {
+        password: adminPassword,
+        config: config
+      })
+        .then(function(res) {
+          if (!res || !res.success) {
+            showMsg('actionMsg', res && res.message ? res.message : '寫入失敗。', 'error');
+            return;
+          }
+
+          currentConfig = res.config;
+          latestPreviewRows = res.rows || [];
+
+          renderSummary(res.summary || {});
+          renderPreview(latestPreviewRows);
+
+          document.getElementById('summaryCard').classList.remove('hidden');
+          document.getElementById('previewCard').classList.remove('hidden');
+
+          document.getElementById('publicUrl').value =
+            'https://khyp402-ops.github.io/familybiblereading/readingSchedule.html';
+
+          document.getElementById('newAdminPassword').value = '';
+          showMsg('actionMsg', '已寫入讀經進度表。', 'success');
+        })
+        .catch(function(err) {
+          showMsg('actionMsg', err && err.message ? err.message : String(err), 'error');
+        });
+    }
+
+    function renderSummary(summary) {
+      document.getElementById('sumTotalWeeks').textContent = summary.totalWeeks || 0;
+      document.getElementById('sumReadingWeeks').textContent = summary.readingWeeks || 0;
+      document.getElementById('sumBufferWeeks').textContent = summary.bufferWeeks || 0;
+      document.getElementById('sumTotalChapters').textContent = summary.totalChapters || 0;
+      document.getElementById('sumCompletionDate').textContent = summary.completionDate || '-';
+
+      if (summary.targetWarning) {
+        showMsg('summaryWarning', summary.targetWarning, 'error');
+      } else {
+        document.getElementById('summaryWarning').classList.add('hidden');
+      }
+    }
+
+    function renderPreview(rows) {
+      const tbody = document.getElementById('previewBody');
+      tbody.innerHTML = '';
+
+      rows.forEach(function(row) {
+        const tr = document.createElement('tr');
+        const typeBadge = row.weekType === '緩衝展覽週'
+          ? '<span class="badge buffer">緩衝展覽週</span>'
+          : '<span class="badge">讀經週</span>';
+
+        tr.innerHTML = `
+          <td>${row.weekNo}</td>
+          <td>${row.startDate}–${row.endDate}</td>
+          <td>${escapeHtml(row.stageName)}</td>
+          <td>${typeBadge}</td>
+          <td>${escapeHtml(row.readingRange)}</td>
+          <td>${row.chapterCount}</td>
+          <td>${row.exhibitionDate || ''}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
