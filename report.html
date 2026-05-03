@@ -1,0 +1,410 @@
+<script>
+  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+  let systemData = {
+    groups: [],
+    books: [],
+    totalChapters: 0,
+    expectedProgress: null
+  };
+
+  let currentProgress = null;
+  let selectedCompleted = 0;
+  let lockedCompleted = 0;
+
+  window.onload = function() {
+    callGasApi('getReportSystemInitData')
+      .then(function(data) {
+        systemData = data;
+        renderGroupOptions();
+        renderBookOptions();
+        document.getElementById('formStatus').textContent = '';
+      })
+      .catch(function(err) {
+        showError(err);
+      });
+  };
+
+  function callGasApi(action, payload) {
+    return new Promise(function(resolve, reject) {
+      const callbackName =
+        'reportCallback_' +
+        Date.now() +
+        '_' +
+        Math.random().toString(36).slice(2);
+
+      const script = document.createElement('script');
+
+      const timer = setTimeout(function() {
+        cleanup();
+        reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
+      }, 20000);
+
+      function cleanup() {
+        clearTimeout(timer);
+
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+
+        try {
+          delete window[callbackName];
+        } catch (e) {
+          window[callbackName] = undefined;
+        }
+      }
+
+      window[callbackName] = function(response) {
+        cleanup();
+
+        if (!response || response.success !== true) {
+          reject(new Error(response && response.message ? response.message : '讀取失敗'));
+          return;
+        }
+
+        resolve(response.data);
+      };
+
+      script.onerror = function() {
+        cleanup();
+        reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
+      };
+
+      const params = [
+        'action=' + encodeURIComponent(action),
+        'callback=' + encodeURIComponent(callbackName),
+        '_=' + Date.now()
+      ];
+
+      if (payload !== undefined) {
+        params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+      }
+
+      const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+      script.src = GAS_WEB_APP_URL + separator + params.join('&');
+
+      document.body.appendChild(script);
+    });
+  }
+
+  function renderGroupOptions() {
+    const select = document.getElementById('groupSelect');
+    select.innerHTML = '<option value="">請選擇報名小組編號</option>';
+
+    systemData.groups.forEach(function(item) {
+      const option = document.createElement('option');
+      option.value = item.group;
+      option.textContent = item.displayText;
+      select.appendChild(option);
+    });
+  }
+
+  function renderBookOptions() {
+    const select = document.getElementById('bookSelect');
+    select.innerHTML = '<option value="">請選擇卷名</option>';
+
+    systemData.books.forEach(function(item) {
+      const option = document.createElement('option');
+      option.value = item.book;
+      option.textContent = item.book + '（共 ' + item.totalChapters + ' 章）';
+      option.dataset.total = item.totalChapters;
+      select.appendChild(option);
+    });
+  }
+
+  function handleGroupChange() {
+    const group = document.getElementById('groupSelect').value;
+
+    selectedCompleted = 0;
+    lockedCompleted = 0;
+    renderChapterCircles();
+
+    if (group) {
+      queryProgress(function() {
+        renderChapterCircles();
+      });
+    }
+  }
+
+  function handleBookChange() {
+    selectedCompleted = 0;
+    renderChapterCircles();
+  }
+
+  function renderChapterCircles() {
+    const grid = document.getElementById('chapterGrid');
+    const hint = document.getElementById('chapterHint');
+    const book = document.getElementById('bookSelect').value;
+    const group = document.getElementById('groupSelect').value;
+
+    grid.innerHTML = '';
+
+    if (!group || !book) {
+      hint.textContent = '請先選擇報名小組編號與卷名';
+      return;
+    }
+
+    const bookData = systemData.books.find(function(item) {
+      return item.book === book;
+    });
+
+    if (!bookData) {
+      hint.textContent = '找不到卷名資料';
+      return;
+    }
+
+    lockedCompleted = getLockedCompleted(book);
+    selectedCompleted = Math.max(selectedCompleted, lockedCompleted);
+
+    for (let i = 1; i <= bookData.totalChapters; i++) {
+      const circle = document.createElement('div');
+      circle.className = 'chapter-circle';
+      circle.textContent = i;
+
+      if (i <= lockedCompleted) {
+        circle.classList.add('locked');
+      } else if (i <= selectedCompleted) {
+        circle.classList.add('selected');
+      }
+
+      if (i > lockedCompleted) {
+        circle.onclick = function() {
+          selectedCompleted = i;
+          renderChapterCircles();
+        };
+      }
+
+      grid.appendChild(circle);
+    }
+
+    if (lockedCompleted > 0) {
+      hint.textContent = '已回報到第 ' + lockedCompleted + ' 章；灰色章數不能更改。';
+    } else {
+      hint.textContent = '請點選已完成到第幾章。';
+    }
+  }
+
+  function getLockedCompleted(book) {
+    if (!currentProgress || !currentProgress.bookProgress) return 0;
+
+    const item = currentProgress.bookProgress.find(function(row) {
+      return row.book === book;
+    });
+
+    return item ? Number(item.completedChapters || 0) : 0;
+  }
+
+  function submitReport() {
+    const group = document.getElementById('groupSelect').value.trim();
+    const book = document.getElementById('bookSelect').value.trim();
+
+    if (!group) {
+      setStatus('請選擇報名小組編號', true);
+      return;
+    }
+
+    if (!book) {
+      setStatus('請選擇卷名', true);
+      return;
+    }
+
+    if (!selectedCompleted || selectedCompleted <= lockedCompleted) {
+      setStatus('請點選新的完成章數', true);
+      return;
+    }
+
+    document.getElementById('submitBtn').disabled = true;
+    setStatus('送出中...', false);
+
+    callGasApi('submitReadingReport', {
+      group: group,
+      book: book,
+      completedChapters: selectedCompleted
+    })
+      .then(function(progressData) {
+        document.getElementById('submitBtn').disabled = false;
+        currentProgress = progressData;
+
+        renderProgress(progressData);
+        showDoneOverlay(progressData.totalPercent);
+
+        resetReportFormAfterSubmit();
+      })
+      .catch(function(err) {
+        document.getElementById('submitBtn').disabled = false;
+        showError(err);
+      });
+  }
+
+  function resetReportFormAfterSubmit() {
+    document.getElementById('groupSelect').value = '';
+    document.getElementById('bookSelect').value = '';
+
+    selectedCompleted = 0;
+    lockedCompleted = 0;
+    currentProgress = null;
+
+    document.getElementById('chapterGrid').innerHTML = '';
+    document.getElementById('chapterHint').textContent = '請先選擇報名小組編號與卷名';
+    setStatus('', false);
+  }
+
+  function queryProgress(callback) {
+    const group = document.getElementById('groupSelect').value.trim();
+
+    if (!group) {
+      setStatus('請先選擇報名小組編號', true);
+      return;
+    }
+
+    setStatus('查詢中...', false);
+
+    callGasApi('getProgressByGroup', { group: group })
+      .then(function(data) {
+        currentProgress = data;
+        setStatus('', false);
+        renderProgress(data);
+        renderChapterCircles();
+
+        if (typeof callback === 'function') {
+          callback();
+        }
+      })
+      .catch(function(err) {
+        showError(err);
+      });
+  }
+
+  function renderProgress(data) {
+    const area = document.getElementById('resultArea');
+    const expected = data.expectedProgress || systemData.expectedProgress || null;
+
+    let html = '';
+
+    html += '<div class="summary-box">';
+
+    html += '<div class="summary-item">';
+    html += '<div class="summary-number">' + data.completedTotal + '</div>';
+    html += '<div class="summary-label">新約已完成章數</div>';
+    html += '</div>';
+
+    html += '<div class="summary-item">';
+    html += '<div class="summary-number">' + data.totalChapters + '</div>';
+    html += '<div class="summary-label">新約總章數</div>';
+    html += '</div>';
+
+    html += '<div class="summary-item">';
+    html += '<div class="summary-number">' + data.totalPercent + '%</div>';
+    html += '<div class="summary-label">新約總完成百分比</div>';
+    html += '<div class="progress-wrap">';
+    html += '<div class="progress-bar" style="width:' + safePercent(data.totalPercent) + '%"></div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += renderExpectedProgressItem(expected);
+
+    html += '</div>';
+
+    html += '<table>';
+    html += '<thead>';
+    html += '<tr>';
+    html += '<th>卷名</th>';
+    html += '<th>完成章數</th>';
+    html += '<th>總章數</th>';
+    html += '<th>百分比</th>';
+    html += '<th>進度</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody>';
+
+    data.bookProgress.forEach(function(item) {
+      html += '<tr>';
+      html += '<td>' + escapeHtml(item.book) + '</td>';
+      html += '<td>' + item.completedChapters + '</td>';
+      html += '<td>' + item.totalChapters + '</td>';
+      html += '<td>' + item.percent + '%</td>';
+      html += '<td>';
+      html += '<div class="small-progress">';
+      html += '<div class="small-progress-inner" style="width:' + safePercent(item.percent) + '%"></div>';
+      html += '</div>';
+      html += '</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody>';
+    html += '</table>';
+
+    area.innerHTML = html;
+  }
+
+  function renderExpectedProgressItem(expected) {
+    let html = '';
+
+    html += '<div class="summary-item expected">';
+
+    if (expected && expected.available) {
+      html += '<div class="summary-number">' + expected.expectedPercent + '%</div>';
+      html += '<div class="summary-label">今日正常進度</div>';
+      html += '<div class="progress-wrap">';
+      html += '<div class="progress-bar" style="width:' + safePercent(expected.expectedPercent) + '%"></div>';
+      html += '</div>';
+      html += '<div class="summary-note">';
+      html += '依進度，本週應完成共 ' + expected.expectedChapters + ' 章';
+      html += '</div>';
+    } else {
+      html += '<div class="summary-number">-</div>';
+      html += '<div class="summary-label">今日正常進度</div>';
+      html += '<div class="summary-note">' + escapeHtml(expected && expected.message ? expected.message : '無法讀取讀經進度表') + '</div>';
+    }
+
+    html += '</div>';
+
+    return html;
+  }
+
+  function safePercent(value) {
+    const n = Number(value || 0);
+    if (n < 0) return 0;
+    if (n > 100) return 100;
+    return n;
+  }
+
+  function showDoneOverlay(percent) {
+    const overlay = document.getElementById('doneOverlay');
+    const bar = document.getElementById('overlayProgressInner');
+    const percentText = document.getElementById('overlayPercent');
+
+    overlay.style.display = 'flex';
+    bar.style.width = '0%';
+    percentText.textContent = '0%';
+
+    setTimeout(function() {
+      bar.style.width = safePercent(percent) + '%';
+      percentText.textContent = percent + '%';
+    }, 100);
+
+    setTimeout(function() {
+      overlay.style.display = 'none';
+    }, 2200);
+  }
+
+  function setStatus(message, isError) {
+    const status = document.getElementById('formStatus');
+    status.textContent = message || '';
+    status.className = isError ? 'status error' : 'status';
+  }
+
+  function showError(err) {
+    const message = err && err.message ? err.message : String(err);
+    setStatus(message, true);
+  }
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+</script>
