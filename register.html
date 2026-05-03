@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <style>
+    :root {
+      --teal-dark: #27565b;
+      --teal: #477b7a;
+      --teal-soft: #d7e7e3;
+
+      --wood: #b9865d;
+      --wood-light: #d8b083;
+      --wood-soft: #f4e6d5;
+      --wood-dark: #7b5134;
+
+      --charcoal: #232625;
+      --charcoal-2: #303433;
+      --ink: #27302e;
+
+      --cream: #f7f1e7;
+      --paper: #fffaf2;
+      --line: rgba(69, 55, 42, 0.18);
+
+      --danger: #b94132;
+      --success: #476f48;
+
+      --shadow: 0 18px 46px rgba(24, 31, 30, 0.22);
+      --soft-shadow: 0 10px 28px rgba(30, 36, 34, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      min-height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 20%, rgba(215, 176, 131, 0.28), transparent 34%),
+        radial-gradient(circle at 88% 0%, rgba(71, 123, 122, 0.22), transparent 36%),
+        linear-gradient(135deg, #254f55 0%, #376f70 34%, #e7d4bd 34.2%, #f1e2ce 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.05), transparent 20%, rgba(0,0,0,0.08)),
+        repeating-linear-gradient(
+          90deg,
+          rgba(97, 64, 39, 0.035) 0px,
+          rgba(97, 64, 39, 0.035) 1px,
+          transparent 1px,
+          transparent 84px
+        );
+      opacity: 0.8;
+      z-index: -1;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+    }
+
+    .page-shell {
+      width: 100%;
+      min-height: 100vh;
+      padding: 34px 18px 72px;
+    }
+
+    .workspace {
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+      background:
+        linear-gradient(180deg, rgba(255,250,242,0.96), rgba(246,235,221,0.97));
+      border: 1px solid rgba(255,255,255,0.56);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .workspace::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 18px;
+      background:
+        linear-gradient(90deg, #6b432b, #c99568 18%, #8e5c3b 38%, #d3a477 61%, #68422e 100%);
+      opacity: 0.92;
+    }
+
+    .hero {
+      position: relative;
+      padding: 52px 34px 30px;
+      background:
+        linear-gradient(135deg, rgba(35,38,37,0.94), rgba(45,54,52,0.95)),
+        linear-gradient(90deg, #2d2f2e, #444947);
+      color: #fffaf2;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 18px 24px auto auto;
+      width: 210px;
+      height: 116px;
+      border-radius: 0 0 0 28px;
+      background:
+        linear-gradient(90deg, rgba(190,140,96,0.95), rgba(220,177,132,0.92)),
+        repeating-linear-gradient(90deg, rgba(70,45,30,0.1) 0 1px, transparent 1px 30px);
+      opacity: 0.36;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: 48px;
+      bottom: -28px;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      border: 26px solid rgba(71, 123, 122, 0.42);
+    }
+
+    h1 {
+      position: relative;
+      margin: 0;
+      text-align: left;
+      font-size: 42px;
+      line-height: 1.25;
+      letter-spacing: 0.04em;
+      font-weight: 900;
+      color: #fff8ea;
+    }
+
+    .subtitle {
+      position: relative;
+      margin-top: 12px;
+      font-size: 20px;
+      line-height: 1.6;
+      color: rgba(255,250,242,0.78);
+    }
+
+    .content {
+      padding: 30px 34px 38px;
+    }
+
+    .description-box {
+      background:
+        linear-gradient(135deg, rgba(244,230,213,0.96), rgba(255,250,242,0.96));
+      border: 1px solid rgba(123,81,52,0.22);
+      border-left: 10px solid var(--wood);
+      color: #5b3a25;
+      border-radius: 22px;
+      padding: 22px 24px;
+      margin: 0 0 26px;
+      font-size: 21px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .card {
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(255,250,242,0.98), rgba(250,242,232,0.98));
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 26px;
+      margin-bottom: 24px;
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 8px;
+      background:
+        linear-gradient(90deg, var(--wood-dark), var(--wood), var(--wood-light));
+      opacity: 0.9;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 27px;
+      font-weight: 900;
+      margin: 4px 0 20px;
+      color: #3f2a1c;
+      letter-spacing: 0.03em;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 12px;
+      height: 32px;
+      border-radius: 99px;
+      background: var(--teal);
+      box-shadow: 0 0 0 6px rgba(71,123,122,0.12);
+    }
+
+    label {
+      display: block;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 20px 0 9px;
+      color: #34413d;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      font-size: 22px;
+      padding: 17px 16px;
+      border: 1.8px solid rgba(87, 68, 51, 0.22);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.9);
+      color: #27302e;
+      outline: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.85),
+        0 8px 18px rgba(65, 51, 38, 0.07);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    select {
+      min-height: 62px;
+      text-align: center;
+      text-align-last: center;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #6c4b32 50%),
+        linear-gradient(135deg, #6c4b32 50%, transparent 50%),
+        linear-gradient(90deg, rgba(184,134,93,0.18), rgba(184,134,93,0.18));
+      background-position:
+        calc(100% - 26px) 50%,
+        calc(100% - 17px) 50%,
+        calc(100% - 58px) 50%;
+      background-size:
+        9px 9px,
+        9px 9px,
+        1px 32px;
+      background-repeat: no-repeat;
+      padding-right: 68px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--teal);
+      background: #fffdf8;
+      box-shadow:
+        0 0 0 5px rgba(71,123,122,0.13),
+        0 10px 24px rgba(65, 51, 38, 0.09);
+    }
+
+    textarea {
+      min-height: 132px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .radio-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .radio-row.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .radio-btn {
+      position: relative;
+      font-size: 24px;
+      font-weight: 900;
+      text-align: center;
+      padding: 19px 10px;
+      border-radius: 18px;
+      border: 1.8px solid rgba(123,81,52,0.25);
+      background:
+        linear-gradient(180deg, #fffaf2, #f4e6d5);
+      color: #5b3a25;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 8px 18px rgba(65, 51, 38, 0.08);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .radio-btn:active {
+      transform: scale(0.985);
+    }
+
+    .radio-btn.active {
+      background:
+        linear-gradient(135deg, #7b5134, #b9865d 52%, #d8b083);
+      color: #fffaf2;
+      border-color: rgba(91,58,37,0.42);
+      box-shadow: 0 12px 24px rgba(91, 58, 37, 0.24);
+    }
+
+    .child-card {
+      position: relative;
+      border: 1.8px solid rgba(123,81,52,0.18);
+      border-radius: 22px;
+      padding: 20px;
+      margin-top: 18px;
+      background:
+        linear-gradient(135deg, rgba(255,250,242,0.96), rgba(244,230,213,0.9));
+      box-shadow: 0 8px 22px rgba(65,51,38,0.08);
+      overflow: hidden;
+    }
+
+    .child-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      background: var(--teal);
+      opacity: 0.78;
+    }
+
+    .child-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      font-size: 23px;
+      font-weight: 900;
+      color: #3f2a1c;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    .remove-child {
+      border: none;
+      background: var(--danger);
+      color: white;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 11px 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(185,65,50,0.22);
+    }
+
+    .add-btn,
+    .submit-btn {
+      width: 100%;
+      border: none;
+      border-radius: 22px;
+      font-size: 27px;
+      font-weight: 900;
+      padding: 21px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+
+    .add-btn:active,
+    .submit-btn:active {
+      transform: scale(0.988);
+    }
+
+    .add-btn {
+      background:
+        linear-gradient(135deg, rgba(215,231,227,0.95), rgba(255,250,242,0.95));
+      color: #27565b;
+      border: 1.8px solid rgba(71,123,122,0.24);
+      margin-top: 22px;
+      box-shadow: 0 10px 22px rgba(39,86,91,0.12);
+    }
+
+    .submit-btn {
+      background:
+        linear-gradient(135deg, #6f452c, #b9865d 48%, #d8b083);
+      color: #fffaf2;
+      margin-top: 6px;
+      box-shadow: 0 18px 34px rgba(91,58,37,0.32);
+    }
+
+    .submit-btn:disabled {
+      background: linear-gradient(135deg, #8a8d8b, #a9aaa8);
+      color: #f4f4f4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .hint {
+      font-size: 19px;
+      color: #60706c;
+      margin-top: 12px;
+      line-height: 1.6;
+      background: rgba(71,123,122,0.09);
+      border-left: 6px solid rgba(71,123,122,0.52);
+      border-radius: 14px;
+      padding: 13px 15px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at center, rgba(39,86,91,0.35), rgba(0,0,0,0.66));
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+
+    .overlay-box {
+      width: 100%;
+      max-width: 640px;
+      background:
+        linear-gradient(180deg, #fffaf2, #f1dfc9);
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: 30px;
+      padding: 42px 28px 30px;
+      text-align: center;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.36);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .overlay-box::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 12px;
+      background:
+        linear-gradient(90deg, var(--wood-dark), var(--wood), var(--wood-light), var(--teal));
+    }
+
+    .overlay-title {
+      font-size: 36px;
+      font-weight: 900;
+      color: #3f2a1c;
+      margin-bottom: 18px;
+      line-height: 1.35;
+    }
+
+    .overlay-text {
+      font-size: 26px;
+      line-height: 1.55;
+      color: #34413d;
+      margin-bottom: 30px;
+      white-space: pre-wrap;
+    }
+
+    .overlay-btn {
+      width: 100%;
+      border: none;
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, #27565b, #477b7a);
+      color: #fffaf2;
+      font-size: 26px;
+      font-weight: 900;
+      padding: 19px;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(39,86,91,0.26);
+    }
+
+    .overlay-btn.gray {
+      background:
+        linear-gradient(135deg, #5f6361, #8b8f8d);
+    }
+
+    .overlay-btn.red {
+      background:
+        linear-gradient(135deg, #8f3026, #b94132);
+    }
+
+    .overlay-btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .footer-space {
+      height: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .page-shell {
+        padding: 18px 10px 56px;
+      }
+
+      .workspace {
+        border-radius: 26px;
+      }
+
+      .hero {
+        padding: 48px 22px 26px;
+      }
+
+      .hero::before {
+        width: 150px;
+        height: 90px;
+        right: 14px;
+      }
+
+      h1 {
+        font-size: 34px;
+        text-align: center;
+      }
+
+      .subtitle {
+        text-align: center;
+        font-size: 18px;
+      }
+
+      .content {
+        padding: 22px 14px 28px;
+      }
+
+      .description-box {
+        font-size: 21px;
+        padding: 20px;
+      }
+
+      .card {
+        padding: 22px 16px;
+        border-radius: 23px;
+      }
+
+      .section-title {
+        font-size: 26px;
+      }
+
+      label {
+        font-size: 22px;
+      }
+
+      input,
+      select,
+      textarea {
+        font-size: 22px;
+        padding: 17px 14px;
+      }
+
+      .radio-row {
+        gap: 12px;
+      }
+
+      .radio-btn {
+        font-size: 23px;
+        padding: 18px 8px;
+      }
+
+      .add-btn,
+      .submit-btn {
+        font-size: 26px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .page-shell {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .workspace {
+        border-radius: 22px;
+      }
+
+      .hero {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .content {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .card {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      input,
+      select,
+      textarea {
+        font-size: 21px;
+      }
+
+      .radio-btn {
+        font-size: 21px;
+      }
+
+      .overlay-box {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .overlay-title {
+        font-size: 34px;
+      }
+
+      .overlay-text {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-shell">
+    <main class="workspace">
+      <section class="hero">
+        <h1>青少年共讀聖經報名系統</h1>
+        <div class="subtitle">填寫報名資料，完成後系統會建立報名小組編號。</div>
+      </section>
+
+      <section class="content">
+        <div id="descriptionBox" class="description-box hidden"></div>
+
+        <div class="card">
+          <div class="section-title">報名資料</div>
+
+          <label>選擇照顧區</label>
+          <select id="areaSelect" onchange="handleAreaChange()">
+            <option value="">載入中...</option>
+          </select>
+
+          <label>選擇大區</label>
+          <select id="districtSelect">
+            <option value="">請先選擇照顧區</option>
+          </select>
+
+          <label>填表者姓名</label>
+          <input id="applicantName" type="text" placeholder="請輸入姓名" autocomplete="name">
+
+          <label>是否願意定期收到報表</label>
+          <div class="radio-row">
+            <div id="subscribeYesBtn" class="radio-btn" onclick="selectSubscribeReport('是')">是</div>
+            <div id="subscribeNoBtn" class="radio-btn" onclick="selectSubscribeReport('否')">否</div>
+          </div>
+          <input id="subscribeReport" type="hidden">
+
+          <div id="emailBlock" class="hidden">
+            <label>E-mail</label>
+            <input id="email" type="email" placeholder="請輸入 E-mail" autocomplete="email">
+          </div>
+
+          <label>填表者身份</label>
+          <div class="radio-row three">
+            <div id="roleYouthBtn" class="radio-btn" onclick="selectApplicantRole('青少年')">青少年</div>
+            <div id="roleParentBtn" class="radio-btn" onclick="selectApplicantRole('家長')">家長</div>
+            <div id="roleWorkerBtn" class="radio-btn" onclick="selectApplicantRole('服事者')">服事者</div>
+          </div>
+          <input id="applicantRole" type="hidden">
+        </div>
+
+        <div id="youthSection" class="card hidden">
+          <div class="section-title">青少年資料</div>
+
+          <label>性別</label>
+          <select id="youthGender">
+            <option value="">請選擇</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+
+          <label>學籍</label>
+          <select id="youthSchool">
+            <option value="">請選擇</option>
+            <option value="國中">國中</option>
+            <option value="高中">高中</option>
+            <option value="五專">五專</option>
+          </select>
+
+          <label>陪讀者身份</label>
+          <select id="companionRole" onchange="handleCompanionRoleChange()">
+            <option value="">請選擇</option>
+            <option value="家長">家長</option>
+            <option value="服事者">服事者</option>
+          </select>
+
+          <label id="companionNameLabel">家長姓名或服事者姓名</label>
+          <input id="companionName" type="text" placeholder="請輸入姓名">
+
+          <div id="unableReasonBlock" class="hidden">
+            <label>家長無法陪讀原因簡述</label>
+            <textarea id="unableReason" placeholder="請簡述原因"></textarea>
+          </div>
+        </div>
+
+        <div id="parentSection" class="card hidden">
+          <div class="section-title">孩子資料</div>
+
+          <div id="childrenContainer"></div>
+
+          <button class="add-btn" type="button" onclick="addChild()">＋ 增加小孩</button>
+
+          <div id="workerUnableReasonBlock" class="hidden">
+            <label>家長無法陪讀原因簡述</label>
+            <textarea id="workerUnableReason" placeholder="請簡述原因"></textarea>
+          </div>
+
+          <div class="hint">
+            家長一次報名多位孩子時，系統會給同一個報名小組編號。
+          </div>
+        </div>
+
+        <button id="submitBtn" class="submit-btn" type="button" onclick="submitForm()">提交報名</button>
+
+        <div class="footer-space"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="warningOverlay" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">提醒</div>
+      <div class="overlay-text">以家庭報名優先，家長無法陪伴才選擇此項。服事者會根據情況跟家長確認。</div>
+      <button class="overlay-btn" onclick="closeWarning()">我知道了</button>
+    </div>
+  </div>
+
+  <div id="errorOverlay" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">資料未完成</div>
+      <div id="errorOverlayText" class="overlay-text"></div>
+      <button class="overlay-btn red" onclick="closeError()">我知道了</button>
+    </div>
+  </div>
+
+  <div id="successOverlay" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">報名完成</div>
+      <div id="successText" class="overlay-text"></div>
+
+      <div class="overlay-btn-row">
+        <button class="overlay-btn" onclick="nextGroup()">報名下一組</button>
+        <button id="exitPageBtn" class="overlay-btn gray" onclick="exitPage()">離開網頁</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    let districtsByArea = {};
+    let exitButtonUrl = '';
+
+    window.onload = function () {
+      callGasApi('getInitialData')
+        .then(initForm)
+        .catch(showError);
+    };
+
+    function callGasApi(action, payload) {
+      return new Promise(function(resolve, reject) {
+        const callbackName =
+          'gasCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
+        }, 20000);
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = function(response) {
+          cleanup();
+
+          if (!response || response.success !== true) {
+            reject(new Error(response && response.message ? response.message : '讀取失敗'));
+            return;
+          }
+
+          resolve(response.data);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
+        };
+
+        const params = [
+          'action=' + encodeURIComponent(action),
+          'callback=' + encodeURIComponent(callbackName),
+          '_=' + Date.now()
+        ];
+
+        if (payload !== undefined) {
+          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+        }
+
+        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+        script.src = GAS_WEB_APP_URL + separator + params.join('&');
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function initForm(data) {
+      districtsByArea = data.districtsByArea || {};
+      exitButtonUrl = data.exitButtonUrl || '';
+
+      const exitPageBtn = document.getElementById('exitPageBtn');
+      if (exitPageBtn) {
+        exitPageBtn.textContent = data.exitButtonText || '離開網頁';
+      }
+
+      const descriptionBox = document.getElementById('descriptionBox');
+      const descriptionText = data.descriptionText || '';
+
+      if (descriptionText.trim() !== '') {
+        descriptionBox.textContent = descriptionText;
+        descriptionBox.classList.remove('hidden');
+      } else {
+        descriptionBox.textContent = '';
+        descriptionBox.classList.add('hidden');
+      }
+
+      const areaSelect = document.getElementById('areaSelect');
+      areaSelect.innerHTML = '<option value="">請選擇照顧區</option>';
+
+      (data.areas || []).forEach(area => {
+        const option = document.createElement('option');
+        option.value = area;
+        option.textContent = area;
+        areaSelect.appendChild(option);
+      });
+    }
+
+    function handleAreaChange() {
+      const area = document.getElementById('areaSelect').value;
+      const districtSelect = document.getElementById('districtSelect');
+
+      districtSelect.innerHTML = '<option value="">請選擇大區</option>';
+
+      if (!area || !districtsByArea[area]) {
+        districtSelect.innerHTML = '<option value="">請先選擇照顧區</option>';
+        return;
+      }
+
+      districtsByArea[area].forEach(district => {
+        const option = document.createElement('option');
+        option.value = district;
+        option.textContent = district;
+        districtSelect.appendChild(option);
+      });
+    }
+
+    function selectSubscribeReport(value) {
+      document.getElementById('subscribeReport').value = value;
+
+      document.getElementById('subscribeYesBtn').classList.toggle('active', value === '是');
+      document.getElementById('subscribeNoBtn').classList.toggle('active', value === '否');
+
+      const emailBlock = document.getElementById('emailBlock');
+      const email = document.getElementById('email');
+
+      if (value === '是') {
+        emailBlock.classList.remove('hidden');
+      } else {
+        emailBlock.classList.add('hidden');
+        email.value = '';
+      }
+    }
+
+    function selectApplicantRole(role) {
+      document.getElementById('applicantRole').value = role;
+
+      document.getElementById('roleYouthBtn').classList.toggle('active', role === '青少年');
+      document.getElementById('roleParentBtn').classList.toggle('active', role === '家長');
+      document.getElementById('roleWorkerBtn').classList.toggle('active', role === '服事者');
+
+      document.getElementById('youthSection').classList.toggle('hidden', role !== '青少年');
+      document.getElementById('parentSection').classList.toggle('hidden', role !== '家長' && role !== '服事者');
+
+      document.getElementById('workerUnableReasonBlock').classList.toggle('hidden', role !== '服事者');
+
+      if ((role === '家長' || role === '服事者') && document.querySelectorAll('.child-card').length === 0) {
+        addChild();
+      }
+
+      if (role === '服事者') {
+        document.getElementById('warningOverlay').classList.remove('hidden');
+      } else {
+        document.getElementById('workerUnableReason').value = '';
+      }
+    }
+
+    function handleCompanionRoleChange() {
+      const role = document.getElementById('companionRole').value;
+      const label = document.getElementById('companionNameLabel');
+      const unableReasonBlock = document.getElementById('unableReasonBlock');
+
+      if (role === '家長') {
+        label.textContent = '家長姓名';
+        unableReasonBlock.classList.add('hidden');
+        document.getElementById('unableReason').value = '';
+      } else if (role === '服事者') {
+        label.textContent = '服事者姓名';
+        unableReasonBlock.classList.remove('hidden');
+        document.getElementById('warningOverlay').classList.remove('hidden');
+      } else {
+        label.textContent = '家長姓名或服事者姓名';
+        unableReasonBlock.classList.add('hidden');
+      }
+    }
+
+    function addChild() {
+      const container = document.getElementById('childrenContainer');
+      const index = container.querySelectorAll('.child-card').length + 1;
+
+      const div = document.createElement('div');
+      div.className = 'child-card';
+
+      div.innerHTML = `
+        <div class="child-header">
+          <span>孩子 ${index}</span>
+          ${index === 1 ? '' : '<button type="button" class="remove-child">刪除</button>'}
+        </div>
+
+        <label>姓名</label>
+        <input class="child-name" type="text" placeholder="請輸入孩子姓名">
+
+        <label>性別</label>
+        <select class="child-gender">
+          <option value="">請選擇</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+
+        <label>學籍</label>
+        <select class="child-school">
+          <option value="">請選擇</option>
+          <option value="國中">國中</option>
+          <option value="高中">高中</option>
+          <option value="五專">五專</option>
+        </select>
+      `;
+
+      container.appendChild(div);
+
+      const removeBtn = div.querySelector('.remove-child');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', function () {
+          div.remove();
+          renumberChildren();
+        });
+      }
+    }
+
+    function renumberChildren() {
+      const cards = document.querySelectorAll('.child-card');
+
+      cards.forEach((card, index) => {
+        card.querySelector('.child-header span').textContent = '孩子 ' + (index + 1);
+
+        const header = card.querySelector('.child-header');
+        let removeBtn = card.querySelector('.remove-child');
+
+        if (index === 0 && removeBtn) {
+          removeBtn.remove();
+        }
+
+        if (index > 0 && !removeBtn) {
+          removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'remove-child';
+          removeBtn.textContent = '刪除';
+
+          removeBtn.addEventListener('click', function () {
+            card.remove();
+            renumberChildren();
+          });
+
+          header.appendChild(removeBtn);
+        }
+      });
+    }
+
+    function submitForm() {
+      clearError();
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '提交中...';
+
+      const applicantRole = document.getElementById('applicantRole').value;
+
+      const payload = {
+        area: document.getElementById('areaSelect').value,
+        district: document.getElementById('districtSelect').value,
+        applicantName: document.getElementById('applicantName').value.trim(),
+        subscribeReport: document.getElementById('subscribeReport').value,
+        email: document.getElementById('email').value.trim(),
+        applicantRole: applicantRole
+      };
+
+      const localError = validatePayloadBeforeSubmit(payload);
+
+      if (localError) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交報名';
+        showError(localError);
+        return;
+      }
+
+      if (applicantRole === '青少年') {
+        payload.youthGender = document.getElementById('youthGender').value;
+        payload.youthSchool = document.getElementById('youthSchool').value;
+        payload.companionRole = document.getElementById('companionRole').value;
+        payload.companionName = document.getElementById('companionName').value.trim();
+        payload.unableReason = document.getElementById('unableReason').value.trim();
+
+        const youthError = validateYouthPayload(payload);
+
+        if (youthError) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '提交報名';
+          showError(youthError);
+          return;
+        }
+      }
+
+      if (applicantRole === '家長' || applicantRole === '服事者') {
+        payload.children = [];
+
+        document.querySelectorAll('.child-card').forEach(card => {
+          payload.children.push({
+            name: card.querySelector('.child-name').value.trim(),
+            gender: card.querySelector('.child-gender').value,
+            school: card.querySelector('.child-school').value
+          });
+        });
+
+        payload.unableReason = applicantRole === '服事者'
+          ? document.getElementById('workerUnableReason').value.trim()
+          : '';
+
+        const childrenError = validateChildrenPayload(payload.children);
+
+        if (childrenError) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '提交報名';
+          showError(childrenError);
+          return;
+        }
+
+        if (applicantRole === '服事者' && !payload.unableReason) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '提交報名';
+          showError('請簡述家長無法陪讀原因');
+          return;
+        }
+      }
+
+      callGasApi('submitRegistration', payload)
+        .then(function (result) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '提交報名';
+
+          document.getElementById('successText').innerHTML =
+            '您的組別：' + result.groupNo + '<br>' +
+            '成功寫入 ' + result.count + ' 筆資料';
+
+          document.getElementById('successOverlay').classList.remove('hidden');
+        })
+        .catch(function (err) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '提交報名';
+          showError(err);
+        });
+    }
+
+    function validatePayloadBeforeSubmit(payload) {
+      if (!payload.area) return '請選擇照顧區';
+      if (!payload.district) return '請選擇大區';
+      if (!payload.applicantName) return '請填寫填表者姓名';
+      if (!payload.subscribeReport) return '請選擇是否願意定期收到報表';
+
+      if (payload.subscribeReport === '是') {
+        if (!payload.email) return '請填寫 E-mail';
+        if (!isValidEmail(payload.email)) return 'E-mail 格式錯誤';
+      }
+
+      if (!payload.applicantRole) return '請選擇填表者身份';
+
+      return '';
+    }
+
+    function validateYouthPayload(payload) {
+      if (!payload.youthGender) return '請選擇青少年性別';
+      if (!payload.youthSchool) return '請選擇青少年學籍';
+      if (!payload.companionRole) return '請選擇陪讀者身份';
+      if (!payload.companionName) return '請填寫家長姓名或服事者姓名';
+      if (payload.companionRole === '服事者' && !payload.unableReason) {
+        return '請簡述家長無法陪讀原因';
+      }
+      return '';
+    }
+
+    function validateChildrenPayload(children) {
+      if (!children || children.length === 0) return '請至少填寫一位孩子資料';
+
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+
+        if (!child.name) return '第 ' + (i + 1) + ' 位孩子未填姓名';
+        if (!child.gender) return '第 ' + (i + 1) + ' 位孩子未選性別';
+        if (!child.school) return '第 ' + (i + 1) + ' 位孩子未選學籍';
+      }
+
+      return '';
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function nextGroup() {
+      document.getElementById('successOverlay').classList.add('hidden');
+
+      clearError();
+
+      document.getElementById('areaSelect').selectedIndex = 0;
+
+      const districtSelect = document.getElementById('districtSelect');
+      districtSelect.innerHTML = '<option value="">請先選擇照顧區</option>';
+
+      document.getElementById('applicantName').value = '';
+      document.getElementById('subscribeReport').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('emailBlock').classList.add('hidden');
+
+      document.getElementById('subscribeYesBtn').classList.remove('active');
+      document.getElementById('subscribeNoBtn').classList.remove('active');
+
+      document.getElementById('applicantRole').value = '';
+
+      document.getElementById('roleYouthBtn').classList.remove('active');
+      document.getElementById('roleParentBtn').classList.remove('active');
+      document.getElementById('roleWorkerBtn').classList.remove('active');
+
+      document.getElementById('youthSection').classList.add('hidden');
+      document.getElementById('parentSection').classList.add('hidden');
+
+      document.getElementById('youthGender').value = '';
+      document.getElementById('youthSchool').value = '';
+      document.getElementById('companionRole').value = '';
+      document.getElementById('companionName').value = '';
+      document.getElementById('unableReason').value = '';
+      document.getElementById('unableReasonBlock').classList.add('hidden');
+      document.getElementById('companionNameLabel').textContent = '家長姓名或服事者姓名';
+
+      document.getElementById('workerUnableReason').value = '';
+      document.getElementById('workerUnableReasonBlock').classList.add('hidden');
+
+      document.getElementById('childrenContainer').innerHTML = '';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      setTimeout(function () {
+        document.getElementById('areaSelect').focus();
+      }, 300);
+    }
+
+    function exitPage() {
+      const url = String(exitButtonUrl || '').trim();
+
+      if (url) {
+        window.location.href = url;
+        return;
+      }
+
+      window.location.href = './';
+    }
+
+    function closeWarning() {
+      document.getElementById('warningOverlay').classList.add('hidden');
+    }
+
+    function closeError() {
+      document.getElementById('errorOverlay').classList.add('hidden');
+    }
+
+    function showError(err) {
+      const msg = typeof err === 'string'
+        ? err
+        : err && err.message
+          ? err.message
+          : '發生錯誤，請稍後再試';
+
+      document.getElementById('errorOverlayText').textContent = msg;
+      document.getElementById('errorOverlay').classList.remove('hidden');
+    }
+
+    function clearError() {
+      document.getElementById('errorOverlayText').textContent = '';
+      document.getElementById('errorOverlay').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
