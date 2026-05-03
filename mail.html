@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --bg-0: #101722;
+      --bg-1: #172231;
+      --bg-2: #223247;
+      --bg-3: #2f4158;
+
+      --blue-0: #dceafe;
+      --blue-1: #b7cce8;
+      --blue-2: #7d99bd;
+      --blue-3: #4e6786;
+      --blue-4: #314763;
+
+      --gray-0: #f4f6f8;
+      --gray-1: #d7dee7;
+      --gray-2: #aab7c6;
+      --gray-3: #718093;
+      --gray-4: #374151;
+
+      --accent-red: #b76e6a;
+      --accent-red-dark: #7f3f40;
+
+      --card: rgba(244, 246, 248, 0.11);
+      --border: rgba(244, 246, 248, 0.18);
+
+      --text: #f5f7fa;
+      --text-muted: #aab7c6;
+
+      --success: #8fd19e;
+      --error: #ff9a95;
+
+      --shadow: rgba(0, 0, 0, 0.36);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 16% 8%, rgba(183, 204, 232, 0.16), transparent 34%),
+        radial-gradient(circle at 82% 18%, rgba(78, 103, 134, 0.22), transparent 32%),
+        radial-gradient(circle at 70% 82%, rgba(183, 204, 232, 0.10), transparent 38%),
+        linear-gradient(135deg, var(--bg-0), var(--bg-1) 42%, var(--bg-2));
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(120deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 100%),
+        linear-gradient(300deg, transparent 0 62%, rgba(183,204,232,0.12) 62% 76%, transparent 76%),
+        linear-gradient(38deg, transparent 0 18%, rgba(78,103,134,0.22) 18% 33%, transparent 33%),
+        linear-gradient(155deg, transparent 0 74%, rgba(183,204,232,0.10) 74% 86%, transparent 86%);
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      width: 560px;
+      height: 560px;
+      right: -230px;
+      top: -160px;
+      background:
+        linear-gradient(135deg, rgba(183,204,232,0.18), rgba(78,103,134,0.06));
+      clip-path: polygon(18% 0, 100% 0, 72% 100%, 0 78%);
+    }
+
+    body::after {
+      width: 420px;
+      height: 420px;
+      left: -190px;
+      bottom: -130px;
+      background:
+        linear-gradient(135deg, rgba(78,103,134,0.24), rgba(183,204,232,0.08));
+      clip-path: polygon(0 12%, 70% 0, 100% 72%, 24% 100%);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 34px 18px 70px;
+    }
+
+    .hero {
+      position: relative;
+      padding: 36px 22px 32px;
+      margin: 4px 0 24px;
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(244,246,248,0.16), rgba(244,246,248,0.06)),
+        linear-gradient(120deg, rgba(78,103,134,0.22), rgba(16,23,34,0.08));
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 12%, rgba(183,204,232,0.15) 12% 19%, transparent 19%),
+        linear-gradient(65deg, transparent 0 70%, rgba(78,103,134,0.26) 70% 82%, transparent 82%),
+        linear-gradient(25deg, transparent 0 38%, rgba(183,204,232,0.06) 38% 41%, transparent 41%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      right: -42px;
+      bottom: -84px;
+      border: 1px solid rgba(244,246,248,0.20);
+      transform: rotate(18deg);
+      background: rgba(244,246,248,0.045);
+    }
+
+    .title-wrap {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(244,246,248,0.10);
+      border: 1px solid rgba(244,246,248,0.18);
+      color: var(--blue-1);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+    }
+
+    .title {
+      margin: 0;
+      color: var(--text);
+      font-size: 39px;
+      font-weight: 900;
+      line-height: 1.18;
+      letter-spacing: 0.04em;
+      text-shadow: 0 8px 24px rgba(0,0,0,0.32);
+    }
+
+    .title-line {
+      width: 150px;
+      height: 5px;
+      margin: 18px auto 0;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, transparent, var(--blue-1), var(--accent-red), var(--blue-1), transparent);
+      opacity: 0.85;
+    }
+
+    .subtitle {
+      max-width: 660px;
+      margin: 16px auto 0;
+      color: var(--text-muted);
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.75;
+    }
+
+    .grid-accent {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      display: grid;
+      grid-template-columns: repeat(4, 11px);
+      gap: 8px;
+      opacity: 0.48;
+    }
+
+    .grid-accent span {
+      width: 11px;
+      height: 11px;
+      background: rgba(183,204,232,0.52);
+      transform: rotate(45deg);
+    }
+
+    .angle-accent {
+      position: absolute;
+      right: 24px;
+      top: 24px;
+      width: 82px;
+      height: 82px;
+      border-top: 2px solid rgba(183,204,232,0.28);
+      border-right: 2px solid rgba(183,204,232,0.28);
+      transform: skew(-8deg);
+      opacity: 0.72;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 22px;
+      padding: 26px;
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(244,246,248,0.135), rgba(244,246,248,0.06)),
+        linear-gradient(120deg, rgba(49,71,99,0.22), rgba(16,23,34,0.18));
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 46px rgba(0,0,0,0.31);
+      backdrop-filter: blur(10px);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      right: -76px;
+      top: -98px;
+      background: rgba(183,204,232,0.10);
+      transform: rotate(28deg);
+      border: 1px solid rgba(244,246,248,0.13);
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 112px;
+      height: 112px;
+      left: -54px;
+      bottom: -54px;
+      background: rgba(78,103,134,0.22);
+      clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      color: var(--text);
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .card-title::before {
+      content: "";
+      width: 16px;
+      height: 34px;
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, var(--blue-1), var(--blue-4));
+      box-shadow: 0 0 24px rgba(183,204,232,0.28);
+      flex: 0 0 auto;
+    }
+
+    .card-title::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background:
+        linear-gradient(90deg, rgba(183,204,232,0.32), transparent);
+      margin-left: 4px;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 9px;
+      color: var(--blue-1);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    select {
+      width: 100%;
+      min-height: 56px;
+      padding: 14px 16px;
+      border: 1px solid rgba(244,246,248,0.25);
+      border-radius: 16px;
+      outline: none;
+      background:
+        linear-gradient(135deg, rgba(244,246,248,0.98), rgba(215,222,231,0.95));
+      color: #111827;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.72),
+        0 10px 22px rgba(0,0,0,0.13);
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--blue-4) 50%),
+        linear-gradient(135deg, var(--blue-4) 50%, transparent 50%),
+        linear-gradient(135deg, rgba(244,246,248,0.98), rgba(215,222,231,0.95));
+      background-position:
+        calc(100% - 24px) 50%,
+        calc(100% - 16px) 50%,
+        0 0;
+      background-size:
+        8px 8px,
+        8px 8px,
+        100% 100%;
+      background-repeat: no-repeat;
+    }
+
+    select:focus {
+      border-color: rgba(183,204,232,0.95);
+      box-shadow:
+        0 0 0 4px rgba(183,204,232,0.16),
+        inset 0 1px 0 rgba(255,255,255,0.72),
+        0 10px 22px rgba(0,0,0,0.13);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    button {
+      width: 100%;
+      min-height: 58px;
+      border: none;
+      border-radius: 18px;
+      padding: 16px 18px;
+      color: #ffffff;
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      background:
+        linear-gradient(135deg, var(--blue-2), var(--blue-4));
+      box-shadow:
+        0 16px 32px rgba(0,0,0,0.30),
+        inset 0 1px 0 rgba(255,255,255,0.20);
+      transition:
+        transform 0.15s ease,
+        filter 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+      box-shadow:
+        0 20px 38px rgba(0,0,0,0.36),
+        inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.danger {
+      background:
+        linear-gradient(135deg, var(--accent-red), var(--accent-red-dark));
+    }
+
+    button.send {
+      background:
+        linear-gradient(135deg, var(--blue-1), var(--blue-3) 52%, var(--blue-4));
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      transform: none;
+      filter: grayscale(0.25) opacity(0.65);
+      box-shadow: none;
+    }
+
+    .note {
+      margin-top: 18px;
+      padding: 15px 17px;
+      border-radius: 18px;
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.75;
+      background:
+        linear-gradient(135deg, rgba(244,246,248,0.095), rgba(244,246,248,0.045));
+      border: 1px solid rgba(244,246,248,0.16);
+    }
+
+    .status {
+      margin-top: 17px;
+      min-height: 28px;
+      color: var(--text-muted);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.65;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--error);
+    }
+
+    .single-action {
+      margin-top: 4px;
+    }
+
+    .decor-line {
+      height: 1px;
+      margin: 20px 0 4px;
+      background:
+        linear-gradient(90deg, transparent, rgba(183,204,232,0.28), transparent);
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 22px 12px 54px;
+      }
+
+      .hero {
+        padding: 28px 16px 26px;
+        border-radius: 24px;
+      }
+
+      .title {
+        font-size: 31px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+      }
+
+      .card {
+        padding: 21px 16px;
+        border-radius: 24px;
+      }
+
+      .card-title {
+        font-size: 23px;
+      }
+
+      .row,
+      .button-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      label {
+        font-size: 18px;
+      }
+
+      select {
+        font-size: 20px;
+        min-height: 58px;
+      }
+
+      button {
+        margin-top: 14px;
+        font-size: 21px;
+        min-height: 60px;
+      }
+
+      .angle-accent {
+        width: 56px;
+        height: 56px;
+        right: 16px;
+        top: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="angle-accent" aria-hidden="true"></div>
+
+      <div class="title-wrap">
+        <div class="eyebrow">READING REPORT MAIL SETTING</div>
+        <h1 class="title">共讀進度報告寄送設定</h1>
+        <div class="title-line"></div>
+        <div class="subtitle">
+          設定青少年共讀進度報告的固定寄送時間，或立即產生目前進度並寄送一次。
+        </div>
+      </div>
+
+      <div class="grid-accent" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-inner">
+        <div class="card-title">一、設定固定寄送時間</div>
+
+        <div class="row">
+          <div>
+            <label for="dayOfWeek">星期</label>
+            <select id="dayOfWeek">
+              <option value="">請選擇星期</option>
+              <option value="SUNDAY">星期日</option>
+              <option value="MONDAY">星期一</option>
+              <option value="TUESDAY">星期二</option>
+              <option value="WEDNESDAY">星期三</option>
+              <option value="THURSDAY">星期四</option>
+              <option value="FRIDAY">星期五</option>
+              <option value="SATURDAY">星期六</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="hour">時間</label>
+            <select id="hour">
+              <option value="">請選擇時間</option>
+              <option value="6">06:00</option>
+              <option value="7">07:00</option>
+              <option value="8">08:00</option>
+              <option value="9">09:00</option>
+              <option value="10">10:00</option>
+              <option value="11">11:00</option>
+              <option value="12">12:00</option>
+              <option value="13">13:00</option>
+              <option value="14">14:00</option>
+              <option value="15">15:00</option>
+              <option value="16">16:00</option>
+              <option value="17">17:00</option>
+              <option value="18">18:00</option>
+              <option value="19">19:00</option>
+              <option value="20">20:00</option>
+              <option value="21">21:00</option>
+              <option value="22">22:00</option>
+              <option value="23">23:00</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="saveBtn" onclick="saveSchedule()">儲存排程</button>
+          <button class="danger" id="deleteBtn" onclick="deleteSchedule()">刪除固定寄送時間</button>
+        </div>
+
+        <div class="note">
+          固定寄送會寄給「報名名單」中「是否願意定期收到報表」為「是」且有填寫 E-mail 的人。
+        </div>
+
+        <div class="decor-line"></div>
+        <div id="scheduleStatus" class="status"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-inner">
+        <div class="card-title">二、立刻寄送</div>
+
+        <button class="send single-action" id="sendNowBtn" onclick="sendNow()">立即寄送進度報告</button>
+
+        <div class="note">
+          立刻寄送會立即產生目前進度報告並寄出。每個小組只會收到自己小組的進度。
+        </div>
+
+        <div class="decor-line"></div>
+        <div id="sendStatus" class="status"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    window.onload = function() {
+      callGasApi('getMailPageInitData', null, 30000)
+        .then(function(data) {
+          const status = document.getElementById('scheduleStatus');
+
+          if (data && data.hasSchedule) {
+            document.getElementById('dayOfWeek').value = data.dayOfWeek || '';
+            document.getElementById('hour').value = data.hour || '';
+
+            status.className = 'status success';
+            status.textContent = '目前已有固定寄送排程。';
+          } else {
+            document.getElementById('dayOfWeek').value = '';
+            document.getElementById('hour').value = '';
+
+            status.className = 'status';
+            status.textContent = '目前沒有固定寄送排程。';
+          }
+        })
+        .catch(function(err) {
+          showStatus('scheduleStatus', err.message || String(err), true);
+        });
+    };
+
+    function callGasApi(action, payload, timeoutMs) {
+      return new Promise(function(resolve, reject) {
+        const callbackName =
+          'mailCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址、部署權限，或寄送時間是否過長'));
+        }, timeoutMs || 30000);
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = function(response) {
+          cleanup();
+
+          if (!response || response.success !== true) {
+            reject(new Error(response && response.message ? response.message : '讀取失敗'));
+            return;
+          }
+
+          resolve(response.data);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
+        };
+
+        const params = [
+          'action=' + encodeURIComponent(action),
+          'callback=' + encodeURIComponent(callbackName),
+          '_=' + Date.now()
+        ];
+
+        if (payload !== undefined && payload !== null) {
+          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+        }
+
+        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+        script.src = GAS_WEB_APP_URL + separator + params.join('&');
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function saveSchedule() {
+      const dayOfWeek = document.getElementById('dayOfWeek').value;
+      const hour = document.getElementById('hour').value;
+
+      if (!dayOfWeek) {
+        showStatus('scheduleStatus', '請選擇星期', true);
+        return;
+      }
+
+      if (!hour) {
+        showStatus('scheduleStatus', '請選擇時間', true);
+        return;
+      }
+
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      showStatus('scheduleStatus', '儲存中...', false);
+
+      callGasApi('saveMailSchedule', {
+        dayOfWeek: dayOfWeek,
+        hour: hour
+      }, 45000)
+        .then(function(result) {
+          btn.disabled = false;
+          showStatus('scheduleStatus', result.message || '已儲存排程', false, true);
+        })
+        .catch(function(err) {
+          btn.disabled = false;
+          showStatus('scheduleStatus', err.message || String(err), true);
+        });
+    }
+
+    function deleteSchedule() {
+      const btn = document.getElementById('deleteBtn');
+      btn.disabled = true;
+      showStatus('scheduleStatus', '刪除中...', false);
+
+      callGasApi('deleteMailSchedule', null, 45000)
+        .then(function(result) {
+          btn.disabled = false;
+          document.getElementById('dayOfWeek').value = '';
+          document.getElementById('hour').value = '';
+          showStatus('scheduleStatus', result.message || '已刪除排程', false, true);
+        })
+        .catch(function(err) {
+          btn.disabled = false;
+          showStatus('scheduleStatus', err.message || String(err), true);
+        });
+    }
+
+    function sendNow() {
+      const btn = document.getElementById('sendNowBtn');
+      btn.disabled = true;
+      showStatus('sendStatus', '寄送中，請勿關閉頁面...', false);
+
+      callGasApi('sendReportNow', null, 180000)
+        .then(function(result) {
+          btn.disabled = false;
+
+          let message = result.message || '已完成寄送';
+          message += '\n寄送人數：' + result.sentCount;
+
+          if (result.emailList && result.emailList.length) {
+            message += '\n收件信箱：' + result.emailList.join('、');
+          }
+
+          showStatus('sendStatus', message, false, true);
+        })
+        .catch(function(err) {
+          btn.disabled = false;
+          showStatus('sendStatus', err.message || String(err), true);
+        });
+    }
+
+    function showStatus(id, message, isError, isSuccess) {
+      const el = document.getElementById(id);
+      el.textContent = message || '';
+
+      if (isError) {
+        el.className = 'status error';
+      } else if (isSuccess) {
+        el.className = 'status success';
+      } else {
+        el.className = 'status';
+      }
+    }
+  </script>
+</body>
+</html>
