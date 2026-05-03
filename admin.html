@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg0: #0f172a;
+      --bg1: #111827;
+      --line: rgba(255,255,255,0.18);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --blue: #93c5fd;
+      --blue2: #60a5fa;
+      --red: #fca5a5;
+      --white: #ffffff;
+      --darkText: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(96,165,250,0.25), transparent 28%),
+        radial-gradient(circle at 85% 18%, rgba(196,181,253,0.18), transparent 30%),
+        radial-gradient(circle at 70% 88%, rgba(134,239,172,0.13), transparent 35%),
+        linear-gradient(135deg, #0f172a, #111827 52%, #1e293b);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(115deg, transparent 0 16%, rgba(255,255,255,0.05) 16% 17%, transparent 17% 100%),
+        linear-gradient(35deg, transparent 0 72%, rgba(255,255,255,0.06) 72% 78%, transparent 78% 100%);
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 30px 18px 80px;
+    }
+
+    .hero {
+      position: relative;
+      padding: 34px 26px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+      box-shadow: 0 24px 70px rgba(0,0,0,0.34);
+      overflow: hidden;
+      margin-bottom: 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      right: -90px;
+      top: -110px;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(147,197,253,0.14);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.08);
+      color: var(--blue);
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 700;
+      margin-top: 12px;
+      line-height: 1.7;
+    }
+
+    .update-time {
+      margin-top: 10px;
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toolbar {
+      position: relative;
+      z-index: 3000;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
+      gap: 12px;
+      margin: 22px 0;
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      overflow: visible;
+    }
+
+    select,
+    input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 14px;
+      padding: 11px 14px;
+      font-size: 16px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.92);
+      color: var(--darkText);
+      outline: none;
+    }
+
+    .search-wrap {
+      position: relative;
+      width: 100%;
+      z-index: 4000;
+    }
+
+    .suggestion-box {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 7px);
+      z-index: 99999;
+      max-height: 280px;
+      overflow-y: auto;
+      border-radius: 15px;
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 22px 46px rgba(0,0,0,0.36);
+      border: 1px solid rgba(15,23,42,0.16);
+      display: none;
+      pointer-events: auto;
+    }
+
+    .suggestion-item {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      border-bottom: 1px solid #e5e7eb;
+      position: relative;
+      z-index: 100000;
+      pointer-events: auto;
+    }
+
+    .suggestion-item:hover {
+      background: #dbeafe;
+    }
+
+    .suggestion-type {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      background: #e0f2fe;
+      color: #075985;
+      white-space: nowrap;
+    }
+
+    .suggestion-value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .suggestion-empty {
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #64748b;
+    }
+
+    button {
+      min-height: 48px;
+      border: none;
+      border-radius: 14px;
+      padding: 11px 18px;
+      font-size: 16px;
+      font-weight: 900;
+      color: #0f172a;
+      background: linear-gradient(135deg, #bfdbfe, #60a5fa);
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #ddd6fe, #a78bfa);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status {
+      text-align: center;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 18px;
+      margin: 18px 0;
+      white-space: pre-wrap;
+    }
+
+    .status.error {
+      color: var(--red);
+    }
+
+    .summary-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .metric {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+      box-shadow: 0 16px 38px rgba(0,0,0,0.24);
+      min-height: 118px;
+    }
+
+    .metric-label {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.4;
+    }
+
+    .metric-value {
+      position: relative;
+      z-index: 1;
+      margin-top: 10px;
+      font-size: 34px;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.1;
+    }
+
+    .metric-note {
+      position: relative;
+      z-index: 1;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--blue);
+      font-weight: 800;
+    }
+
+    .section {
+      margin-bottom: 22px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 22px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05));
+      box-shadow: 0 16px 42px rgba(0,0,0,0.24);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 12px;
+      height: 30px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, var(--blue), var(--blue2));
+      box-shadow: 0 0 20px rgba(96,165,250,0.38);
+    }
+
+    .setting-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .setting-card {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.08);
+      padding: 14px;
+      min-height: 128px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .setting-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--blue);
+      line-height: 1.35;
+    }
+
+    .setting-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .setting-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      min-height: 20px;
+      padding: 0;
+    }
+
+    .setting-row span {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .setting-card select {
+      min-height: 42px;
+      font-size: 16px;
+    }
+
+    .setting-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .chart-box {
+      min-height: 320px;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.9);
+      color: var(--darkText);
+    }
+
+    .chart-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: var(--darkText);
+    }
+
+    .chart-note {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.5;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.94);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: var(--darkText);
+      table-layout: fixed;
+      min-width: 860px;
+    }
+
+    th,
+    td {
+      padding: 11px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: center;
+      font-size: 14px;
+      vertical-align: middle;
+      line-height: 1.45;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #e0f2fe;
+      color: #0f172a;
+      font-weight: 900;
+      z-index: 1;
+    }
+
+    td.left,
+    th.left {
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #0f172a;
+      background: #dbeafe;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      background: #bbf7d0;
+    }
+
+    .badge.yellow {
+      background: #fef3c7;
+    }
+
+    .badge.red {
+      background: #fecaca;
+    }
+
+    .badge.purple {
+      background: #ddd6fe;
+    }
+
+    .progress-cell {
+      min-width: 120px;
+    }
+
+    .progress-bg {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .progress-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #60a5fa);
+      width: 0%;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 800;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .setting-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .page {
+        padding: 18px 10px 56px;
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .hero {
+        padding: 28px 18px;
+        border-radius: 24px;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .section-title {
+        font-size: 22px;
+      }
+
+      .chart-box {
+        min-height: 280px;
+      }
+
+      .suggestion-item {
+        grid-template-columns: 64px 1fr;
+        font-size: 15px;
+      }
+
+      .setting-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-content">
+        <div class="eyebrow">ADMIN ANALYTICS DASHBOARD</div>
+        <h1>青少年共讀聖經管理分析系統</h1>
+        <div class="subtitle">
+          依報名名單與回報記錄，分析參與組數、人數、回報頻率、未回報狀態、陪讀型態、區域差異與書卷停滯情形。
+        </div>
+        <div id="updateTime" class="update-time"></div>
+      </div>
+    </section>
+
+    <div id="status" class="status">資料載入中...</div>
+
+    <section id="mainContent" style="display:none;">
+      <div class="toolbar">
+        <select id="careAreaFilter" onchange="applyFilters()">
+          <option value="">全部照顧區</option>
+        </select>
+
+        <select id="bigAreaFilter" onchange="applyFilters()">
+          <option value="">全部大區</option>
+        </select>
+
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="">全部狀態</option>
+          <option value="從未回報">從未回報</option>
+          <option value="近期有回報">近期有回報</option>
+          <option value="兩週以上未回報">兩週以上未回報</option>
+          <option value="一個月以上未回報">一個月以上未回報</option>
+          <option value="兩個月以上未回報">兩個月以上未回報</option>
+          <option value="已完成">已完成</option>
+        </select>
+
+        <div class="search-wrap">
+          <input
+            id="keywordFilter"
+            type="text"
+            placeholder="搜尋小組、填表者、陪讀者、孩子"
+            autocomplete="off"
+            oninput="handleKeywordInput()"
+            onfocus="handleKeywordInput()"
+            onkeydown="handleSearchKeydown(event)"
+          >
+          <div id="suggestionBox" class="suggestion-box"></div>
+        </div>
+
+        <button onclick="reloadData()">重新整理</button>
+        <button class="secondary" onclick="exportCareList()">匯出關懷名單</button>
+      </div>
+
+      <div class="summary-grid" id="summaryGrid"></div>
+
+      <section class="section">
+        <div class="section-title">一、整體分布圖表</div>
+        <div class="chart-grid">
+          <div class="chart-box">
+            <div class="chart-title">完成率分布</div>
+            <canvas id="progressChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-title">未回報時間分布</div>
+            <canvas id="inactivityChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-title">陪讀人數型態</div>
+            <canvas id="childLoadChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-title">平均回報間隔</div>
+            <canvas id="frequencyChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-title">孩子學籍分布</div>
+            <canvas id="schoolChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-title">陪讀者身份分布</div>
+            <canvas id="readerIdentityChart"></canvas>
+            <div id="readerIdentityNote" class="chart-note"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">二、照顧區統計</div>
+        <div id="areaStatsTable" class="table-wrap"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">三、大區統計</div>
+        <div id="bigAreaStatsTable" class="table-wrap"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">四、關懷名單條件設定</div>
+
+        <div class="setting-grid">
+          <div class="setting-card">
+            <div class="setting-title">長時間未回報</div>
+            <div class="setting-row">
+              <input id="careEnableInactivity" type="checkbox" onchange="renderCareList()">
+              <span>啟用此條件</span>
+            </div>
+            <select id="careInactivityValue" onchange="renderCareList()">
+              <option value="">請選擇</option>
+              <option value="never">從未回報</option>
+              <option value="10">10天以上</option>
+              <option value="20">20天以上</option>
+              <option value="30">30天以上</option>
+            </select>
+            <div class="setting-note">從未回報或最後回報距今達指定天數。</div>
+          </div>
+
+          <div class="setting-card">
+            <div class="setting-title">完成率偏低</div>
+            <div class="setting-row">
+              <input id="careEnableLowProgress" type="checkbox" onchange="renderCareList()">
+              <span>啟用此條件</span>
+            </div>
+            <select id="careLowProgressPercent" onchange="renderCareList()">
+              <option value="">請選擇</option>
+              <option value="10">低於10%</option>
+              <option value="20">低於20%</option>
+              <option value="30">低於30%</option>
+              <option value="40">低於40%</option>
+              <option value="50">低於50%</option>
+              <option value="60">低於60%</option>
+            </select>
+            <div class="setting-note">完成率低於所選百分比。</div>
+          </div>
+
+          <div class="setting-card">
+            <div class="setting-title">陪伴孩子數</div>
+            <div class="setting-row">
+              <input id="careEnableChildCount" type="checkbox" onchange="renderCareList()">
+              <span>啟用此條件</span>
+            </div>
+            <select id="careChildCountValue" onchange="renderCareList()">
+              <option value="">請選擇</option>
+              <option value="1">1人以上</option>
+              <option value="2">2人以上</option>
+              <option value="3">3人以上</option>
+              <option value="4">4人以上</option>
+              <option value="5">5人以上</option>
+              <option value="6plus">6人以上</option>
+            </select>
+            <div class="setting-note">同一陪讀者若在同照顧區、同大區跨組陪伴，孩子數會合併計算。</div>
+          </div>
+        </div>
+
+        <div id="careListTable" class="table-wrap"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">五、小組明細</div>
+        <div id="groupTable" class="table-wrap"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">六、書卷分析</div>
+        <div id="bookAnalysisTable" class="table-wrap"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">七、陪讀者分析</div>
+        <div id="readerTable" class="table-wrap"></div>
+      </section>
+    </section>
+  </div>
+
+  <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    let adminData = null;
+    let filteredGroups = [];
+    let chartInstances = {};
+    let currentSuggestions = [];
+
+    const pieValueLabelPlugin = {
+      id: 'pieValueLabelPlugin',
+      afterDatasetsDraw: function(chart) {
+        if (!chart || !chart.config || chart.config.type !== 'pie') return;
+
+        const ctx = chart.ctx;
+        const dataset = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        const values = (dataset.data || []).map(function(v) {
+          return Number(v || 0);
+        });
+        const total = values.reduce(function(sum, value) {
+          return sum + value;
+        }, 0);
+
+        if (!total) return;
+
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 13px Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+        ctx.fillStyle = '#0f172a';
+
+        meta.data.forEach(function(arc, index) {
+          const value = values[index];
+          if (!value) return;
+
+          const percent = Math.round((value / total) * 1000) / 10;
+          const label = value + '人 (' + percent + '%)';
+
+          const angle = (arc.startAngle + arc.endAngle) / 2;
+          const radius = (arc.innerRadius + arc.outerRadius) / 2;
+          const x = arc.x + Math.cos(angle) * radius;
+          const y = arc.y + Math.sin(angle) * radius;
+
+          ctx.strokeText(label, x, y);
+          ctx.fillText(label, x, y);
+        });
+
+        ctx.restore();
+      }
+    };
+
+    if (typeof Chart !== 'undefined') {
+      Chart.register(pieValueLabelPlugin);
+    }
+
+    window.addEventListener('load', reloadData);
+
+    document.addEventListener('mousedown', function(event) {
+      const wrap = document.querySelector('.search-wrap');
+      const box = document.getElementById('suggestionBox');
+
+      if (!wrap || !box) return;
+
+      if (!wrap.contains(event.target)) {
+        hideSuggestions();
+      }
+    });
+
+    function callGasApi(action, payload, timeoutMs) {
+      return new Promise(function(resolve, reject) {
+        const callbackName =
+          'adminCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        const timer = setTimeout(function() {
+          cleanup();
+          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
+        }, timeoutMs || 60000);
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = function(response) {
+          cleanup();
+
+          if (!response || response.success !== true) {
+            reject(new Error(response && response.message ? response.message : '讀取失敗'));
+            return;
+          }
+
+          resolve(response.data);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
+        };
+
+        const params = [
+          'action=' + encodeURIComponent(action),
+          'callback=' + encodeURIComponent(callbackName),
+          '_=' + Date.now()
+        ];
+
+        if (payload !== undefined && payload !== null) {
+          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+        }
+
+        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
+        script.src = GAS_WEB_APP_URL + separator + params.join('&');
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function reloadData() {
+      setStatus('資料載入中...', false);
+      document.getElementById('mainContent').style.display = 'none';
+      hideSuggestions();
+
+      callGasApi('getAdminAnalysisData', null, 90000)
+        .then(function(data) {
+          adminData = data || {};
+          filteredGroups = adminData.groups || [];
+
+          document.getElementById('updateTime').textContent = '更新時間：' + (adminData.generatedAt || '');
+
+          initFilters();
+          renderAll();
+          setStatus('', false);
+          document.getElementById('mainContent').style.display = 'block';
+        })
+        .catch(function(err) {
+          setStatus(err && err.message ? err.message : String(err), true);
+        });
+    }
+
+    function initFilters() {
+      const careAreaFilter = document.getElementById('careAreaFilter');
+      const bigAreaFilter = document.getElementById('bigAreaFilter');
+
+      const currentCareArea = careAreaFilter.value;
+      const currentBigArea = bigAreaFilter.value;
+
+      careAreaFilter.innerHTML = '<option value="">全部照顧區</option>';
+      bigAreaFilter.innerHTML = '<option value="">全部大區</option>';
+
+      unique((adminData.groups || []).map(function(g) {
+        return g.careArea;
+      }).filter(Boolean)).forEach(function(value) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        careAreaFilter.appendChild(option);
+      });
+
+      unique((adminData.groups || []).map(function(g) {
+        return g.bigArea;
+      }).filter(Boolean)).forEach(function(value) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        bigAreaFilter.appendChild(option);
+      });
+
+      careAreaFilter.value = currentCareArea;
+      bigAreaFilter.value = currentBigArea;
+    }
+
+    function handleKeywordInput() {
+      renderSuggestions();
+      applyFilters();
+    }
+
+    function handleSearchKeydown(event) {
+      if (event.key === 'Escape') {
+        hideSuggestions();
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+
+        if (currentSuggestions.length > 0) {
+          selectSuggestion(0);
+        }
+      }
+    }
+
+    function renderSuggestions() {
+      const input = document.getElementById('keywordFilter');
+      const box = document.getElementById('suggestionBox');
+      const keyword = input.value.trim();
+
+      box.innerHTML = '';
+      currentSuggestions = [];
+
+      if (!keyword || !adminData || !Array.isArray(adminData.groups)) {
+        hideSuggestions();
+        return;
+      }
+
+      currentSuggestions = buildSearchSuggestions(keyword);
+
+      if (currentSuggestions.length === 0) {
+        box.innerHTML = '<div class="suggestion-empty">沒有符合的建議</div>';
+        box.style.display = 'block';
+        return;
+      }
+
+      currentSuggestions.forEach(function(item, index) {
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.setAttribute('role', 'button');
+        div.setAttribute('tabindex', '0');
+
+        div.innerHTML =
+          '<span class="suggestion-type">' + escapeHtml(item.type) + '</span>' +
+          '<span class="suggestion-value">' + highlightKeyword(item.value, keyword) + '</span>';
+
+        div.addEventListener('mousedown', function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          selectSuggestion(index);
+        });
+
+        div.addEventListener('touchstart', function(event) {
+          event.stopPropagation();
+          selectSuggestion(index);
+        }, { passive: true });
+
+        div.addEventListener('keydown', function(event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            selectSuggestion(index);
+          }
+        });
+
+        box.appendChild(div);
+      });
+
+      box.style.display = 'block';
+    }
+
+    function buildSearchSuggestions(keyword) {
+      const result = [];
+      const map = {};
+
+      (adminData.groups || []).forEach(function(group) {
+        addSuggestion(result, map, '小組', group.group, keyword);
+        addSuggestion(result, map, '填表者', group.registrantName, keyword);
+
+        String(group.readerNames || '')
+          .split('、')
+          .map(function(v) { return v.trim(); })
+          .filter(Boolean)
+          .forEach(function(name) {
+            addSuggestion(result, map, '陪讀者', name, keyword);
+          });
+
+        String(group.childNames || '')
+          .split('、')
+          .map(function(v) { return v.trim(); })
+          .filter(Boolean)
+          .forEach(function(name) {
+            addSuggestion(result, map, '孩子', name, keyword);
+          });
+      });
+
+      result.sort(function(a, b) {
+        const aExactStart = String(a.value).indexOf(keyword) === 0 ? 0 : 1;
+        const bExactStart = String(b.value).indexOf(keyword) === 0 ? 0 : 1;
+
+        if (aExactStart !== bExactStart) return aExactStart - bExactStart;
+
+        const typeOrder = {
+          '小組': 1,
+          '填表者': 2,
+          '陪讀者': 3,
+          '孩子': 4
+        };
+
+        const at = typeOrder[a.type] || 99;
+        const bt = typeOrder[b.type] || 99;
+
+        if (at !== bt) return at - bt;
+
+        return String(a.value).localeCompare(String(b.value), 'zh-Hant', { numeric: true });
+      });
+
+      return result.slice(0, 15);
+    }
+
+    function addSuggestion(result, map, type, value, keyword) {
+      value = String(value || '').trim();
+      if (!value) return;
+      if (!value.includes(keyword)) return;
+
+      const key = type + '|' + value;
+      if (map[key]) return;
+
+      map[key] = true;
+
+      result.push({
+        type: type,
+        value: value
+      });
+    }
+
+    function selectSuggestion(index) {
+      const item = currentSuggestions[index];
+      if (!item) return;
+
+      document.getElementById('keywordFilter').value = item.value;
+      hideSuggestions();
+      applyFilters();
+    }
+
+    function hideSuggestions() {
+      const box = document.getElementById('suggestionBox');
+      if (!box) return;
+
+      box.style.display = 'none';
+      box.innerHTML = '';
+    }
+
+    function highlightKeyword(value, keyword) {
+      const text = String(value || '');
+      const key = String(keyword || '');
+
+      if (!key) return escapeHtml(text);
+
+      const index = text.indexOf(key);
+
+      if (index === -1) return escapeHtml(text);
+
+      return escapeHtml(text.slice(0, index)) +
+        '<mark style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 2px;">' +
+        escapeHtml(text.slice(index, index + key.length)) +
+        '</mark>' +
+        escapeHtml(text.slice(index + key.length));
+    }
+
+    function applyFilters() {
+      const careArea = document.getElementById('careAreaFilter').value;
+      const bigArea = document.getElementById('bigAreaFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const keyword = document.getElementById('keywordFilter').value.trim();
+
+      filteredGroups = (adminData.groups || []).filter(function(group) {
+        if (careArea && group.careArea !== careArea) return false;
+        if (bigArea && group.bigArea !== bigArea) return false;
+        if (status && group.status !== status) return false;
+
+        if (keyword) {
+          const target = [
+            group.group,
+            group.careArea,
+            group.bigArea,
+            group.registrantName,
+            group.readerNames,
+            group.childNames,
+            group.childDisplay,
+            group.readerCareLoadText
+          ].join(' ');
+
+          if (!target.includes(keyword)) return false;
+        }
+
+        return true;
+      });
+
+      renderSummary();
+      renderGroupTable();
+      renderCareList();
+    }
+
+    function renderAll() {
+      renderSummary();
+      renderCharts();
+      renderAreaStats();
+      renderBigAreaStats();
+      renderCareList();
+      renderGroupTable();
+      renderBookAnalysis();
+      renderReaderAnalysis();
+    }
+
+    function renderSummary() {
+      const allGroups = adminData.groups || [];
+      const source = filteredGroups.length === allGroups.length
+        ? adminData.summary
+        : buildFilteredSummary(filteredGroups);
+
+      const summaryGrid = document.getElementById('summaryGrid');
+
+      const cards = [
+        ['參與組數', source.totalGroups, 'distinct 小組編號'],
+        ['孩子人數', source.totalChildren, '依報名名單孩子列計算'],
+        ['陪讀者人數', source.readerCount, '陪讀者姓名去重'],
+        ['總參與人數', source.totalParticipants, '孩子 + 陪讀者去重'],
+        ['已有回報組數', source.reportedGroups, '至少一筆回報'],
+        ['從未回報組數', source.neverReportedGroups, '回報記錄無資料'],
+        ['一個月以上未回報', source.inactive30, '最後回報 ≥ 30天'],
+        ['兩個月以上未回報', source.inactive60, '最後回報 ≥ 60天'],
+        ['平均完成率', source.averageProgress + '%', '全部小組平均'],
+        ['中位數完成率', source.medianProgress + '%', '避免極端值影響'],
+        ['平均回報間隔', source.averageReportInterval + '天', '至少2次回報才計算'],
+        ['跨組陪讀者', source.crossGroupReaders, '同陪讀者帶不同組']
+      ];
+
+      summaryGrid.innerHTML = cards.map(function(card) {
+        return `
+          <div class="metric">
+            <div class="metric-label">${escapeHtml(card[0])}</div>
+            <div class="metric-value">${escapeHtml(card[1])}</div>
+            <div class="metric-note">${escapeHtml(card[2])}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function buildFilteredSummary(groups) {
+      const readerSet = {};
+      let totalChildren = 0;
+      let reportedGroups = 0;
+      let neverReportedGroups = 0;
+      let inactive30 = 0;
+      let inactive60 = 0;
+      let completedGroups = 0;
+
+      const progressList = [];
+      const intervalList = [];
+
+      groups.forEach(function(group) {
+        totalChildren += Number(group.childCount || 0);
+
+        String(group.readerNames || '')
+          .split('、')
+          .filter(Boolean)
+          .forEach(function(name) {
+            readerSet[name] = true;
+          });
+
+        if (group.reportCount > 0) reportedGroups++;
+        if (group.reportCount === 0) neverReportedGroups++;
+        if (group.inactivityDays !== null && group.inactivityDays >= 30) inactive30++;
+        if (group.inactivityDays !== null && group.inactivityDays >= 60) inactive60++;
+        if (group.totalPercent >= 100) completedGroups++;
+
+        progressList.push(Number(group.totalPercent || 0));
+
+        if (group.averageIntervalDays !== null) {
+          intervalList.push(Number(group.averageIntervalDays));
+        }
+      });
+
+      const readerCount = Object.keys(readerSet).length;
+
+      return {
+        totalGroups: groups.length,
+        totalChildren: totalChildren,
+        readerCount: readerCount,
+        totalParticipants: totalChildren + readerCount,
+        reportedGroups: reportedGroups,
+        neverReportedGroups: neverReportedGroups,
+        inactive30: inactive30,
+        inactive60: inactive60,
+        completedGroups: completedGroups,
+        averageProgress: average(progressList),
+        medianProgress: median(progressList),
+        averageReportInterval: average(intervalList),
+        crossGroupReaders: '-'
+      };
+    }
+
+    function getCareSettings() {
+      return {
+        enableInactivity: document.getElementById('careEnableInactivity').checked,
+        inactivityValue: document.getElementById('careInactivityValue').value,
+
+        enableLowProgress: document.getElementById('careEnableLowProgress').checked,
+        lowProgressPercent: document.getElementById('careLowProgressPercent').value,
+
+        enableChildCount: document.getElementById('careEnableChildCount').checked,
+        childCountValue: document.getElementById('careChildCountValue').value
+      };
+    }
+
+    function getCareReasons(group, settings) {
+      const reasons = [];
+
+      if (settings.enableInactivity && settings.inactivityValue) {
+        if (settings.inactivityValue === 'never') {
+          if (group.reportCount === 0) {
+            reasons.push('從未回報');
+          }
+        } else {
+          const days = Number(settings.inactivityValue);
+
+          if (group.inactivityDays !== null && group.inactivityDays >= days) {
+            reasons.push(days + '天以上未回報');
+          }
+        }
+      }
+
+      if (
+        settings.enableLowProgress &&
+        settings.lowProgressPercent &&
+        Number(group.totalPercent || 0) < Number(settings.lowProgressPercent)
+      ) {
+        reasons.push('完成率低於' + settings.lowProgressPercent + '%');
+      }
+
+      if (settings.enableChildCount && settings.childCountValue) {
+        const effectiveChildCount = getEffectiveCareChildCount(group);
+
+        if (settings.childCountValue === '6plus') {
+          if (effectiveChildCount >= 6) {
+            reasons.push('陪伴孩子數6人以上' + getReaderLoadReasonSuffix(group));
+          }
+        } else {
+          const childThreshold = Number(settings.childCountValue);
+
+          if (effectiveChildCount >= childThreshold) {
+            reasons.push('陪伴孩子數達' + childThreshold + '人以上' + getReaderLoadReasonSuffix(group));
+          }
+        }
+      }
+
+      return reasons;
+    }
+
+    function getEffectiveCareChildCount(group) {
+      const groupChildCount = Number(group && group.childCount ? group.childCount : 0);
+      const readerMaxChildCount = Number(group && group.readerMaxChildCount ? group.readerMaxChildCount : 0);
+      return Math.max(groupChildCount, readerMaxChildCount);
+    }
+
+    function getReaderLoadReasonSuffix(group) {
+      const groupChildCount = Number(group && group.childCount ? group.childCount : 0);
+      const readerMaxChildCount = Number(group && group.readerMaxChildCount ? group.readerMaxChildCount : 0);
+      const list = Array.isArray(group && group.readerCareLoadList) ? group.readerCareLoadList : [];
+
+      if (readerMaxChildCount <= groupChildCount) return '';
+
+      const top = list.slice().sort(function(a, b) {
+        if (Number(b.childCount || 0) !== Number(a.childCount || 0)) {
+          return Number(b.childCount || 0) - Number(a.childCount || 0);
+        }
+
+        return String(a.name || '').localeCompare(String(b.name || ''), 'zh-Hant', { numeric: true });
+      })[0];
+
+      if (!top) return '';
+
+      return '（同陪讀者跨組累計：' + top.name + ' ' + top.childCount + '人）';
+    }
+
+    function buildCareList() {
+      const settings = getCareSettings();
+
+      return (filteredGroups || [])
+        .map(function(group) {
+          const reasons = getCareReasons(group, settings);
+          const copy = Object.assign({}, group);
+          copy.careReasons = reasons;
+          copy.isCareTarget = reasons.length > 0;
+          return copy;
+        })
+        .filter(function(group) {
+          return group.isCareTarget;
+        })
+        .sort(function(a, b) {
+          const ad = a.inactivityDays === null ? 99999 : a.inactivityDays;
+          const bd = b.inactivityDays === null ? 99999 : b.inactivityDays;
+
+          if (bd !== ad) return bd - ad;
+
+          if (a.totalPercent !== b.totalPercent) return a.totalPercent - b.totalPercent;
+
+          return String(a.group).localeCompare(String(b.group), 'zh-Hant', { numeric: true });
+        });
+    }
+
+    function renderCareList() {
+      if (!adminData) return;
+
+      const rows = buildCareList();
+
+      const html = `
+        <table>
+          <colgroup>
+            <col style="width:6%">
+            <col style="width:7%">
+            <col style="width:7%">
+            <col style="width:10%">
+            <col style="width:15%">
+            <col style="width:7%">
+            <col style="width:14%">
+            <col style="width:8%">
+            <col style="width:9%">
+            <col style="width:7%">
+            <col style="width:10%">
+            <col style="width:8%">
+            <col style="width:9%">
+            <col style="width:16%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>小組</th>
+              <th>照顧區</th>
+              <th>大區</th>
+              <th>陪讀者</th>
+              <th>孩子</th>
+              <th>組內孩子數</th>
+              <th>陪讀者累計</th>
+              <th>完成率</th>
+              <th>目前位置</th>
+              <th>回報次數</th>
+              <th>最後回報</th>
+              <th>未回報天數</th>
+              <th>狀態</th>
+              <th>列入原因</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(function(row) {
+              return `
+                <tr>
+                  <td>${escapeHtml(row.group)}</td>
+                  <td>${escapeHtml(row.careArea)}</td>
+                  <td>${escapeHtml(row.bigArea)}</td>
+                  <td>${escapeHtml(row.readerNames)}</td>
+                  <td>${escapeHtml(row.childDisplay)}</td>
+                  <td>${row.childCount}</td>
+                  <td>${escapeHtml(row.readerCareLoadText || '-')}</td>
+                  <td>${row.totalPercent}%</td>
+                  <td>${escapeHtml(row.currentPosition)}</td>
+                  <td>${row.reportCount}</td>
+                  <td>${escapeHtml(row.lastReportDate || '-')}</td>
+                  <td>${row.inactivityDays === null ? '從未回報' : row.inactivityDays}</td>
+                  <td>${statusBadge(row.status)}</td>
+                  <td>${escapeHtml(row.careReasons.join('、'))}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('careListTable').innerHTML = html;
+    }
+
+    function renderCharts() {
+      const d = adminData.distributions || {};
+
+      drawBarChart('progressChart', d.progress || [], '完成率分布');
+      drawBarChart('inactivityChart', d.inactivity || [], '未回報時間');
+      drawBarChart('childLoadChart', d.childLoad || [], '陪讀人數型態');
+      drawBarChart('frequencyChart', d.reportFrequency || [], '平均回報間隔');
+      drawPieChart('schoolChart', d.school || [], '孩子學籍');
+      drawPieChart('readerIdentityChart', d.readerIdentity || [], '陪讀者身份');
+      renderReaderIdentityNote(d.readerIdentityDual || { count: 0, names: [] });
+    }
+
+    function renderReaderIdentityNote(info) {
+      const note = document.getElementById('readerIdentityNote');
+      if (!note) return;
+
+      const count = Number(info && info.count ? info.count : 0);
+
+      note.textContent = '同時具有「家長」與「服事者」身份：' + count + '位';
+    }
+
+    function drawBarChart(canvasId, rows, label) {
+      destroyChart(canvasId);
+
+      const ctx = document.getElementById(canvasId);
+
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: rows.map(function(r) { return r.label; }),
+          datasets: [{
+            label: label,
+            data: rows.map(function(r) { return r.count; })
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawPieChart(canvasId, rows, label) {
+      destroyChart(canvasId);
+
+      const ctx = document.getElementById(canvasId);
+
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: rows.map(function(r) { return r.label; }),
+          datasets: [{
+            label: label,
+            data: rows.map(function(r) { return r.count; })
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 14,
+                font: {
+                  size: 13,
+                  weight: 'bold'
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = Number(context.raw || 0);
+                  const data = context.dataset.data || [];
+                  const total = data.reduce(function(sum, item) {
+                    return sum + Number(item || 0);
+                  }, 0);
+                  const percent = total ? Math.round((value / total) * 1000) / 10 : 0;
+                  return context.label + '：' + value + '人（' + percent + '%）';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function destroyChart(canvasId) {
+      if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+      }
+    }
+
+    function renderAreaStats() {
+      const rows = adminData.areaStats || [];
+
+      const html = `
+        <table>
+          <colgroup>
+            <col style="width:14%">
+            <col style="width:9%">
+            <col style="width:10%">
+            <col style="width:10%">
+            <col style="width:12%">
+            <col style="width:13%">
+            <col style="width:13%">
+            <col style="width:10%">
+            <col style="width:9%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>照顧區</th>
+              <th>組數</th>
+              <th>孩子數</th>
+              <th>已回報</th>
+              <th>從未回報</th>
+              <th>30天未回報</th>
+              <th>60天未回報</th>
+              <th>平均完成率</th>
+              <th>中位數</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(function(row) {
+              return `
+                <tr>
+                  <td>${escapeHtml(row.careArea)}</td>
+                  <td>${row.groupCount}</td>
+                  <td>${row.childCount}</td>
+                  <td>${row.reportedGroups}</td>
+                  <td>${row.neverReportedGroups}</td>
+                  <td>${row.inactive30}</td>
+                  <td>${row.inactive60}</td>
+                  <td>${row.averageProgress}%</td>
+                  <td>${row.medianProgress}%</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('areaStatsTable').innerHTML = html;
+    }
+
+    function renderBigAreaStats() {
+      const rows = adminData.bigAreaStats || [];
+
+      const html = `
+        <table>
+          <colgroup>
+            <col style="width:12%">
+            <col style="width:12%">
+            <col style="width:8%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:11%">
+            <col style="width:13%">
+            <col style="width:13%">
+            <col style="width:8%">
+            <col style="width:5%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>照顧區</th>
+              <th>大區</th>
+              <th>組數</th>
+              <th>孩子數</th>
+              <th>已回報</th>
+              <th>從未回報</th>
+              <th>30天未回報</th>
+              <th>60天未回報</th>
+              <th>平均完成率</th>
+              <th>中位數</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(function(row) {
+              return `
+                <tr>
+                  <td>${escapeHtml(row.careArea)}</td>
+                  <td>${escapeHtml(row.bigArea)}</td>
+                  <td>${row.groupCount}</td>
+                  <td>${row.childCount}</td>
+                  <td>${row.reportedGroups}</td>
+                  <td>${row.neverReportedGroups}</td>
+                  <td>${row.inactive30}</td>
+                  <td>${row.inactive60}</td>
+                  <td>${row.averageProgress}%</td>
+                  <td>${row.medianProgress}%</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('bigAreaStatsTable').innerHTML = html;
+    }
+
+    function renderGroupTable() {
+      const rows = filteredGroups || [];
+
+      const html = `
+        <table>
+          <colgroup>
+            <col style="width:6%">
+            <col style="width:7%">
+            <col style="width:7%">
+            <col style="width:9%">
+            <col style="width:10%">
+            <col style="width:18%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:10%">
+            <col style="width:7%">
+            <col style="width:10%">
+            <col style="width:8%">
+            <col style="width:10%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>小組</th>
+              <th>照顧區</th>
+              <th>大區</th>
+              <th>填表者</th>
+              <th>陪讀者</th>
+              <th>孩子</th>
+              <th>陪讀型態</th>
+              <th>完成率</th>
+              <th>目前位置</th>
+              <th>回報次數</th>
+              <th>最後回報</th>
+              <th>未回報天數</th>
+              <th>狀態</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(function(row) {
+              return `
+                <tr>
+                  <td>${escapeHtml(row.group)}</td>
+                  <td>${escapeHtml(row.careArea)}</td>
+                  <td>${escapeHtml(row.bigArea)}</td>
+                  <td>${escapeHtml(row.registrantName)}</td>
+                  <td>${escapeHtml(row.readerNames)}</td>
+                  <td>
+                    ${escapeHtml(row.childDisplay)}
+                    <div class="small">${row.childCount}人</div>
+                    <div class="small">陪讀者累計：${escapeHtml(row.readerCareLoadText || '-')}</div>
+                  </td>
+                  <td>${loadBadge(row.childLoadBucket)}</td>
+                  <td class="progress-cell">
+                    ${row.totalPercent}%
+                    <div class="progress-bg">
+                      <div class="progress-inner" style="width:${safePercent(row.totalPercent)}%"></div>
+                    </div>
+                  </td>
+                  <td>${escapeHtml(row.currentPosition)}</td>
+                  <td>${row.reportCount}</td>
+                  <td>${escapeHtml(row.lastReportDate || '-')}</td>
+                  <td>${row.inactivityDays === null ? '從未回報' : row.inactivityDays}</td>
+                  <td>${statusBadge(row.status)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('groupTable').innerHTML = html;
+    }
+
+    function renderBookAnalysis() {
+      const rows = adminData.bookAnalysis || [];
+
+      const html = `
+        <table>
+          <colgroup>
+            <col style="width:34%">
+            <col style="width:20%">
+            <col style="width:23%">
+            <col style="width:23%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>書卷</th>
+              <th>總章數</th>
+              <th>平均完成率</th>
+              <th>完成此卷組數</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(function(row) {
+              return `
+                <tr>
+                  <td>${escapeHtml(row.book)}</td>
+                  <td>${row.totalChapters}</td>
+                  <td>${row.averagePercent}%</td>
+                  <td>${row.completedGroupCount}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('bookAnalysisTable').innerHTML = html;
+    }
+
+    function renderReaderAnalysis() {
+      const rows = adminData.readerAnalysis || [];
+
+      const html = `
+        <table>
+          <colgroup>
+            <col style="width:14%">
+            <col style="width:10%">
+            <col style="width:8%">
+            <col style="width:16%">
+            <col style="width:8%">
+            <col style="width:20%">
+            <col style="width:12%">
+            <col style="width:10%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>陪讀者</th>
+              <th>身份</th>
+              <th>帶幾組</th>
+              <th>小組</th>
+              <th>孩子數</th>
+              <th>照顧區/大區累計</th>
+              <th>平均完成率</th>
+              <th>跨組陪讀</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(function(row) {
+              return `
+                <tr>
+                  <td>${escapeHtml(row.readerName)}</td>
+                  <td>${escapeHtml(row.identities)}</td>
+                  <td>${row.groupCount}</td>
+                  <td>${escapeHtml(row.groupNos)}</td>
+                  <td>${row.childCount}</td>
+                  <td>${escapeHtml(row.scopedCareLoadText || '-')}</td>
+                  <td>${row.averageProgress}%</td>
+                  <td>${row.isCrossGroup ? '<span class="badge purple">是</span>' : '<span class="badge">否</span>'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('readerTable').innerHTML = html;
+    }
+
+    function exportCareList() {
+      const btns = document.querySelectorAll('button');
+      btns.forEach(function(btn) {
+        btn.disabled = true;
+      });
+
+      setStatus('正在匯出關懷名單...', false);
+
+      callGasApi('exportAdminCareList', {
+        settings: getCareSettings()
+      }, 120000)
+        .then(function(result) {
+          btns.forEach(function(btn) {
+            btn.disabled = false;
+          });
+
+          setStatus('已匯出：' + result.sheetName + '\n筆數：' + result.count, false);
+        })
+        .catch(function(err) {
+          btns.forEach(function(btn) {
+            btn.disabled = false;
+          });
+
+          setStatus(err && err.message ? err.message : String(err), true);
+        });
+    }
+
+    function statusBadge(status) {
+      let cls = 'badge';
+
+      if (status === '近期有回報' || status === '已完成') cls += ' green';
+      else if (status === '兩週以上未回報') cls += ' yellow';
+      else if (status === '一個月以上未回報' || status === '兩個月以上未回報' || status === '從未回報') cls += ' red';
+
+      return '<span class="' + cls + '">' + escapeHtml(status) + '</span>';
+    }
+
+    function loadBadge(text) {
+      let cls = 'badge';
+
+      if (text === '1人陪讀') cls += ' green';
+      else if (text === '2–3人陪讀') cls += ' yellow';
+      else if (text === '4–5人陪讀' || text === '6人以上陪讀') cls += ' red';
+
+      return '<span class="' + cls + '">' + escapeHtml(text) + '</span>';
+    }
+
+    function safePercent(value) {
+      const n = Number(value || 0);
+      return Math.max(0, Math.min(100, n));
+    }
+
+    function setStatus(message, isError) {
+      const status = document.getElementById('status');
+      status.textContent = message || '';
+      status.className = isError ? 'status error' : 'status';
+    }
+
+    function unique(arr) {
+      const map = {};
+      const result = [];
+
+      arr.forEach(function(item) {
+        const key = String(item || '').trim();
+        if (!key || map[key]) return;
+
+        map[key] = true;
+        result.push(key);
+      });
+
+      return result.sort(function(a, b) {
+        return String(a).localeCompare(String(b), 'zh-Hant', { numeric: true });
+      });
+    }
+
+    function average(list) {
+      const nums = (list || []).map(Number).filter(function(n) {
+        return !isNaN(n);
+      });
+
+      if (nums.length === 0) return 0;
+
+      const sum = nums.reduce(function(a, b) {
+        return a + b;
+      }, 0);
+
+      return Math.round((sum / nums.length) * 10) / 10;
+    }
+
+    function median(list) {
+      const nums = (list || []).map(Number).filter(function(n) {
+        return !isNaN(n);
+      }).sort(function(a, b) {
+        return a - b;
+      });
+
+      if (nums.length === 0) return 0;
+
+      const mid = Math.floor(nums.length / 2);
+
+      if (nums.length % 2 === 0) {
+        return Math.round(((nums[mid - 1] + nums[mid]) / 2) * 10) / 10;
+      }
+
+      return Math.round(nums[mid] * 10) / 10;
+    }
+
+    function escapeHtml(text) {
+      return String(text == null ? '' : text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
