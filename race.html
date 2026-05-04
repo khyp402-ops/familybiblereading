@@ -612,6 +612,7 @@
     let raceData = null;
     let groupMap = new Map();
     let resizeTimer = null;
+    let activeGroupId = '';
 
     const DESKTOP_VIEWBOX = '0 0 1600 900';
     const MOBILE_VIEWBOX = '0 0 900 1600';
@@ -698,8 +699,7 @@
         const keyword = normalizeGroupId(e.target.value);
 
         if (!keyword) {
-          clearHighlight();
-          closeDetail();
+          clearSelection();
           return;
         }
 
@@ -708,6 +708,7 @@
         if (group) {
           focusGroup(group.groupId);
         } else {
+          activeGroupId = '';
           showNotFound(keyword);
         }
       });
@@ -718,6 +719,10 @@
         resizeTimer = setTimeout(function() {
           applyRoute();
           renderPoints();
+
+          if (activeGroupId && groupMap.has(activeGroupId)) {
+            applyActivePointState(activeGroupId);
+          }
         }, 160);
       });
     }
@@ -821,12 +826,24 @@
         point.style.top = 'calc(' + (basePoint.y / getViewBoxHeight() * 100) + '% + ' + offsetY + 'px)';
 
         point.addEventListener('click', function() {
-          document.getElementById('searchInput').value = group.groupId;
-          focusGroup(group.groupId);
+          const clickedGroupId = String(group.groupId);
+
+          if (activeGroupId === clickedGroupId) {
+            document.getElementById('searchInput').value = '';
+            clearSelection();
+            return;
+          }
+
+          document.getElementById('searchInput').value = clickedGroupId;
+          focusGroup(clickedGroupId);
         });
 
         layer.appendChild(point);
       });
+
+      if (activeGroupId && groupMap.has(activeGroupId)) {
+        applyActivePointState(activeGroupId);
+      }
     }
 
     function getViewBoxWidth() {
@@ -847,16 +864,27 @@
     }
 
     function focusGroup(groupId) {
-      const group = groupMap.get(String(groupId));
+      const normalizedGroupId = String(groupId);
+      const group = groupMap.get(normalizedGroupId);
       if (!group) return;
 
+      activeGroupId = normalizedGroupId;
+      applyActivePointState(normalizedGroupId);
+      showDetail(group);
+    }
+
+    function applyActivePointState(groupId) {
       document.querySelectorAll('.groupPoint').forEach(function(el) {
         const active = el.dataset.groupId === String(groupId);
         el.classList.toggle('active', active);
         el.classList.toggle('dim', !active);
       });
+    }
 
-      showDetail(group);
+    function clearSelection() {
+      activeGroupId = '';
+      clearHighlight();
+      closeDetail();
     }
 
     function clearHighlight() {
