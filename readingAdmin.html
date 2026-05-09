@@ -346,7 +346,7 @@
     <section class="hero">
       <div class="eyebrow">READING PLAN ADMIN</div>
       <h1>讀經進度設定</h1>
-      <p>設定讀經節奏、緩衝週與展覽聚會日期；參加者頁面只顯示進度，不處理回報。</p>
+      <p>設定讀經節奏、補進度次數與展覽聚會日期；補進度週會平均分布在各月份區間內。</p>
     </section>
 
     <section id="loginCard" class="card login">
@@ -419,13 +419,13 @@
 
         <div class="grid-2" style="margin-bottom:16px;">
           <div>
-            <label>展覽模式說明</label>
-            <input type="text" readonly value="選「無」：這個階段不安排展覽聚會">
+            <label>補進度次數說明</label>
+            <input type="text" readonly value="每個月份區間可設定 0～3 次，系統會平均分布">
             <input id="exhibitionWeekday" type="hidden" value="0">
           </div>
           <div>
-            <label>指定日期說明</label>
-            <input type="text" readonly value="選「指定日期」：必須填寫右側指定展覽日期">
+            <label>展覽模式說明</label>
+            <input type="text" readonly value="選「無」不安排展覽；選「指定日期」需填展覽日期">
           </div>
         </div>
 
@@ -438,7 +438,7 @@
                 <th>開始月</th>
                 <th>結束月</th>
                 <th>每週章數</th>
-                <th>緩衝週數</th>
+                <th>補進度次數</th>
                 <th>展覽模式</th>
                 <th>指定展覽日期</th>
               </tr>
@@ -485,7 +485,7 @@
             <div id="sumReadingWeeks" class="value">0</div>
           </div>
           <div class="item">
-            <div class="label">緩衝展覽週</div>
+            <div class="label">補進度週</div>
             <div id="sumBufferWeeks" class="value">0</div>
           </div>
           <div class="item">
@@ -611,6 +611,14 @@
     function fromDateInput(value) {
       if (!value) return '';
       return String(value).replace(/-/g, '/');
+    }
+
+    function clampBufferWeeks(value) {
+      const number = Number(value);
+
+      if (isNaN(number)) return 0;
+
+      return Math.max(0, Math.min(3, Math.floor(number)));
     }
 
     function login() {
@@ -759,7 +767,7 @@
           <td>${monthSelect('stage-start-month', stage.startMonth)}</td>
           <td>${monthSelect('stage-end-month', stage.endMonth)}</td>
           <td><input type="number" class="stage-chapters" min="1" value="${Number(stage.chaptersPerWeek || 3)}"></td>
-          <td><input type="number" class="stage-buffer" min="0" value="${Number(stage.bufferWeeks || 0)}"></td>
+          <td><input type="number" class="stage-buffer" min="0" max="3" step="1" value="${clampBufferWeeks(stage.bufferWeeks || 0)}" onchange="normalizeBufferInput(this)" oninput="normalizeBufferInput(this)"></td>
           <td>
             <select class="stage-exhibition-mode" onchange="toggleManualDate(this)">
               <option value="無" ${normalizeExhibitionMode(stage.exhibitionMode || '無') === '無' ? 'selected' : ''}>無</option>
@@ -776,6 +784,10 @@
         const modeSelect = tr.querySelector('.stage-exhibition-mode');
         toggleManualDate(modeSelect);
       });
+    }
+
+    function normalizeBufferInput(input) {
+      input.value = clampBufferWeeks(input.value);
     }
 
     function toggleManualDate(select) {
@@ -820,7 +832,7 @@
           startMonth: Number(tr.querySelector('.stage-start-month').value),
           endMonth: Number(tr.querySelector('.stage-end-month').value),
           chaptersPerWeek: Number(tr.querySelector('.stage-chapters').value),
-          bufferWeeks: Number(tr.querySelector('.stage-buffer').value),
+          bufferWeeks: clampBufferWeeks(tr.querySelector('.stage-buffer').value),
           exhibitionMode: exhibitionMode,
           manualExhibitionDate: exhibitionMode === '指定日期' ? fromDateInput(manualDate) : '',
           enabled: tr.querySelector('.stage-enabled').checked
@@ -855,6 +867,14 @@
           manualMissing.map(function(stage) {
             return '・' + stage.name;
           }).join('\n');
+      }
+
+      const invalidBuffer = config.stages.filter(function(stage) {
+        return stage.enabled && (Number(stage.bufferWeeks) < 0 || Number(stage.bufferWeeks) > 3);
+      });
+
+      if (invalidBuffer.length) {
+        return '補進度次數只能設定 0～3 次。';
       }
 
       return '';
@@ -978,8 +998,10 @@
 
       rows.forEach(function(row) {
         const tr = document.createElement('tr');
-        const typeBadge = row.weekType === '緩衝展覽週'
-          ? '<span class="badge buffer">緩衝展覽週</span>'
+        const isBuffer = row.weekType === '緩衝展覽週' || row.weekType === '補進度週';
+
+        const typeBadge = isBuffer
+          ? '<span class="badge buffer">補進度週</span>'
           : '<span class="badge">讀經週</span>';
 
         tr.innerHTML = `
