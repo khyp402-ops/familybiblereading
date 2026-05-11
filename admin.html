@@ -358,6 +358,23 @@
       flex: 0 0 auto;
     }
 
+    .section-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .section-select {
+      width: auto;
+      min-width: 180px;
+      min-height: 40px;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 12px;
+    }
+
     .setting-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -453,7 +470,7 @@
     }
 
     .table-scroll-6 {
-      max-height: 405px;
+      max-height: 356px;
       overflow-x: auto;
       overflow-y: auto;
     }
@@ -596,6 +613,16 @@
         flex-direction: column;
       }
 
+      .section-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .section-select {
+        width: 100%;
+      }
+
       .section-title {
         font-size: 22px;
       }
@@ -720,7 +747,12 @@
       <section class="section">
         <div class="section-head">
           <div class="section-title">三、大區統計</div>
-          <button class="copy-table-btn" onclick="copyTableToClipboard('bigAreaStatsTable', this)">複製表格</button>
+          <div class="section-actions">
+            <select id="bigAreaCareAreaFilter" class="section-select" onchange="renderBigAreaStats()">
+              <option value="">全部照顧區</option>
+            </select>
+            <button class="copy-table-btn" onclick="copyTableToClipboard('bigAreaStatsTable', this)">複製表格</button>
+          </div>
         </div>
         <div id="bigAreaStatsTable" class="table-wrap"></div>
       </section>
@@ -959,7 +991,9 @@
           document.getElementById('updateTime').textContent = '更新時間：' + (adminData.generatedAt || '');
 
           initFilters();
+          initBigAreaCareAreaFilter();
           renderAll();
+
           setStatus('', false);
           document.getElementById('mainContent').style.display = 'block';
         })
@@ -998,6 +1032,26 @@
 
       careAreaFilter.value = currentCareArea;
       bigAreaFilter.value = currentBigArea;
+    }
+
+    function initBigAreaCareAreaFilter() {
+      const filter = document.getElementById('bigAreaCareAreaFilter');
+      if (!filter || !adminData) return;
+
+      const currentValue = filter.value;
+
+      filter.innerHTML = '<option value="">全部照顧區</option>';
+
+      unique((adminData.bigAreaStats || []).map(function(row) {
+        return row.careArea;
+      }).filter(Boolean)).forEach(function(value) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        filter.appendChild(option);
+      });
+
+      filter.value = currentValue;
     }
 
     function handleKeywordInput() {
@@ -1204,7 +1258,6 @@
       });
 
       renderSummary();
-      renderBigAreaStats();
       renderGroupTable();
       renderCareList();
     }
@@ -1645,17 +1698,12 @@
     }
 
     function renderBigAreaStats() {
-      const selectedCareArea = document.getElementById('careAreaFilter')
-        ? document.getElementById('careAreaFilter').value
-        : '';
-
-      const selectedBigArea = document.getElementById('bigAreaFilter')
-        ? document.getElementById('bigAreaFilter').value
+      const selectedCareArea = document.getElementById('bigAreaCareAreaFilter')
+        ? document.getElementById('bigAreaCareAreaFilter').value
         : '';
 
       const rows = (adminData.bigAreaStats || []).filter(function(row) {
         if (selectedCareArea && row.careArea !== selectedCareArea) return false;
-        if (selectedBigArea && row.bigArea !== selectedBigArea) return false;
         return true;
       });
 
