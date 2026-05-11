@@ -128,7 +128,7 @@
       position: relative;
       z-index: 3000;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
       gap: 12px;
       margin: 22px 0;
       padding: 18px;
@@ -244,6 +244,15 @@
       cursor: not-allowed;
     }
 
+    .copy-table-btn {
+      min-height: 40px;
+      padding: 9px 14px;
+      font-size: 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e0f2fe, #93c5fd);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+    }
+
     .status {
       text-align: center;
       color: var(--muted);
@@ -318,6 +327,14 @@
       overflow: hidden;
     }
 
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
     .section-title {
       display: flex;
       align-items: center;
@@ -327,6 +344,10 @@
       font-weight: 900;
     }
 
+    .section-head .section-title {
+      margin-bottom: 0;
+    }
+
     .section-title::before {
       content: "";
       width: 12px;
@@ -334,6 +355,7 @@
       border-radius: 99px;
       background: linear-gradient(180deg, var(--blue), var(--blue2));
       box-shadow: 0 0 20px rgba(96,165,250,0.38);
+      flex: 0 0 auto;
     }
 
     .setting-grid {
@@ -430,6 +452,12 @@
       background: rgba(255,255,255,0.94);
     }
 
+    .table-scroll-6 {
+      max-height: 405px;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -456,7 +484,7 @@
       background: #e0f2fe;
       color: #0f172a;
       font-weight: 900;
-      z-index: 1;
+      z-index: 2;
     }
 
     td.left,
@@ -563,8 +591,17 @@
         border-radius: 22px;
       }
 
+      .section-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
       .section-title {
         font-size: 22px;
+      }
+
+      .copy-table-btn {
+        width: 100%;
       }
 
       .chart-box {
@@ -631,7 +668,7 @@
           <div id="suggestionBox" class="suggestion-box"></div>
         </div>
 
-        <button onclick="reloadData()">重新整理</button>       
+        <button onclick="reloadData()">重新整理</button>
       </div>
 
       <div class="summary-grid" id="summaryGrid"></div>
@@ -673,17 +710,26 @@
       </section>
 
       <section class="section">
-        <div class="section-title">二、照顧區統計</div>
+        <div class="section-head">
+          <div class="section-title">二、照顧區統計</div>
+          <button class="copy-table-btn" onclick="copyTableToClipboard('areaStatsTable', this)">複製表格</button>
+        </div>
         <div id="areaStatsTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-title">三、大區統計</div>
+        <div class="section-head">
+          <div class="section-title">三、大區統計</div>
+          <button class="copy-table-btn" onclick="copyTableToClipboard('bigAreaStatsTable', this)">複製表格</button>
+        </div>
         <div id="bigAreaStatsTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-title">四、關懷名單條件設定</div>
+        <div class="section-head">
+          <div class="section-title">四、關懷名單條件設定</div>
+          <button class="copy-table-btn" onclick="copyTableToClipboard('careListTable', this)">複製表格</button>
+        </div>
 
         <div class="setting-grid">
           <div class="setting-card">
@@ -739,22 +785,31 @@
           </div>
         </div>
 
-        <div id="careListTable" class="table-wrap"></div>
+        <div id="careListTable" class="table-wrap table-scroll-6"></div>
       </section>
 
       <section class="section">
-        <div class="section-title">五、小組明細</div>
-        <div id="groupTable" class="table-wrap"></div>
+        <div class="section-head">
+          <div class="section-title">五、小組明細</div>
+          <button class="copy-table-btn" onclick="copyTableToClipboard('groupTable', this)">複製表格</button>
+        </div>
+        <div id="groupTable" class="table-wrap table-scroll-6"></div>
       </section>
 
       <section class="section">
-        <div class="section-title">六、書卷分析</div>
-        <div id="bookAnalysisTable" class="table-wrap"></div>
+        <div class="section-head">
+          <div class="section-title">六、書卷分析</div>
+          <button class="copy-table-btn" onclick="copyTableToClipboard('bookAnalysisTable', this)">複製表格</button>
+        </div>
+        <div id="bookAnalysisTable" class="table-wrap table-scroll-6"></div>
       </section>
 
       <section class="section">
-        <div class="section-title">七、陪讀者分析</div>
-        <div id="readerTable" class="table-wrap"></div>
+        <div class="section-head">
+          <div class="section-title">七、陪讀者分析</div>
+          <button class="copy-table-btn" onclick="copyTableToClipboard('readerTable', this)">複製表格</button>
+        </div>
+        <div id="readerTable" class="table-wrap table-scroll-6"></div>
       </section>
     </section>
   </div>
@@ -1149,6 +1204,7 @@
       });
 
       renderSummary();
+      renderBigAreaStats();
       renderGroupTable();
       renderCareList();
     }
@@ -1589,7 +1645,19 @@
     }
 
     function renderBigAreaStats() {
-      const rows = adminData.bigAreaStats || [];
+      const selectedCareArea = document.getElementById('careAreaFilter')
+        ? document.getElementById('careAreaFilter').value
+        : '';
+
+      const selectedBigArea = document.getElementById('bigAreaFilter')
+        ? document.getElementById('bigAreaFilter').value
+        : '';
+
+      const rows = (adminData.bigAreaStats || []).filter(function(row) {
+        if (selectedCareArea && row.careArea !== selectedCareArea) return false;
+        if (selectedBigArea && row.bigArea !== selectedBigArea) return false;
+        return true;
+      });
 
       const html = `
         <table>
@@ -1800,6 +1868,91 @@
       `;
 
       document.getElementById('readerTable').innerHTML = html;
+    }
+
+    function copyTableToClipboard(containerId, button) {
+      const container = document.getElementById(containerId);
+      const table = container ? container.querySelector('table') : null;
+
+      if (!table) {
+        setStatus('找不到可複製的表格', true);
+        return;
+      }
+
+      const rows = Array.prototype.slice.call(table.querySelectorAll('tr')).map(function(row) {
+        return Array.prototype.slice.call(row.querySelectorAll('th, td')).map(function(cell) {
+          return normalizeCopyCell(cell.innerText || cell.textContent || '');
+        }).join('\t');
+      }).join('\n');
+
+      if (!rows.trim()) {
+        setStatus('表格沒有可複製的內容', true);
+        return;
+      }
+
+      writeTextToClipboard(rows)
+        .then(function() {
+          showCopyButtonDone(button);
+        })
+        .catch(function() {
+          setStatus('複製失敗，請改用手動選取表格內容', true);
+        });
+    }
+
+    function normalizeCopyCell(text) {
+      return String(text || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\s*\n\s*/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function writeTextToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+
+      return new Promise(function(resolve, reject) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        try {
+          const ok = document.execCommand('copy');
+          document.body.removeChild(textarea);
+
+          if (ok) {
+            resolve();
+          } else {
+            reject(new Error('copy failed'));
+          }
+        } catch (err) {
+          document.body.removeChild(textarea);
+          reject(err);
+        }
+      });
+    }
+
+    function showCopyButtonDone(button) {
+      if (!button) return;
+
+      const originalText = button.textContent;
+      button.textContent = '已複製';
+      button.disabled = true;
+
+      setTimeout(function() {
+        button.textContent = originalText;
+        button.disabled = false;
+      }, 1200);
     }
 
     function exportCareList() {
