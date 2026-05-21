@@ -703,7 +703,7 @@
             <option value="女">女</option>
           </select>
 
-          <label>學籍</label>
+          <label>學制</label>
           <select id="youthSchool">
             <option value="">請選擇</option>
             <option value="國中">國中</option>
@@ -985,7 +985,7 @@
           <option value="女">女</option>
         </select>
 
-        <label>學籍</label>
+        <label>學制</label>
         <select class="child-school">
           <option value="">請選擇</option>
           <option value="國中">國中</option>
@@ -1146,7 +1146,7 @@
 
     function validateYouthPayload(payload) {
       if (!payload.youthGender) return '請選擇青少年性別';
-      if (!payload.youthSchool) return '請選擇青少年學籍';
+      if (!payload.youthSchool) return '請選擇青少年學制';
       if (!payload.companionRole) return '請選擇陪讀者身份';
       if (!payload.companionName) return '請填寫家長姓名或服事者姓名';
       if (payload.companionRole === '服事者' && !payload.unableReason) {
@@ -1163,7 +1163,7 @@
 
         if (!child.name) return '第 ' + (i + 1) + ' 位孩子未填姓名';
         if (!child.gender) return '第 ' + (i + 1) + ' 位孩子未選性別';
-        if (!child.school) return '第 ' + (i + 1) + ' 位孩子未選學籍';
+        if (!child.school) return '第 ' + (i + 1) + ' 位孩子未選學制';
       }
 
       return '';
