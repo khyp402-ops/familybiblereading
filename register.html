@@ -729,7 +729,7 @@
         </div>
 
         <div id="parentSection" class="card hidden">
-          <div class="section-title">孩子資料</div>
+          <div class="section-title">兒女資料</div>
 
           <div id="childrenContainer"></div>
 
@@ -741,7 +741,7 @@
           </div>
 
           <div class="hint">
-            家長一次報名多位孩子時，系統會給同一個報名小組編號。
+            家長一次報名多位兒女時，系統會給同一個報名小組編號。
           </div>
         </div>
 
@@ -972,12 +972,12 @@
 
       div.innerHTML = `
         <div class="child-header">
-          <span>孩子 ${index}</span>
+          <span>兒女 ${index}</span>
           ${index === 1 ? '' : '<button type="button" class="remove-child">刪除</button>'}
         </div>
 
         <label>姓名</label>
-        <input class="child-name" type="text" placeholder="請輸入孩子姓名">
+        <input class="child-name" type="text" placeholder="請輸入兒女姓名">
 
         <label>性別</label>
         <select class="child-gender">
@@ -1011,7 +1011,7 @@
       const cards = document.querySelectorAll('.child-card');
 
       cards.forEach((card, index) => {
-        card.querySelector('.child-header span').textContent = '孩子 ' + (index + 1);
+        card.querySelector('.child-header span').textContent = '兒女 ' + (index + 1);
 
         const header = card.querySelector('.child-header');
         let removeBtn = card.querySelector('.remove-child');
@@ -1158,14 +1158,14 @@
     }
 
     function validateChildrenPayload(children) {
-      if (!children || children.length === 0) return '請至少填寫一位孩子資料';
+      if (!children || children.length === 0) return '請至少填寫一位兒女資料';
 
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
-        if (!child.name) return '第 ' + (i + 1) + ' 位孩子未填姓名';
-        if (!child.gender) return '第 ' + (i + 1) + ' 位孩子未選性別';
-        if (!child.school) return '第 ' + (i + 1) + ' 位孩子未選學制';
+        if (!child.name) return '第 ' + (i + 1) + ' 位兒女未填姓名';
+        if (!child.gender) return '第 ' + (i + 1) + ' 位兒女未選性別';
+        if (!child.school) return '第 ' + (i + 1) + ' 位兒女未選學制';
       }
 
       return '';
