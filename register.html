@@ -686,7 +686,7 @@
 
           <label>填表者身份</label>
           <div class="radio-row three">
-            <div id="roleYouthBtn" class="radio-btn" onclick="selectApplicantRole('青少年')">青少年</div>
+            <div id="roleYouthBtn" class="radio-btn" onclick="selectApplicantRole('兒女')">兒女</div>
             <div id="roleParentBtn" class="radio-btn" onclick="selectApplicantRole('家長')">家長</div>
             <div id="roleWorkerBtn" class="radio-btn" onclick="selectApplicantRole('服事者')">服事者</div>
           </div>
@@ -694,7 +694,7 @@
         </div>
 
         <div id="youthSection" class="card hidden">
-          <div class="section-title">青少年資料</div>
+          <div class="section-title">兒女資料</div>
 
           <label>性別</label>
           <select id="youthGender">
@@ -924,11 +924,11 @@
     function selectApplicantRole(role) {
       document.getElementById('applicantRole').value = role;
 
-      document.getElementById('roleYouthBtn').classList.toggle('active', role === '青少年');
+      document.getElementById('roleYouthBtn').classList.toggle('active', role === '兒女');
       document.getElementById('roleParentBtn').classList.toggle('active', role === '家長');
       document.getElementById('roleWorkerBtn').classList.toggle('active', role === '服事者');
 
-      document.getElementById('youthSection').classList.toggle('hidden', role !== '青少年');
+      document.getElementById('youthSection').classList.toggle('hidden', role !== '兒女');
       document.getElementById('parentSection').classList.toggle('hidden', role !== '家長' && role !== '服事者');
 
       document.getElementById('workerUnableReasonBlock').classList.toggle('hidden', role !== '服事者');
@@ -1063,7 +1063,7 @@
         return;
       }
 
-      if (applicantRole === '青少年') {
+      if (applicantRole === '兒女') {
         payload.youthGender = document.getElementById('youthGender').value;
         payload.youthSchool = document.getElementById('youthSchool').value;
         payload.companionRole = document.getElementById('companionRole').value;
@@ -1147,8 +1147,8 @@
     }
 
     function validateYouthPayload(payload) {
-      if (!payload.youthGender) return '請選擇青少年性別';
-      if (!payload.youthSchool) return '請選擇青少年學制';
+      if (!payload.youthGender) return '請選擇兒女性別';
+      if (!payload.youthSchool) return '請選擇兒女學制';
       if (!payload.companionRole) return '請選擇陪讀者身份';
       if (!payload.companionName) return '請填寫家長姓名或服事者姓名';
       if (payload.companionRole === '服事者' && !payload.unableReason) {
