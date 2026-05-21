@@ -724,7 +724,7 @@
           </div>
 
           <div class="chart-box">
-            <div class="chart-title">孩子學籍分布</div>
+            <div class="chart-title">孩子學制分布</div>
             <canvas id="schoolChart"></canvas>
           </div>
 
@@ -1546,7 +1546,7 @@
       drawBarChart('inactivityChart', d.inactivity || [], '未回報時間');
       drawBarChart('childLoadChart', d.childLoad || [], '陪讀人數型態');
       drawBarChart('frequencyChart', d.reportFrequency || [], '平均回報間隔');
-      drawPieChart('schoolChart', d.school || [], '孩子學籍');
+      drawPieChart('schoolChart', d.school || [], '孩子學制');
       drawPieChart('readerIdentityChart', d.readerIdentity || [], '陪讀者身份');
       renderReaderIdentityNote(d.readerIdentityDual || { count: 0, names: [] });
     }
