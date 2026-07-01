@@ -669,6 +669,11 @@
             <option value="">請先選擇照顧區</option>
           </select>
 
+          <label>選擇參與梯次</label>
+          <select id="batchSelect">
+            <option value="">載入中...</option>
+          </select>
+
           <label>填表者姓名</label>
           <input id="applicantName" type="text" placeholder="請輸入姓名" autocomplete="name">
 
@@ -686,7 +691,7 @@
 
           <label>填表者身份</label>
           <div class="radio-row three">
-            <div id="roleYouthBtn" class="radio-btn" onclick="selectApplicantRole('兒女')">兒女</div>
+            <div id="roleYouthBtn" class="radio-btn" onclick="selectApplicantRole('青少年')">青少年</div>
             <div id="roleParentBtn" class="radio-btn" onclick="selectApplicantRole('家長')">家長</div>
             <div id="roleWorkerBtn" class="radio-btn" onclick="selectApplicantRole('服事者')">服事者</div>
           </div>
@@ -694,7 +699,7 @@
         </div>
 
         <div id="youthSection" class="card hidden">
-          <div class="section-title">兒女資料</div>
+          <div class="section-title">青少年資料</div>
 
           <label>性別</label>
           <select id="youthGender">
@@ -703,10 +708,9 @@
             <option value="女">女</option>
           </select>
 
-          <label>學制</label>
+          <label>學籍</label>
           <select id="youthSchool">
             <option value="">請選擇</option>
-            <option value="國小">國小</option>
             <option value="國中">國中</option>
             <option value="高中">高中</option>
             <option value="五專">五專</option>
@@ -729,7 +733,7 @@
         </div>
 
         <div id="parentSection" class="card hidden">
-          <div class="section-title">兒女資料</div>
+          <div class="section-title">孩子資料</div>
 
           <div id="childrenContainer"></div>
 
@@ -741,7 +745,7 @@
           </div>
 
           <div class="hint">
-            家長一次報名多位兒女時，系統會給同一個報名小組編號。
+            家長一次報名多位孩子時，系統會給同一個報名小組編號。
           </div>
         </div>
 
@@ -755,7 +759,8 @@
   <div id="warningOverlay" class="overlay hidden">
     <div class="overlay-box">
       <div class="overlay-title">提醒</div>
-      <div class="overlay-text">以家庭報名優先，家長無法陪伴才選擇此項。服事者會根據情況跟家長確認。</div>
+      <div class="overlay-text">以家庭報名優先，家長無法陪伴才選擇此項。服事者會根據情況跟家長確認。
+      </div>
       <button class="overlay-btn" onclick="closeWarning()">我知道了</button>
     </div>
   </div>
@@ -780,82 +785,21 @@
     </div>
   </div>
 
+  <script src="./api.js"></script>
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
-
     let districtsByArea = {};
+    let activeBatches = [];
     let exitButtonUrl = '';
 
     window.onload = function () {
-      callGasApi('getInitialData')
+      FamilyBibleApi.call('getInitialData')
         .then(initForm)
         .catch(showError);
     };
 
-    function callGasApi(action, payload) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'gasCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-        }, 20000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
-
     function initForm(data) {
       districtsByArea = data.districtsByArea || {};
+      activeBatches = data.activeBatches || [];
       exitButtonUrl = data.exitButtonUrl || '';
 
       const exitPageBtn = document.getElementById('exitPageBtn');
@@ -883,6 +827,34 @@
         option.textContent = area;
         areaSelect.appendChild(option);
       });
+
+      initBatchSelect(activeBatches);
+    }
+
+    function initBatchSelect(batches) {
+      const batchSelect = document.getElementById('batchSelect');
+      if (!batchSelect) return;
+
+      batchSelect.innerHTML = '<option value="">請選擇參與梯次</option>';
+
+      if (!batches || batches.length === 0) {
+        batchSelect.innerHTML = '<option value="">目前沒有可報名梯次</option>';
+        batchSelect.disabled = true;
+        return;
+      }
+
+      batches.forEach(batch => {
+        const option = document.createElement('option');
+        option.value = batch.batchId || '';
+        option.textContent = batch.batchName || batch.batchId || '';
+        batchSelect.appendChild(option);
+      });
+
+      batchSelect.disabled = false;
+
+      if (batches.length === 1) {
+        batchSelect.value = batches[0].batchId || '';
+      }
     }
 
     function handleAreaChange() {
@@ -924,11 +896,11 @@
     function selectApplicantRole(role) {
       document.getElementById('applicantRole').value = role;
 
-      document.getElementById('roleYouthBtn').classList.toggle('active', role === '兒女');
+      document.getElementById('roleYouthBtn').classList.toggle('active', role === '青少年');
       document.getElementById('roleParentBtn').classList.toggle('active', role === '家長');
       document.getElementById('roleWorkerBtn').classList.toggle('active', role === '服事者');
 
-      document.getElementById('youthSection').classList.toggle('hidden', role !== '兒女');
+      document.getElementById('youthSection').classList.toggle('hidden', role !== '青少年');
       document.getElementById('parentSection').classList.toggle('hidden', role !== '家長' && role !== '服事者');
 
       document.getElementById('workerUnableReasonBlock').classList.toggle('hidden', role !== '服事者');
@@ -972,12 +944,12 @@
 
       div.innerHTML = `
         <div class="child-header">
-          <span>兒女 ${index}</span>
+          <span>孩子 ${index}</span>
           ${index === 1 ? '' : '<button type="button" class="remove-child">刪除</button>'}
         </div>
 
         <label>姓名</label>
-        <input class="child-name" type="text" placeholder="請輸入兒女姓名">
+        <input class="child-name" type="text" placeholder="請輸入孩子姓名">
 
         <label>性別</label>
         <select class="child-gender">
@@ -986,10 +958,9 @@
           <option value="女">女</option>
         </select>
 
-        <label>學制</label>
+        <label>學籍</label>
         <select class="child-school">
           <option value="">請選擇</option>
-          <option value="國小">國小</option>
           <option value="國中">國中</option>
           <option value="高中">高中</option>
           <option value="五專">五專</option>
@@ -1011,7 +982,7 @@
       const cards = document.querySelectorAll('.child-card');
 
       cards.forEach((card, index) => {
-        card.querySelector('.child-header span').textContent = '兒女 ' + (index + 1);
+        card.querySelector('.child-header span').textContent = '孩子 ' + (index + 1);
 
         const header = card.querySelector('.child-header');
         let removeBtn = card.querySelector('.remove-child');
@@ -1049,6 +1020,7 @@
         area: document.getElementById('areaSelect').value,
         district: document.getElementById('districtSelect').value,
         applicantName: document.getElementById('applicantName').value.trim(),
+        batchId: document.getElementById('batchSelect') ? document.getElementById('batchSelect').value : '',
         subscribeReport: document.getElementById('subscribeReport').value,
         email: document.getElementById('email').value.trim(),
         applicantRole: applicantRole
@@ -1063,7 +1035,7 @@
         return;
       }
 
-      if (applicantRole === '兒女') {
+      if (applicantRole === '青少年') {
         payload.youthGender = document.getElementById('youthGender').value;
         payload.youthSchool = document.getElementById('youthSchool').value;
         payload.companionRole = document.getElementById('companionRole').value;
@@ -1112,15 +1084,29 @@
         }
       }
 
-      callGasApi('submitRegistration', payload)
+      FamilyBibleApi.call('submitRegistration', payload)
         .then(function (result) {
           submitBtn.disabled = false;
           submitBtn.textContent = '提交報名';
 
-          document.getElementById('successText').innerHTML =
+          let successHtml =
             '您的組別：' + result.groupNo + '<br>' +
             '成功寫入 ' + result.count + ' 筆資料';
 
+          if (result.batchName) {
+            successHtml += '<br>梯次：' + escapeHtml(result.batchName);
+          }
+
+          if (result.queryCode) {
+            successHtml += '<br>查詢碼：' + escapeHtml(result.queryCode);
+          }
+
+          if (result.reportUrl) {
+            successHtml += '<br><br>專屬回報連結：<br>' +
+              '<span style="font-size:18px; word-break:break-all;">' + escapeHtml(result.reportUrl) + '</span>';
+          }
+
+          document.getElementById('successText').innerHTML = successHtml;
           document.getElementById('successOverlay').classList.remove('hidden');
         })
         .catch(function (err) {
@@ -1133,6 +1119,7 @@
     function validatePayloadBeforeSubmit(payload) {
       if (!payload.area) return '請選擇照顧區';
       if (!payload.district) return '請選擇大區';
+      if (activeBatches && activeBatches.length > 0 && !payload.batchId) return '請選擇參與梯次';
       if (!payload.applicantName) return '請填寫填表者姓名';
       if (!payload.subscribeReport) return '請選擇是否願意定期收到報表';
 
@@ -1147,8 +1134,8 @@
     }
 
     function validateYouthPayload(payload) {
-      if (!payload.youthGender) return '請選擇兒女性別';
-      if (!payload.youthSchool) return '請選擇兒女學制';
+      if (!payload.youthGender) return '請選擇青少年性別';
+      if (!payload.youthSchool) return '請選擇青少年學籍';
       if (!payload.companionRole) return '請選擇陪讀者身份';
       if (!payload.companionName) return '請填寫家長姓名或服事者姓名';
       if (payload.companionRole === '服事者' && !payload.unableReason) {
@@ -1158,17 +1145,26 @@
     }
 
     function validateChildrenPayload(children) {
-      if (!children || children.length === 0) return '請至少填寫一位兒女資料';
+      if (!children || children.length === 0) return '請至少填寫一位孩子資料';
 
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
 
-        if (!child.name) return '第 ' + (i + 1) + ' 位兒女未填姓名';
-        if (!child.gender) return '第 ' + (i + 1) + ' 位兒女未選性別';
-        if (!child.school) return '第 ' + (i + 1) + ' 位兒女未選學制';
+        if (!child.name) return '第 ' + (i + 1) + ' 位孩子未填姓名';
+        if (!child.gender) return '第 ' + (i + 1) + ' 位孩子未選性別';
+        if (!child.school) return '第 ' + (i + 1) + ' 位孩子未選學籍';
       }
 
       return '';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     function isValidEmail(email) {
@@ -1184,6 +1180,11 @@
 
       const districtSelect = document.getElementById('districtSelect');
       districtSelect.innerHTML = '<option value="">請先選擇照顧區</option>';
+
+      const batchSelect = document.getElementById('batchSelect');
+      if (batchSelect && activeBatches.length !== 1) {
+        batchSelect.value = '';
+      }
 
       document.getElementById('applicantName').value = '';
       document.getElementById('subscribeReport').value = '';
@@ -1226,11 +1227,15 @@
       const url = String(exitButtonUrl || '').trim();
 
       if (url) {
-        window.location.href = url;
+        window.top.location.href = url;
         return;
       }
 
-      window.location.href = './';
+      window.close();
+
+      setTimeout(function () {
+        window.location.href = 'about:blank';
+      }, 200);
     }
 
     function closeWarning() {
