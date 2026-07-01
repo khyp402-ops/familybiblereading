@@ -3,8 +3,6 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
     :root {
       --bg1: #fff4df;
@@ -498,14 +496,13 @@
     }
   </style>
 </head>
-
 <body>
   <div class="page">
     <section class="hero">
       <div class="hero-inner">
         <div class="eyebrow">READING WEEKLY PLAN</div>
         <h1 id="planName">讀經進度表</h1>
-        <p class="subtitle">青少年家庭共讀進度。日期依台北時間判斷。</p>
+        <p class="subtitle">青少年家庭共讀官方進度。日期依台北時間判斷。</p>
       </div>
     </section>
 
@@ -560,84 +557,21 @@
     </section>
   </div>
 
+  <script src="./api.js"></script>
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
-
     let currentWeekNo = null;
     let allRows = [];
     let taipeiTodayDate = null;
 
     window.addEventListener('load', function () {
-      callGasApi('readingGetPublicSchedule')
+      FamilyBibleApi.call('readingGetPublicSchedule')
         .then(renderPage)
         .catch(function (err) {
           const notice = document.getElementById('emptyNotice');
           notice.style.display = 'block';
-          notice.textContent = err && err.message ? err.message : String(err);
+          notice.textContent = err.message || String(err);
         });
     });
-
-    function callGasApi(action, payload) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'readingCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-        }, 20000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
 
     function renderPage(res) {
       if (!res || !res.success || !res.rows || !res.rows.length) {
