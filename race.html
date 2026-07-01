@@ -3,7 +3,6 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
   :root {
@@ -606,13 +605,11 @@
     </div>
   </div>
 
+  <script src="./api.js"></script>
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
-
     let raceData = null;
     let groupMap = new Map();
     let resizeTimer = null;
-    let activeGroupId = '';
 
     const DESKTOP_VIEWBOX = '0 0 1600 900';
     const MOBILE_VIEWBOX = '0 0 900 1600';
@@ -623,83 +620,22 @@
 
     document.addEventListener('DOMContentLoaded', initRacePage);
 
-    function callGasApi(action, payload) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'raceCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-        }, 20000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
-
     function initRacePage() {
       applyRoute();
       bindEvents();
 
-      callGasApi('getRaceData')
+      FamilyBibleApi.call('getRaceData')
         .then(handleData)
         .catch(handleError);
     }
 
     function bindEvents() {
-      document.getElementById('searchInput').addEventListener('input', function(e) {
+      document.getElementById('searchInput').addEventListener('input', e => {
         const keyword = normalizeGroupId(e.target.value);
 
         if (!keyword) {
-          clearSelection();
+          clearHighlight();
+          closeDetail();
           return;
         }
 
@@ -708,21 +644,15 @@
         if (group) {
           focusGroup(group.groupId);
         } else {
-          activeGroupId = '';
           showNotFound(keyword);
         }
       });
 
-      window.addEventListener('resize', function() {
+      window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-
-        resizeTimer = setTimeout(function() {
+        resizeTimer = setTimeout(() => {
           applyRoute();
           renderPoints();
-
-          if (activeGroupId && groupMap.has(activeGroupId)) {
-            applyActivePointState(activeGroupId);
-          }
         }, 160);
       });
     }
@@ -731,12 +661,12 @@
       raceData = data;
       groupMap = new Map();
 
-      data.groups.forEach(function(g) {
+      data.groups.forEach(g => {
         groupMap.set(String(g.groupId), g);
       });
 
       document.getElementById('subtitle').textContent =
-        '共 ' + data.groups.length + ' 組正在奔跑｜新約共 ' + data.totalChapters + ' 章';
+        `共 ${data.groups.length} 組正在奔跑｜新約共 ${data.totalChapters} 章`;
 
       document.getElementById('loading').style.display = 'none';
       renderPoints();
@@ -744,7 +674,7 @@
 
     function handleError(err) {
       document.getElementById('loading').innerHTML =
-        '<div class="error">讀取失敗：' + escapeHtml(err.message || err) + '</div>';
+        `<div class="error">讀取失敗：${escapeHtml(err.message || err)}</div>`;
     }
 
     function isMobile() {
@@ -802,7 +732,7 @@
       const length = route.getTotalLength();
       const usedSlots = {};
 
-      raceData.groups.forEach(function(group) {
+      raceData.groups.forEach(group => {
         const percent = Math.max(0, Math.min(100, Number(group.percent) || 0));
         const basePoint = route.getPointAtLength(length * (percent / 100));
 
@@ -818,32 +748,20 @@
         const offsetY = Math.sin(angle * Math.PI / 180) * radius;
 
         const point = document.createElement('div');
-        point.className = 'groupPoint ' + getPercentClass(percent);
+        point.className = `groupPoint ${getPercentClass(percent)}`;
         point.dataset.groupId = group.groupId;
         point.textContent = group.groupId;
 
-        point.style.left = 'calc(' + (basePoint.x / getViewBoxWidth() * 100) + '% + ' + offsetX + 'px)';
-        point.style.top = 'calc(' + (basePoint.y / getViewBoxHeight() * 100) + '% + ' + offsetY + 'px)';
+        point.style.left = `calc(${basePoint.x / getViewBoxWidth() * 100}% + ${offsetX}px)`;
+        point.style.top = `calc(${basePoint.y / getViewBoxHeight() * 100}% + ${offsetY}px)`;
 
-        point.addEventListener('click', function() {
-          const clickedGroupId = String(group.groupId);
-
-          if (activeGroupId === clickedGroupId) {
-            document.getElementById('searchInput').value = '';
-            clearSelection();
-            return;
-          }
-
-          document.getElementById('searchInput').value = clickedGroupId;
-          focusGroup(clickedGroupId);
+        point.addEventListener('click', () => {
+          document.getElementById('searchInput').value = group.groupId;
+          focusGroup(group.groupId);
         });
 
         layer.appendChild(point);
       });
-
-      if (activeGroupId && groupMap.has(activeGroupId)) {
-        applyActivePointState(activeGroupId);
-      }
     }
 
     function getViewBoxWidth() {
@@ -864,31 +782,20 @@
     }
 
     function focusGroup(groupId) {
-      const normalizedGroupId = String(groupId);
-      const group = groupMap.get(normalizedGroupId);
+      const group = groupMap.get(String(groupId));
       if (!group) return;
 
-      activeGroupId = normalizedGroupId;
-      applyActivePointState(normalizedGroupId);
-      showDetail(group);
-    }
-
-    function applyActivePointState(groupId) {
-      document.querySelectorAll('.groupPoint').forEach(function(el) {
+      document.querySelectorAll('.groupPoint').forEach(el => {
         const active = el.dataset.groupId === String(groupId);
         el.classList.toggle('active', active);
         el.classList.toggle('dim', !active);
       });
-    }
 
-    function clearSelection() {
-      activeGroupId = '';
-      clearHighlight();
-      closeDetail();
+      showDetail(group);
     }
 
     function clearHighlight() {
-      document.querySelectorAll('.groupPoint').forEach(function(el) {
+      document.querySelectorAll('.groupPoint').forEach(el => {
         el.classList.remove('active', 'dim');
       });
     }
@@ -897,18 +804,16 @@
       const card = document.getElementById('detailCard');
 
       const booksHtml = group.books.length
-        ? group.books.map(function(book) {
-          return `
-            <div class="bookRow">
-              <div>${escapeHtml(book.shortName)}</div>
-              <div class="bar">
-                <div class="barFill" style="width:${book.percent}%"></div>
-              </div>
-              <div>${book.done}/${book.total}</div>
+        ? group.books.map(book => `
+          <div class="bookRow">
+            <div>${escapeHtml(book.shortName)}</div>
+            <div class="bar">
+              <div class="barFill" style="width:${book.percent}%"></div>
             </div>
-          `;
-        }).join('')
-        : '<div style="color:#6b7280;font-weight:800;">尚無回報</div>';
+            <div>${book.done}/${book.total}</div>
+          </div>
+        `).join('')
+        : `<div style="color:#6b7280;font-weight:800;">尚無回報</div>`;
 
       card.innerHTML = `
         <div class="detailTitle">
@@ -934,7 +839,6 @@
       clearHighlight();
 
       const card = document.getElementById('detailCard');
-
       card.innerHTML = `
         <div class="detailTitle">
           <span>找不到 ${escapeHtml(keyword)} 組</span>
@@ -943,7 +847,6 @@
           請確認小組編號是否存在。
         </div>
       `;
-
       card.classList.add('open');
     }
 
