@@ -2,7 +2,6 @@
 <html>
 <head>
   <base target="_top">
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
@@ -28,15 +27,19 @@
       --accent-red-dark: #7f3f40;
 
       --card: rgba(244, 246, 248, 0.11);
+      --card-strong: rgba(244, 246, 248, 0.16);
       --border: rgba(244, 246, 248, 0.18);
+      --border-strong: rgba(244, 246, 248, 0.28);
 
       --text: #f5f7fa;
+      --text-soft: #d7dee7;
       --text-muted: #aab7c6;
 
       --success: #8fd19e;
       --error: #ff9a95;
 
       --shadow: rgba(0, 0, 0, 0.36);
+      --shadow-strong: rgba(0, 0, 0, 0.5);
     }
 
     * {
@@ -414,6 +417,10 @@
       border: 1px solid rgba(244,246,248,0.16);
     }
 
+    .note strong {
+      color: var(--blue-0);
+    }
+
     .status {
       margin-top: 17px;
       min-height: 28px;
@@ -597,11 +604,10 @@
     </section>
   </div>
 
+  <script src="./api.js"></script>
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
-
     window.onload = function() {
-      callGasApi('getMailPageInitData', null, 30000)
+      FamilyBibleApi.call('getMailPageInitData')
         .then(function(data) {
           const status = document.getElementById('scheduleStatus');
 
@@ -624,68 +630,6 @@
         });
     };
 
-    function callGasApi(action, payload, timeoutMs) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'mailCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址、部署權限，或寄送時間是否過長'));
-        }, timeoutMs || 30000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined && payload !== null) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
-
     function saveSchedule() {
       const dayOfWeek = document.getElementById('dayOfWeek').value;
       const hour = document.getElementById('hour').value;
@@ -704,10 +648,10 @@
       btn.disabled = true;
       showStatus('scheduleStatus', '儲存中...', false);
 
-      callGasApi('saveMailSchedule', {
+      FamilyBibleApi.call('saveMailSchedule', {
         dayOfWeek: dayOfWeek,
         hour: hour
-      }, 45000)
+      })
         .then(function(result) {
           btn.disabled = false;
           showStatus('scheduleStatus', result.message || '已儲存排程', false, true);
@@ -723,7 +667,7 @@
       btn.disabled = true;
       showStatus('scheduleStatus', '刪除中...', false);
 
-      callGasApi('deleteMailSchedule', null, 45000)
+      FamilyBibleApi.call('deleteMailSchedule')
         .then(function(result) {
           btn.disabled = false;
           document.getElementById('dayOfWeek').value = '';
@@ -739,18 +683,14 @@
     function sendNow() {
       const btn = document.getElementById('sendNowBtn');
       btn.disabled = true;
-      showStatus('sendStatus', '寄送中，請勿關閉頁面...', false);
+      showStatus('sendStatus', '寄送中...', false);
 
-      callGasApi('sendReportNow', null, 180000)
+      FamilyBibleApi.call('sendReportNow')
         .then(function(result) {
           btn.disabled = false;
 
           let message = result.message || '已完成寄送';
           message += '\n寄送人數：' + result.sentCount;
-
-          if (result.emailList && result.emailList.length) {
-            message += '\n收件信箱：' + result.emailList.join('、');
-          }
 
           showStatus('sendStatus', message, false, true);
         })
