@@ -128,7 +128,7 @@
       position: relative;
       z-index: 3000;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
       gap: 12px;
       margin: 22px 0;
       padding: 18px;
@@ -244,15 +244,6 @@
       cursor: not-allowed;
     }
 
-    .copy-table-btn {
-      min-height: 40px;
-      padding: 9px 14px;
-      font-size: 14px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #e0f2fe, #93c5fd);
-      box-shadow: 0 10px 22px rgba(0,0,0,0.18);
-    }
-
     .status {
       text-align: center;
       color: var(--muted);
@@ -327,14 +318,6 @@
       overflow: hidden;
     }
 
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
     .section-title {
       display: flex;
       align-items: center;
@@ -344,10 +327,6 @@
       font-weight: 900;
     }
 
-    .section-head .section-title {
-      margin-bottom: 0;
-    }
-
     .section-title::before {
       content: "";
       width: 12px;
@@ -355,24 +334,6 @@
       border-radius: 99px;
       background: linear-gradient(180deg, var(--blue), var(--blue2));
       box-shadow: 0 0 20px rgba(96,165,250,0.38);
-      flex: 0 0 auto;
-    }
-
-    .section-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .section-select {
-      width: auto;
-      min-width: 180px;
-      min-height: 40px;
-      padding: 8px 12px;
-      font-size: 14px;
-      border-radius: 12px;
     }
 
     .setting-grid {
@@ -469,12 +430,6 @@
       background: rgba(255,255,255,0.94);
     }
 
-    .table-scroll-6 {
-      max-height: 356px;
-      overflow-x: auto;
-      overflow-y: auto;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -501,7 +456,7 @@
       background: #e0f2fe;
       color: #0f172a;
       font-weight: 900;
-      z-index: 2;
+      z-index: 1;
     }
 
     td.left,
@@ -608,27 +563,8 @@
         border-radius: 22px;
       }
 
-      .section-head {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .section-actions {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .section-select {
-        width: 100%;
-      }
-
       .section-title {
         font-size: 22px;
-      }
-
-      .copy-table-btn {
-        width: 100%;
       }
 
       .chart-box {
@@ -696,6 +632,7 @@
         </div>
 
         <button onclick="reloadData()">重新整理</button>
+        <button class="secondary" onclick="exportCareList()">匯出關懷名單</button>
       </div>
 
       <div class="summary-grid" id="summaryGrid"></div>
@@ -724,7 +661,7 @@
           </div>
 
           <div class="chart-box">
-            <div class="chart-title">孩子學制分布</div>
+            <div class="chart-title">孩子學籍分布</div>
             <canvas id="schoolChart"></canvas>
           </div>
 
@@ -737,31 +674,17 @@
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div class="section-title">二、照顧區統計</div>
-          <button class="copy-table-btn" onclick="copyTableToClipboard('areaStatsTable', this)">複製表格</button>
-        </div>
+        <div class="section-title">二、照顧區統計</div>
         <div id="areaStatsTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div class="section-title">三、大區統計</div>
-          <div class="section-actions">
-            <select id="bigAreaCareAreaFilter" class="section-select" onchange="renderBigAreaStats()">
-              <option value="">全部照顧區</option>
-            </select>
-            <button class="copy-table-btn" onclick="copyTableToClipboard('bigAreaStatsTable', this)">複製表格</button>
-          </div>
-        </div>
+        <div class="section-title">三、大區統計</div>
         <div id="bigAreaStatsTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div class="section-title">四、關懷名單條件設定</div>
-          <button class="copy-table-btn" onclick="copyTableToClipboard('careListTable', this)">複製表格</button>
-        </div>
+        <div class="section-title">四、關懷名單條件設定</div>
 
         <div class="setting-grid">
           <div class="setting-card">
@@ -817,38 +740,28 @@
           </div>
         </div>
 
-        <div id="careListTable" class="table-wrap table-scroll-6"></div>
+        <div id="careListTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div class="section-title">五、小組明細</div>
-          <button class="copy-table-btn" onclick="copyTableToClipboard('groupTable', this)">複製表格</button>
-        </div>
-        <div id="groupTable" class="table-wrap table-scroll-6"></div>
+        <div class="section-title">五、小組明細</div>
+        <div id="groupTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div class="section-title">六、書卷分析</div>
-          <button class="copy-table-btn" onclick="copyTableToClipboard('bookAnalysisTable', this)">複製表格</button>
-        </div>
-        <div id="bookAnalysisTable" class="table-wrap table-scroll-6"></div>
+        <div class="section-title">六、書卷分析</div>
+        <div id="bookAnalysisTable" class="table-wrap"></div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div class="section-title">七、陪讀者分析</div>
-          <button class="copy-table-btn" onclick="copyTableToClipboard('readerTable', this)">複製表格</button>
-        </div>
-        <div id="readerTable" class="table-wrap table-scroll-6"></div>
+        <div class="section-title">七、陪讀者分析</div>
+        <div id="readerTable" class="table-wrap"></div>
       </section>
     </section>
   </div>
 
+  <script src="./api.js"></script>
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
-
     let adminData = null;
     let filteredGroups = [];
     let chartInstances = {};
@@ -916,74 +829,12 @@
       }
     });
 
-    function callGasApi(action, payload, timeoutMs) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'adminCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-        }, timeoutMs || 60000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined && payload !== null) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
-
     function reloadData() {
       setStatus('資料載入中...', false);
       document.getElementById('mainContent').style.display = 'none';
       hideSuggestions();
 
-      callGasApi('getAdminAnalysisData', null, 90000)
+      FamilyBibleApi.call('getAdminAnalysisData')
         .then(function(data) {
           adminData = data || {};
           filteredGroups = adminData.groups || [];
@@ -991,9 +842,7 @@
           document.getElementById('updateTime').textContent = '更新時間：' + (adminData.generatedAt || '');
 
           initFilters();
-          initBigAreaCareAreaFilter();
           renderAll();
-
           setStatus('', false);
           document.getElementById('mainContent').style.display = 'block';
         })
@@ -1032,26 +881,6 @@
 
       careAreaFilter.value = currentCareArea;
       bigAreaFilter.value = currentBigArea;
-    }
-
-    function initBigAreaCareAreaFilter() {
-      const filter = document.getElementById('bigAreaCareAreaFilter');
-      if (!filter || !adminData) return;
-
-      const currentValue = filter.value;
-
-      filter.innerHTML = '<option value="">全部照顧區</option>';
-
-      unique((adminData.bigAreaStats || []).map(function(row) {
-        return row.careArea;
-      }).filter(Boolean)).forEach(function(value) {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        filter.appendChild(option);
-      });
-
-      filter.value = currentValue;
     }
 
     function handleKeywordInput() {
@@ -1546,7 +1375,7 @@
       drawBarChart('inactivityChart', d.inactivity || [], '未回報時間');
       drawBarChart('childLoadChart', d.childLoad || [], '陪讀人數型態');
       drawBarChart('frequencyChart', d.reportFrequency || [], '平均回報間隔');
-      drawPieChart('schoolChart', d.school || [], '孩子學制');
+      drawPieChart('schoolChart', d.school || [], '孩子學籍');
       drawPieChart('readerIdentityChart', d.readerIdentity || [], '陪讀者身份');
       renderReaderIdentityNote(d.readerIdentityDual || { count: 0, names: [] });
     }
@@ -1698,14 +1527,7 @@
     }
 
     function renderBigAreaStats() {
-      const selectedCareArea = document.getElementById('bigAreaCareAreaFilter')
-        ? document.getElementById('bigAreaCareAreaFilter').value
-        : '';
-
-      const rows = (adminData.bigAreaStats || []).filter(function(row) {
-        if (selectedCareArea && row.careArea !== selectedCareArea) return false;
-        return true;
-      });
+      const rows = adminData.bigAreaStats || [];
 
       const html = `
         <table>
@@ -1918,91 +1740,6 @@
       document.getElementById('readerTable').innerHTML = html;
     }
 
-    function copyTableToClipboard(containerId, button) {
-      const container = document.getElementById(containerId);
-      const table = container ? container.querySelector('table') : null;
-
-      if (!table) {
-        setStatus('找不到可複製的表格', true);
-        return;
-      }
-
-      const rows = Array.prototype.slice.call(table.querySelectorAll('tr')).map(function(row) {
-        return Array.prototype.slice.call(row.querySelectorAll('th, td')).map(function(cell) {
-          return normalizeCopyCell(cell.innerText || cell.textContent || '');
-        }).join('\t');
-      }).join('\n');
-
-      if (!rows.trim()) {
-        setStatus('表格沒有可複製的內容', true);
-        return;
-      }
-
-      writeTextToClipboard(rows)
-        .then(function() {
-          showCopyButtonDone(button);
-        })
-        .catch(function() {
-          setStatus('複製失敗，請改用手動選取表格內容', true);
-        });
-    }
-
-    function normalizeCopyCell(text) {
-      return String(text || '')
-        .replace(/\u00a0/g, ' ')
-        .replace(/\t/g, ' ')
-        .replace(/\r/g, ' ')
-        .replace(/\s*\n\s*/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function writeTextToClipboard(text) {
-      if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard.writeText(text);
-      }
-
-      return new Promise(function(resolve, reject) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-        textarea.style.top = '-9999px';
-
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-
-        try {
-          const ok = document.execCommand('copy');
-          document.body.removeChild(textarea);
-
-          if (ok) {
-            resolve();
-          } else {
-            reject(new Error('copy failed'));
-          }
-        } catch (err) {
-          document.body.removeChild(textarea);
-          reject(err);
-        }
-      });
-    }
-
-    function showCopyButtonDone(button) {
-      if (!button) return;
-
-      const originalText = button.textContent;
-      button.textContent = '已複製';
-      button.disabled = true;
-
-      setTimeout(function() {
-        button.textContent = originalText;
-        button.disabled = false;
-      }, 1200);
-    }
-
     function exportCareList() {
       const btns = document.querySelectorAll('button');
       btns.forEach(function(btn) {
@@ -2011,9 +1748,9 @@
 
       setStatus('正在匯出關懷名單...', false);
 
-      callGasApi('exportAdminCareList', {
+      FamilyBibleApi.call('exportAdminCareList', {
         settings: getCareSettings()
-      }, 120000)
+      })
         .then(function(result) {
           btns.forEach(function(btn) {
             btn.disabled = false;
