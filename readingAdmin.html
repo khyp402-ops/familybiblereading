@@ -3,8 +3,6 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
     :root {
       --bg: #f6f7fb;
@@ -144,12 +142,6 @@
 
     button:hover {
       background: var(--primary-dark);
-    }
-
-    button:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
-      box-shadow: none;
     }
 
     button.secondary {
@@ -340,13 +332,12 @@
     }
   </style>
 </head>
-
 <body>
   <div class="page">
     <section class="hero">
       <div class="eyebrow">READING PLAN ADMIN</div>
       <h1>讀經進度設定</h1>
-      <p>設定讀經節奏、補進度次數與展覽聚會日期；補進度週會平均分布在各月份區間內。</p>
+      <p>設定讀經節奏、緩衝週與展覽聚會日期；參加者頁面只顯示進度，不處理回報。</p>
     </section>
 
     <section id="loginCard" class="card login">
@@ -356,7 +347,7 @@
         <input id="loginPassword" type="password" placeholder="請輸入管理密碼">
       </div>
       <div class="btns">
-        <button id="loginBtn" onclick="login()">進入設定頁</button>
+        <button onclick="login()">進入設定頁</button>
       </div>
       <div id="loginMsg" class="notice hidden"></div>
     </section>
@@ -419,13 +410,13 @@
 
         <div class="grid-2" style="margin-bottom:16px;">
           <div>
-            <label>補進度次數說明</label>
-            <input type="text" readonly value="每個月份區間可設定 0～3 次，系統會平均分布">
+            <label>展覽模式說明</label>
+            <input type="text" readonly value="選「無」：這個階段不安排展覽聚會">
             <input id="exhibitionWeekday" type="hidden" value="0">
           </div>
           <div>
-            <label>展覽模式說明</label>
-            <input type="text" readonly value="選「無」不安排展覽；選「指定日期」需填展覽日期">
+            <label>指定日期說明</label>
+            <input type="text" readonly value="選「指定日期」：必須填寫右側指定展覽日期">
           </div>
         </div>
 
@@ -438,7 +429,7 @@
                 <th>開始月</th>
                 <th>結束月</th>
                 <th>每週章數</th>
-                <th>補進度次數</th>
+                <th>緩衝週數</th>
                 <th>展覽模式</th>
                 <th>指定展覽日期</th>
               </tr>
@@ -485,7 +476,7 @@
             <div id="sumReadingWeeks" class="value">0</div>
           </div>
           <div class="item">
-            <div class="label">補進度週</div>
+            <div class="label">緩衝展覽週</div>
             <div id="sumBufferWeeks" class="value">0</div>
           </div>
           <div class="item">
@@ -522,75 +513,12 @@
     </main>
   </div>
 
+  <script src="./api.js"></script>
   <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
-
     let adminPassword = '';
     let books = [];
     let currentConfig = null;
     let latestPreviewRows = [];
-
-    function callGasApi(action, payload) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'readingAdminCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-        }, 20000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
 
     function showMsg(id, text, type) {
       const el = document.getElementById(id);
@@ -613,14 +541,6 @@
       return String(value).replace(/-/g, '/');
     }
 
-    function clampBufferWeeks(value) {
-      const number = Number(value);
-
-      if (isNaN(number)) return 0;
-
-      return Math.max(0, Math.min(3, Math.floor(number)));
-    }
-
     function login() {
       adminPassword = document.getElementById('loginPassword').value.trim();
 
@@ -629,20 +549,14 @@
         return;
       }
 
-      const loginBtn = document.getElementById('loginBtn');
-      loginBtn.disabled = true;
-      loginBtn.textContent = '驗證中...';
-
       showMsg('loginMsg', '驗證中...', '');
 
-      callGasApi('readingVerifyAdminPassword', {
+      FamilyBibleApi.call('readingVerifyAdminPassword', {
         password: adminPassword
       })
-        .then(function(res) {
+        .then(function (res) {
           if (!res || !res.success) {
             showMsg('loginMsg', res && res.message ? res.message : '驗證失敗。', 'error');
-            loginBtn.disabled = false;
-            loginBtn.textContent = '進入設定頁';
             return;
           }
 
@@ -655,16 +569,18 @@
           buildBookOptions();
           fillConfig(currentConfig);
 
-          document.getElementById('publicUrl').value =
-            'https://khyp402-ops.github.io/familybiblereading/readingSchedule.html';
+          const publicUrl = res.publicUrl || buildPublicUrl();
+          document.getElementById('publicUrl').value = publicUrl;
 
           hideMsg('loginMsg');
         })
-        .catch(function(err) {
-          showMsg('loginMsg', err && err.message ? err.message : String(err), 'error');
-          loginBtn.disabled = false;
-          loginBtn.textContent = '進入設定頁';
+        .catch(function (err) {
+          showMsg('loginMsg', err.message || String(err), 'error');
         });
+    }
+
+    function buildPublicUrl() {
+      return new URL('readingSchedule.html', window.location.href).href;
     }
 
     function copyPublicUrl() {
@@ -682,7 +598,7 @@
       startBook.innerHTML = '';
       endBook.innerHTML = '';
 
-      books.forEach(function(book) {
+      books.forEach(function (book) {
         const option1 = document.createElement('option');
         option1.value = book.chineseName;
         option1.textContent = book.chineseName;
@@ -697,7 +613,7 @@
 
     function buildChapterOptions(selectId, bookName, selectedChapter) {
       const select = document.getElementById(selectId);
-      const book = books.find(function(item) {
+      const book = books.find(function (item) {
         return item.chineseName === bookName;
       });
 
@@ -757,7 +673,7 @@
       const tbody = document.getElementById('stageBody');
       tbody.innerHTML = '';
 
-      stages.forEach(function(stage, index) {
+      stages.forEach(function (stage, index) {
         const tr = document.createElement('tr');
         tr.dataset.index = index;
 
@@ -767,7 +683,7 @@
           <td>${monthSelect('stage-start-month', stage.startMonth)}</td>
           <td>${monthSelect('stage-end-month', stage.endMonth)}</td>
           <td><input type="number" class="stage-chapters" min="1" value="${Number(stage.chaptersPerWeek || 3)}"></td>
-          <td><input type="number" class="stage-buffer" min="0" max="3" step="1" value="${clampBufferWeeks(stage.bufferWeeks || 0)}" onchange="normalizeBufferInput(this)" oninput="normalizeBufferInput(this)"></td>
+          <td><input type="number" class="stage-buffer" min="0" value="${Number(stage.bufferWeeks || 0)}"></td>
           <td>
             <select class="stage-exhibition-mode" onchange="toggleManualDate(this)">
               <option value="無" ${normalizeExhibitionMode(stage.exhibitionMode || '無') === '無' ? 'selected' : ''}>無</option>
@@ -786,10 +702,6 @@
       });
     }
 
-    function normalizeBufferInput(input) {
-      input.value = clampBufferWeeks(input.value);
-    }
-
     function toggleManualDate(select) {
       const tr = select.closest('tr');
       const dateInput = tr.querySelector('.stage-manual-exhibition-date');
@@ -804,17 +716,15 @@
 
     function monthSelect(className, value) {
       let html = `<select class="${className}">`;
-
       for (let i = 1; i <= 12; i++) {
         html += `<option value="${i}" ${Number(value) === i ? 'selected' : ''}>${i}月</option>`;
       }
-
       html += '</select>';
       return html;
     }
 
     function escapeHtml(value) {
-      return String(value || '')
+      return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -822,7 +732,7 @@
     }
 
     function collectConfig() {
-      const stages = Array.from(document.querySelectorAll('#stageBody tr')).map(function(tr, index) {
+      const stages = Array.from(document.querySelectorAll('#stageBody tr')).map(function (tr, index) {
         const exhibitionMode = tr.querySelector('.stage-exhibition-mode').value;
         const manualDate = tr.querySelector('.stage-manual-exhibition-date').value;
 
@@ -832,7 +742,7 @@
           startMonth: Number(tr.querySelector('.stage-start-month').value),
           endMonth: Number(tr.querySelector('.stage-end-month').value),
           chaptersPerWeek: Number(tr.querySelector('.stage-chapters').value),
-          bufferWeeks: clampBufferWeeks(tr.querySelector('.stage-buffer').value),
+          bufferWeeks: Number(tr.querySelector('.stage-buffer').value),
           exhibitionMode: exhibitionMode,
           manualExhibitionDate: exhibitionMode === '指定日期' ? fromDateInput(manualDate) : '',
           enabled: tr.querySelector('.stage-enabled').checked
@@ -858,31 +768,21 @@
     }
 
     function validateConfig(config) {
-      const manualMissing = config.stages.filter(function(stage) {
+      const manualMissing = config.stages.filter(function (stage) {
         return stage.enabled && stage.exhibitionMode === '指定日期' && !stage.manualExhibitionDate;
       });
 
       if (manualMissing.length) {
         return '以下階段選了「指定日期」，但沒有填展覽日：\n' +
-          manualMissing.map(function(stage) {
-            return '・' + stage.name;
-          }).join('\n');
-      }
-
-      const invalidBuffer = config.stages.filter(function(stage) {
-        return stage.enabled && (Number(stage.bufferWeeks) < 0 || Number(stage.bufferWeeks) > 3);
-      });
-
-      if (invalidBuffer.length) {
-        return '補進度次數只能設定 0～3 次。';
+          manualMissing.map(function (stage) { return '・' + stage.name; }).join('\n');
       }
 
       return '';
     }
 
     function loadDefault() {
-      callGasApi('readingLoadDefaultConfig')
-        .then(function(res) {
+      FamilyBibleApi.call('readingLoadDefaultConfig')
+        .then(function (res) {
           if (!res || !res.success) {
             showMsg('actionMsg', '載入預設失敗。', 'error');
             return;
@@ -894,8 +794,8 @@
           fillConfig(currentConfig);
           showMsg('actionMsg', '已載入預設節奏。尚未寫入試算表。', 'success');
         })
-        .catch(function(err) {
-          showMsg('actionMsg', err && err.message ? err.message : String(err), 'error');
+        .catch(function (err) {
+          showMsg('actionMsg', err.message || String(err), 'error');
         });
     }
 
@@ -910,17 +810,17 @@
 
       showMsg('actionMsg', '正在產生預覽...', '');
 
-      callGasApi('readingGeneratePreview', {
+      FamilyBibleApi.call('readingGeneratePreview', {
         config: config
       })
-        .then(function(res) {
+        .then(function (res) {
           if (!res || !res.success) {
             showMsg('actionMsg', '產生失敗。', 'error');
             return;
           }
 
           latestPreviewRows = res.rows || [];
-          renderSummary(res.summary || {});
+          renderSummary(res.summary);
           renderPreview(latestPreviewRows);
 
           document.getElementById('summaryCard').classList.remove('hidden');
@@ -928,8 +828,8 @@
 
           showMsg('actionMsg', '預覽已產生。確認後可寫入讀經進度表。', 'success');
         })
-        .catch(function(err) {
-          showMsg('actionMsg', err && err.message ? err.message : String(err), 'error');
+        .catch(function (err) {
+          showMsg('actionMsg', err.message || String(err), 'error');
         });
     }
 
@@ -948,11 +848,11 @@
 
       showMsg('actionMsg', '正在寫入讀經進度表...', '');
 
-      callGasApi('readingSavePlanAndSchedule', {
+      FamilyBibleApi.call('readingSavePlanAndSchedule', {
         password: adminPassword,
         config: config
       })
-        .then(function(res) {
+        .then(function (res) {
           if (!res || !res.success) {
             showMsg('actionMsg', res && res.message ? res.message : '寫入失敗。', 'error');
             return;
@@ -961,20 +861,21 @@
           currentConfig = res.config;
           latestPreviewRows = res.rows || [];
 
-          renderSummary(res.summary || {});
+          renderSummary(res.summary);
           renderPreview(latestPreviewRows);
 
           document.getElementById('summaryCard').classList.remove('hidden');
           document.getElementById('previewCard').classList.remove('hidden');
 
-          document.getElementById('publicUrl').value =
-            'https://khyp402-ops.github.io/familybiblereading/readingSchedule.html';
+          if (res.publicUrl) {
+            document.getElementById('publicUrl').value = res.publicUrl;
+          }
 
           document.getElementById('newAdminPassword').value = '';
           showMsg('actionMsg', '已寫入讀經進度表。', 'success');
         })
-        .catch(function(err) {
-          showMsg('actionMsg', err && err.message ? err.message : String(err), 'error');
+        .catch(function (err) {
+          showMsg('actionMsg', err.message || String(err), 'error');
         });
     }
 
@@ -996,12 +897,10 @@
       const tbody = document.getElementById('previewBody');
       tbody.innerHTML = '';
 
-      rows.forEach(function(row) {
+      rows.forEach(function (row) {
         const tr = document.createElement('tr');
-        const isBuffer = row.weekType === '緩衝展覽週' || row.weekType === '補進度週';
-
-        const typeBadge = isBuffer
-          ? '<span class="badge buffer">補進度週</span>'
+        const typeBadge = row.weekType === '緩衝展覽週'
+          ? '<span class="badge buffer">緩衝展覽週</span>'
           : '<span class="badge">讀經週</span>';
 
         tr.innerHTML = `
