@@ -2,7 +2,6 @@
 <html>
 <head>
   <base target="_top">
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
@@ -808,6 +807,149 @@
         font-size: 16px;
       }
     }
+
+
+    .badge-panel {
+      margin: 20px 24px 24px;
+      padding: 18px;
+      border: 1px solid #dce6d3;
+      background: linear-gradient(180deg, #fbfcf8, #f1f6ec);
+      border-radius: 17px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.78),
+        0 8px 18px rgba(70,58,40,0.08);
+    }
+
+    .badge-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .badge-item {
+      width: 132px;
+      min-height: 142px;
+      border: 1px solid #cfddc2;
+      border-radius: 18px;
+      background: #fffdf8;
+      box-shadow: 0 6px 16px rgba(70,58,40,0.08);
+      padding: 12px 10px;
+      text-align: center;
+    }
+
+    .badge-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      margin: 0 auto 10px;
+      background: linear-gradient(135deg, #edf2e7, #d8bf93);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 4px 12px rgba(70,58,40,0.12);
+    }
+
+    .badge-image {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 10px;
+      border-radius: 12px;
+    }
+
+    .badge-name {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--sage-deep);
+      line-height: 1.35;
+    }
+
+    .badge-date {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+
+    .achievement-modal-box {
+      max-width: 680px;
+      padding: 34px 26px 28px;
+    }
+
+    .achievement-modal-subtitle {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--muted);
+      margin: -8px 0 20px;
+      line-height: 1.5;
+    }
+
+    .achievement-modal-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin: 18px 0 22px;
+    }
+
+    .achievement-modal-card {
+      width: 160px;
+      min-height: 170px;
+      border: 1px solid #cfddc2;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #fffdf8, #f5efe3);
+      box-shadow: 0 10px 24px rgba(70,58,40,0.14);
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .achievement-modal-icon {
+      width: 74px;
+      height: 74px;
+      border-radius: 999px;
+      margin: 0 auto 12px;
+      background: linear-gradient(135deg, #edf2e7, #d8bf93);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 8px 18px rgba(70,58,40,0.16);
+    }
+
+    .achievement-modal-image {
+      width: 74px;
+      height: 74px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 12px;
+      border-radius: 14px;
+      background: #fffdf8;
+    }
+
+    .achievement-modal-name {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--sage-deep);
+      line-height: 1.35;
+    }
+
+    .achievement-modal-desc {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .achievement-modal-close {
+      margin-top: 8px;
+    }
+
   </style>
 </head>
 
@@ -840,6 +982,7 @@
       <select id="groupSelect" onchange="handleGroupChange()">
         <option value="">資料載入中...</option>
       </select>
+      <div id="tokenLoginStatus" class="status"></div>
 
       <label for="bookSelect">卷名</label>
       <select id="bookSelect" onchange="handleBookChange()">
@@ -864,6 +1007,16 @@
 
       <div id="resultArea"></div>
     </div>
+
+    <div class="card">
+      <div class="card-title">三、成就徽章</div>
+
+      <button onclick="queryAchievements()">查詢已取得徽章</button>
+
+      <div id="achievementArea" class="badge-panel">
+        請先選擇報名小組編號，再查詢已取得徽章。
+      </div>
+    </div>
   </div>
 
   <div id="doneOverlay" class="overlay">
@@ -877,9 +1030,18 @@
     </div>
   </div>
 
-  <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
+  <div id="achievementCongratsOverlay" class="overlay">
+    <div class="overlay-box achievement-modal-box">
+      <div class="overlay-title">🎉 恭喜取得新徽章！</div>
+      <div class="achievement-modal-subtitle">願主繼續加力，堅定往前讀主話。</div>
+      <div id="achievementCongratsList" class="achievement-modal-grid"></div>
+      <button class="achievement-modal-close" type="button" onclick="closeAchievementCongrats()">感謝主，繼續努力</button>
+    </div>
+  </div>
+
+  <script src="./api.js"></script>
+  <script>
     let systemData = {
       groups: [],
       books: [],
@@ -890,81 +1052,34 @@
     let currentProgress = null;
     let selectedCompleted = 0;
     let lockedCompleted = 0;
+    let currentToken = '';
+    let tokenLoginInfo = null;
 
     window.onload = function() {
-      callGasApi('getReportSystemInitData')
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = String(params.get('token') || '').trim();
+      const savedToken = localStorage.getItem('reading_report_token') || '';
+
+      currentToken = urlToken || savedToken || '';
+
+      FamilyBibleApi.call('getReportSystemInitData', { token: currentToken })
         .then(function(data) {
-          systemData = data;
+          systemData = data || systemData;
+          tokenLoginInfo = data && data.tokenLogin && data.tokenLogin.ok ? data.tokenLogin : null;
+
+          if (tokenLoginInfo && currentToken) {
+            localStorage.setItem('reading_report_token', currentToken);
+          }
+
           renderGroupOptions();
           renderBookOptions();
+          applyTokenLogin();
           document.getElementById('formStatus').textContent = '';
         })
         .catch(function(err) {
           showError(err);
         });
     };
-
-    function callGasApi(action, payload) {
-      return new Promise(function(resolve, reject) {
-        const callbackName =
-          'reportCallback_' +
-          Date.now() +
-          '_' +
-          Math.random().toString(36).slice(2);
-
-        const script = document.createElement('script');
-
-        const timer = setTimeout(function() {
-          cleanup();
-          reject(new Error('讀取逾時，請確認 Apps Script 網頁應用程式網址與部署權限'));
-        }, 20000);
-
-        function cleanup() {
-          clearTimeout(timer);
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = function(response) {
-          cleanup();
-
-          if (!response || response.success !== true) {
-            reject(new Error(response && response.message ? response.message : '讀取失敗'));
-            return;
-          }
-
-          resolve(response.data);
-        };
-
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('無法連線到 Apps Script，請確認部署權限與網址'));
-        };
-
-        const params = [
-          'action=' + encodeURIComponent(action),
-          'callback=' + encodeURIComponent(callbackName),
-          '_=' + Date.now()
-        ];
-
-        if (payload !== undefined) {
-          params.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
-        }
-
-        const separator = GAS_WEB_APP_URL.indexOf('?') >= 0 ? '&' : '?';
-        script.src = GAS_WEB_APP_URL + separator + params.join('&');
-
-        document.body.appendChild(script);
-      });
-    }
 
     function renderGroupOptions() {
       const select = document.getElementById('groupSelect');
@@ -976,6 +1091,43 @@
         option.textContent = item.displayText;
         select.appendChild(option);
       });
+    }
+
+    function applyTokenLogin() {
+      const select = document.getElementById('groupSelect');
+      const status = document.getElementById('tokenLoginStatus');
+
+      if (!tokenLoginInfo) {
+        status.textContent = '';
+        select.disabled = false;
+        return;
+      }
+
+      select.value = tokenLoginInfo.group || '';
+      select.disabled = true;
+      status.innerHTML = '已使用專屬回報連結登入：' + escapeHtml(tokenLoginInfo.displayText || tokenLoginInfo.group || '') +
+        '　<a href="javascript:void(0)" onclick="clearTokenLogin()">切換小組</a>';
+
+      if (select.value) {
+        queryProgress(function() {
+          renderChapterCircles();
+        });
+      }
+    }
+
+    function clearTokenLogin() {
+      localStorage.removeItem('reading_report_token');
+      currentToken = '';
+      tokenLoginInfo = null;
+      const select = document.getElementById('groupSelect');
+      select.disabled = false;
+      select.value = '';
+      document.getElementById('tokenLoginStatus').textContent = '';
+      currentProgress = null;
+      selectedCompleted = 0;
+      lockedCompleted = 0;
+      renderChapterCircles();
+      document.getElementById('resultArea').innerHTML = '';
     }
 
     function renderBookOptions() {
@@ -1095,10 +1247,11 @@
       document.getElementById('submitBtn').disabled = true;
       setStatus('送出中...', false);
 
-      callGasApi('submitReadingReport', {
+      FamilyBibleApi.call('submitReadingReport', {
         group: group,
         book: book,
-        completedChapters: selectedCompleted
+        completedChapters: selectedCompleted,
+        token: currentToken
       })
         .then(function(progressData) {
           document.getElementById('submitBtn').disabled = false;
@@ -1106,6 +1259,7 @@
 
           renderProgress(progressData);
           showDoneOverlay(progressData.totalPercent);
+          handleRealtimeAchievements(progressData);
 
           resetReportFormAfterSubmit();
         })
@@ -1116,15 +1270,19 @@
     }
 
     function resetReportFormAfterSubmit() {
-      document.getElementById('groupSelect').value = '';
+      if (tokenLoginInfo && tokenLoginInfo.group) {
+        document.getElementById('groupSelect').value = tokenLoginInfo.group;
+      } else {
+        document.getElementById('groupSelect').value = '';
+      }
+
       document.getElementById('bookSelect').value = '';
 
       selectedCompleted = 0;
       lockedCompleted = 0;
-      currentProgress = null;
 
       document.getElementById('chapterGrid').innerHTML = '';
-      document.getElementById('chapterHint').textContent = '請先選擇報名小組編號與卷名';
+      document.getElementById('chapterHint').textContent = tokenLoginInfo ? '請選擇卷名' : '請先選擇報名小組編號與卷名';
       setStatus('', false);
     }
 
@@ -1138,7 +1296,7 @@
 
       setStatus('查詢中...', false);
 
-      callGasApi('getProgressByGroup', { group: group })
+      FamilyBibleApi.call('getProgressByGroup', { group: group })
         .then(function(data) {
           currentProgress = data;
           setStatus('', false);
@@ -1216,29 +1374,153 @@
       area.innerHTML = html;
     }
 
-    function renderExpectedProgressItem(expected) {
-      let html = '';
+function renderExpectedProgressItem(expected) {
+  let html = '';
 
-      html += '<div class="summary-item expected">';
+  html += '<div class="summary-item expected">';
 
-      if (expected && expected.available) {
-        html += '<div class="summary-number">' + expected.expectedPercent + '%</div>';
-        html += '<div class="summary-label">今日正常進度</div>';
-        html += '<div class="progress-wrap">';
-        html += '<div class="progress-bar" style="width:' + safePercent(expected.expectedPercent) + '%"></div>';
-        html += '</div>';
-        html += '<div class="summary-note">';
-        html += '依進度，本週應完成共 ' + expected.expectedChapters + ' 章';
-        html += '</div>';
-      } else {
-        html += '<div class="summary-number">-</div>';
-        html += '<div class="summary-label">今日正常進度</div>';
-        html += '<div class="summary-note">' + escapeHtml(expected && expected.message ? expected.message : '無法讀取讀經進度表') + '</div>';
+  if (expected && expected.available) {
+    html += '<div class="summary-number">' + expected.expectedPercent + '%</div>';
+    html += '<div class="summary-label">今日正常進度</div>';
+    html += '<div class="progress-wrap">';
+    html += '<div class="progress-bar" style="width:' + safePercent(expected.expectedPercent) + '%"></div>';
+    html += '</div>';
+    html += '<div class="summary-note">';
+    html += '依進度，本週應完成共 ' + expected.expectedChapters + ' 章';
+    html += '</div>';
+  } else {
+    html += '<div class="summary-number">-</div>';
+    html += '<div class="summary-label">今日正常進度</div>';
+    html += '<div class="summary-note">' + escapeHtml(expected && expected.message ? expected.message : '無法讀取讀經進度表') + '</div>';
+  }
+
+  html += '</div>';
+
+  return html;
+}
+
+
+
+    function handleRealtimeAchievements(progressData) {
+      const area = document.getElementById('achievementArea');
+      const newAchievements = progressData && Array.isArray(progressData.newAchievements)
+        ? progressData.newAchievements
+        : [];
+
+      if (newAchievements.length > 0) {
+        renderAchievements({
+          achievements: newAchievements,
+          title: '🎉 本次新取得徽章'
+        });
+
+        // 先讓原本「回報完成」進度視窗跑完，再跳出徽章恭喜視窗，避免兩個 overlay 疊在一起。
+        setTimeout(function() {
+          showAchievementCongrats(newAchievements);
+        }, 2300);
+        return;
       }
 
-      html += '</div>';
+      if (progressData && progressData.achievementWarning) {
+        area.innerHTML = escapeHtml(progressData.achievementWarning);
+      }
+    }
 
-      return html;
+    function showAchievementCongrats(achievements) {
+      const overlay = document.getElementById('achievementCongratsOverlay');
+      const list = document.getElementById('achievementCongratsList');
+
+      if (!overlay || !list || !Array.isArray(achievements) || achievements.length === 0) {
+        return;
+      }
+
+      let html = '';
+
+      achievements.forEach(function(item) {
+        const title = item.badgeName || item.achievementName || '成就徽章';
+        const desc = item.achievementName && item.achievementName !== title ? item.achievementName : '';
+
+        html += '<div class="achievement-modal-card">';
+
+        if (item.badgeImageUrl) {
+          html += '<img class="achievement-modal-image" src="' + escapeHtml(item.badgeImageUrl) + '" alt="' + escapeHtml(title) + '">';
+        } else {
+          html += '<div class="achievement-modal-icon">' + escapeHtml(item.badgeIcon || '🏅') + '</div>';
+        }
+
+        html += '<div class="achievement-modal-name">' + escapeHtml(title) + '</div>';
+
+        if (desc) {
+          html += '<div class="achievement-modal-desc">' + escapeHtml(desc) + '</div>';
+        }
+
+        html += '</div>';
+      });
+
+      list.innerHTML = html;
+      overlay.style.display = 'flex';
+    }
+
+    function closeAchievementCongrats() {
+      const overlay = document.getElementById('achievementCongratsOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+      }
+    }
+
+    function queryAchievements() {
+      const group = document.getElementById('groupSelect').value.trim();
+      const area = document.getElementById('achievementArea');
+
+      if (!group) {
+        area.innerHTML = '請先選擇報名小組編號。';
+        return;
+      }
+
+      area.innerHTML = '徽章資料讀取中...';
+
+      FamilyBibleApi.call('getAchievementsByGroup', { group: group })
+        .then(function(data) {
+          renderAchievements(data);
+        })
+        .catch(function(err) {
+          area.innerHTML = '徽章資料讀取失敗：' + escapeHtml(err && err.message ? err.message : String(err));
+        });
+    }
+
+    function renderAchievements(data) {
+      const area = document.getElementById('achievementArea');
+      const achievements = data && Array.isArray(data.achievements) ? data.achievements : [];
+
+      if (achievements.length === 0) {
+        area.innerHTML = '目前尚未取得成就徽章。';
+        return;
+      }
+
+      let html = '';
+      html += '<div class="chapter-title">' + escapeHtml(data && data.title ? data.title : '已取得成就徽章') + '</div>';
+      html += '<div class="badge-grid">';
+
+      achievements.forEach(function(item) {
+        const title = item.badgeName || item.achievementName || '成就徽章';
+        html += '<div class="badge-item">';
+
+        if (item.badgeImageUrl) {
+          html += '<img class="badge-image" src="' + escapeHtml(item.badgeImageUrl) + '" alt="' + escapeHtml(title) + '">';
+        } else {
+          html += '<div class="badge-icon">' + escapeHtml(item.badgeIcon || '🏅') + '</div>';
+        }
+
+        html += '<div class="badge-name">' + escapeHtml(title) + '</div>';
+
+        if (item.acquiredAt) {
+          html += '<div class="badge-date">取得：' + escapeHtml(item.acquiredAt) + '</div>';
+        }
+
+        html += '</div>';
+      });
+
+      html += '</div>';
+      area.innerHTML = html;
     }
 
     function safePercent(value) {
