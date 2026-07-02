@@ -589,7 +589,7 @@
     {
       return new Promise(function(resolve, reject) 
       {
-        if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec') 
+        if (!GAS_WEB_APP_URL) 
         {
           reject(new Error('尚未設定 GAS_WEB_APP_URL'));
           return;
