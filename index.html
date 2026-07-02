@@ -576,12 +576,20 @@
     </div>
   </main>
 
-  <script src="./api.js"></script>
   <script>
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
     function initPortal() {
-      FamilyBibleApi.call('getPortalLinks')
+        loadPortalData
         .then(renderPortal)
         .catch(showError);
+    }
+
+    function loadPortalData() {
+    return new Promise(function(resolve, reject) {
+    if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec') {
+      reject(new Error('尚未設定 GAS_WEB_APP_URL'));
+      return;
     }
 
     function renderPortal(data) {
