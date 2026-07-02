@@ -580,7 +580,7 @@
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
     function initPortal() {
-        loadPortalData
+        loadPortalData()
         .then(renderPortal)
         .catch(showError);
     }
@@ -651,6 +651,7 @@
         document.body.appendChild(script);
       });
     }
+    
     function renderPortal(data) {
       const siteTitle = document.getElementById('siteTitle');
       const subtitleText = document.getElementById('subtitleText');
