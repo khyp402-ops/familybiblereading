@@ -3,557 +3,573 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-  :root {
-    --bg1: #e9f7ff;
-    --bg2: #fff5dc;
-    --bg3: #e9ffe9;
-    --ink: #243040;
-    --muted: #6b7280;
-    --card: rgba(255, 255, 255, 0.88);
-    --line: rgba(36, 48, 64, 0.12);
-    --blue: #4f8cff;
-    --green: #3ac17a;
-    --orange: #ffad42;
-    --red: #ff6b6b;
-    --gold: #f6c343;
-    --gray: #9ca3af;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
-    color: var(--ink);
-    background:
-      radial-gradient(circle at 8% 12%, rgba(255, 210, 92, 0.48), transparent 24%),
-      radial-gradient(circle at 88% 10%, rgba(135, 206, 255, 0.48), transparent 28%),
-      radial-gradient(circle at 50% 92%, rgba(102, 220, 142, 0.32), transparent 34%),
-      linear-gradient(135deg, var(--bg1), var(--bg2) 52%, var(--bg3));
-    overflow-x: hidden;
-  }
-
-  .page {
-    width: 100%;
-    min-height: 100vh;
-    padding: 22px;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-    gap: 18px;
-    align-items: flex-start;
-    margin-bottom: 14px;
-    position: relative;
-    z-index: 20;
-  }
-
-  .titleBlock {
-    padding: 14px 18px;
-    border-radius: 26px;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(255,255,255,0.95);
-    box-shadow: 0 18px 42px rgba(43, 73, 110, 0.14);
-    backdrop-filter: blur(14px);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .titleBlock::before {
-    content: "🌱 📖 ✨";
-    position: absolute;
-    right: 16px;
-    top: 12px;
-    font-size: 22px;
-    opacity: 0.45;
-  }
-
-  .eyebrow {
-    font-size: 13px;
-    letter-spacing: 0.18em;
-    font-weight: 900;
-    color: #4f8cff;
-    margin-bottom: 6px;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: clamp(26px, 3.8vw, 48px);
-    line-height: 1.05;
-    letter-spacing: 0.03em;
-    color: #1f3654;
-    text-shadow: 0 3px 0 rgba(255,255,255,0.8);
-  }
-
-  .subtitle {
-    margin-top: 8px;
-    color: var(--muted);
-    font-size: 15px;
-    font-weight: 700;
-  }
-
-  .searchPanel {
-    width: min(360px, 42vw);
-    position: relative;
-    z-index: 40;
-  }
-
-  .searchBox {
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,0.95);
-    box-shadow: 0 16px 40px rgba(43, 73, 110, 0.16);
-    border-radius: 26px;
-    padding: 14px;
-    backdrop-filter: blur(14px);
-  }
-
-  .searchLabel {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 900;
-    margin-bottom: 8px;
-  }
-
-  .searchInput {
-    width: 100%;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 13px 14px;
-    font-size: 18px;
-    font-weight: 900;
-    outline: none;
-    background: #fff;
-  }
-
-  .searchInput:focus {
-    border-color: rgba(79, 140, 255, 0.7);
-    box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.14);
-  }
-
-  .detailCard {
-    margin-top: 10px;
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: all 0.25s ease;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid rgba(255,255,255,0.95);
-    box-shadow: 0 16px 42px rgba(43, 73, 110, 0.18);
-    border-radius: 24px;
-  }
-
-  .detailCard.open {
-    max-height: 520px;
-    opacity: 1;
-    padding: 16px;
-    overflow-y: auto;
-  }
-
-  .detailTitle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 22px;
-    font-weight: 950;
-    margin-bottom: 10px;
-  }
-
-  .badge {
-    font-size: 13px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: rgba(79, 140, 255, 0.12);
-    color: #2f6de0;
-    font-weight: 900;
-  }
-
-  .detailStats {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .stat {
-    border-radius: 16px;
-    background: #f8fafc;
-    padding: 10px;
-    border: 1px solid rgba(36, 48, 64, 0.08);
-  }
-
-  .statLabel {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 800;
-  }
-
-  .statValue {
-    font-size: 18px;
-    font-weight: 950;
-    margin-top: 3px;
-  }
-
-  .bookList {
-    display: grid;
-    gap: 7px;
-    margin-top: 10px;
-  }
-
-  .bookRow {
-    display: grid;
-    grid-template-columns: 58px 1fr 70px;
-    gap: 8px;
-    align-items: center;
-    font-size: 13px;
-    font-weight: 800;
-  }
-
-  .bar {
-    height: 9px;
-    border-radius: 999px;
-    background: #e5e7eb;
-    overflow: hidden;
-  }
-
-  .barFill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #4f8cff, #3ac17a);
-  }
-
-  .mapShell {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border-radius: 36px;
-    overflow: hidden;
-    background:
-      radial-gradient(circle at 12% 20%, rgba(255,255,255,0.92) 0 3%, transparent 3.4%),
-      radial-gradient(circle at 19% 25%, rgba(255,255,255,0.72) 0 2.2%, transparent 2.6%),
-      radial-gradient(circle at 76% 16%, rgba(255,255,255,0.88) 0 3.2%, transparent 3.6%),
-      linear-gradient(180deg, #8fd7ff 0%, #cdefff 34%, #d7f6be 68%, #aee48e 100%);
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.85),
-      0 24px 70px rgba(43, 73, 110, 0.2);
-  }
-
-  .mapShell::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(circle at 18% 78%, rgba(255, 232, 134, 0.85) 0 1.3%, transparent 1.5%),
-      radial-gradient(circle at 21% 81%, rgba(255, 151, 125, 0.7) 0 1.1%, transparent 1.3%),
-      radial-gradient(circle at 24% 77%, rgba(130, 210, 106, 0.75) 0 1.2%, transparent 1.4%),
-      radial-gradient(circle at 72% 77%, rgba(255, 232, 134, 0.85) 0 1.2%, transparent 1.4%),
-      radial-gradient(circle at 75% 80%, rgba(255, 151, 125, 0.7) 0 1.1%, transparent 1.3%),
-      radial-gradient(circle at 82% 73%, rgba(130, 210, 106, 0.75) 0 1.2%, transparent 1.4%),
-      radial-gradient(circle at 8% 55%, rgba(255,255,255,0.45), transparent 14%),
-      radial-gradient(circle at 92% 50%, rgba(255,255,255,0.35), transparent 16%);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .mapShell::after {
-    content: "✨ ✦ ✨          ✦          ✨";
-    position: absolute;
-    left: 6%;
-    right: 6%;
-    top: 8%;
-    font-size: clamp(18px, 2vw, 30px);
-    letter-spacing: 1.8em;
-    color: rgba(255,255,255,0.8);
-    text-shadow: 0 2px 8px rgba(55, 100, 140, 0.16);
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .sun {
-    position: absolute;
-    width: 10%;
-    aspect-ratio: 1;
-    border-radius: 999px;
-    right: 7%;
-    top: 7%;
-    background: radial-gradient(circle, #fff6b8 0 35%, #ffd05a 58%, #ffb13c 100%);
-    box-shadow:
-      0 0 0 14px rgba(255, 221, 105, 0.16),
-      0 0 42px rgba(255, 201, 85, 0.62);
-    z-index: 3;
-  }
-
-  .sun::before {
-    content: "☀";
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-size: clamp(20px, 3vw, 44px);
-    color: rgba(255,255,255,0.86);
-  }
-
-  .hill {
-    position: absolute;
-    bottom: -12%;
-    width: 62%;
-    aspect-ratio: 2.2 / 1;
-    border-radius: 50% 50% 0 0;
-    background:
-      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.22), transparent 24%),
-      linear-gradient(180deg, rgba(104, 212, 118, 0.58), rgba(67, 178, 98, 0.48));
-    z-index: 2;
-  }
-
-  .hill.h1 { left: -9%; }
-
-  .hill.h2 {
-    right: -13%;
-    bottom: -16%;
-    background:
-      radial-gradient(circle at 38% 20%, rgba(255,255,255,0.2), transparent 24%),
-      linear-gradient(180deg, rgba(89, 190, 224, 0.34), rgba(70, 172, 124, 0.35));
-  }
-
-  .cloud {
-    position: absolute;
-    width: 13%;
-    height: 6%;
-    background: rgba(255,255,255,0.82);
-    border-radius: 999px;
-    z-index: 4;
-    box-shadow: 0 8px 20px rgba(68, 117, 155, 0.08);
-  }
-
-  .cloud::before,
-  .cloud::after {
-    content: "";
-    position: absolute;
-    border-radius: 999px;
-    background: inherit;
-  }
-
-  .cloud::before {
-    width: 42%;
-    aspect-ratio: 1;
-    left: 16%;
-    top: -44%;
-  }
-
-  .cloud::after {
-    width: 50%;
-    aspect-ratio: 1;
-    right: 12%;
-    top: -58%;
-  }
-
-  .cloud.c1 {
-    left: 8%;
-    top: 15%;
-  }
-
-  .cloud.c2 {
-    left: 38%;
-    top: 9%;
-    transform: scale(0.72);
-  }
-
-  .trackSvg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    z-index: 8;
-  }
-
-  .routeShadow {
-    fill: none;
-    stroke: rgba(92, 85, 64, 0.18);
-    stroke-width: 52;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .routeBase {
-    fill: none;
-    stroke: rgba(255, 248, 226, 0.96);
-    stroke-width: 42;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .routeLine {
-    fill: none;
-    stroke: rgba(255, 173, 66, 0.55);
-    stroke-width: 5;
-    stroke-dasharray: 11 14;
-    stroke-linecap: round;
-  }
-
-  .markerLabel {
-    font-size: 18px;
-    font-weight: 950;
-    fill: rgba(36, 48, 64, 0.76);
-    paint-order: stroke;
-    stroke: rgba(255,255,255,0.96);
-    stroke-width: 7px;
-    dominant-baseline: middle;
-  }
-
-  .pointsLayer {
-    position: absolute;
-    inset: 0;
-    z-index: 12;
-  }
-
-  .groupPoint {
-    position: absolute;
-    width: 38px;
-    height: 38px;
-    border-radius: 999px;
-    display: grid;
-    place-items: center;
-    font-size: 12px;
-    font-weight: 950;
-    color: #fff;
-    border: 3px solid rgba(255,255,255,0.95);
-    box-shadow: 0 8px 18px rgba(29, 42, 67, 0.24);
-    cursor: pointer;
-    transform: translate(-50%, -50%);
-    transition: opacity 0.18s ease, scale 0.18s ease, filter 0.18s ease;
-    user-select: none;
-  }
-
-  .groupPoint.zero { background: var(--gray); }
-  .groupPoint.low { background: var(--blue); }
-  .groupPoint.mid { background: var(--green); }
-  .groupPoint.high { background: var(--orange); }
-  .groupPoint.top { background: var(--red); }
-  .groupPoint.done { background: var(--gold); color: #4b3600; }
-
-  .groupPoint.dim {
-    opacity: 0.18;
-    filter: grayscale(0.8);
-  }
-
-  .groupPoint.active {
-    z-index: 50;
-    scale: 1.52;
-    box-shadow:
-      0 0 0 9px rgba(79, 140, 255, 0.2),
-      0 0 0 18px rgba(79, 140, 255, 0.12),
-      0 14px 28px rgba(29, 42, 67, 0.26);
-    animation: racePulse 1.1s infinite;
-  }
-
-  @keyframes racePulse {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.2); }
-  }
-
-  .legend {
-    position: relative;
-    width: fit-content;
-    max-width: 100%;
-    margin: 14px auto 0;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    z-index: 18;
-    padding: 10px 14px;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.9);
-    box-shadow: 0 12px 28px rgba(43, 73, 110, 0.12);
-  }
-
-  .legendItem {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 900;
-    color: rgba(36, 48, 64, 0.72);
-  }
-
-  .legendDot {
-    width: 12px;
-    height: 12px;
-    border-radius: 999px;
-  }
-
-  .loading {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    z-index: 100;
-    background: rgba(255,255,255,0.62);
-    backdrop-filter: blur(8px);
-    font-size: 24px;
-    font-weight: 950;
-    color: #3b4b63;
-  }
-
-  .error {
-    color: #b91c1c;
-    font-weight: 900;
-    padding: 12px;
-    border-radius: 16px;
-    background: #fee2e2;
-    margin-top: 10px;
-  }
-
-  @media (max-width: 768px) {
-    .page { padding: 12px; }
-
-    .header { display: block; }
-
-    .titleBlock { margin-bottom: 10px; }
-
-    .searchPanel { width: 100%; }
-
-    .mapShell {
-      aspect-ratio: 9 / 16;
-      border-radius: 28px;
+  <style>
+    :root {
+      --bg1: #e9f7ff;
+      --bg2: #fff5dc;
+      --bg3: #e9ffe9;
+      --ink: #243040;
+      --muted: #6b7280;
+      --card: rgba(255, 255, 255, 0.88);
+      --line: rgba(36, 48, 64, 0.12);
+      --blue: #4f8cff;
+      --green: #3ac17a;
+      --orange: #ffad42;
+      --red: #ff6b6b;
+      --gold: #f6c343;
+      --gray: #9ca3af;
     }
 
-    .mapShell::after {
-      top: 4%;
-      left: 8%;
-      right: 8%;
-      line-height: 2.1;
-      letter-spacing: 0.8em;
+    * {
+      box-sizing: border-box;
     }
 
-    .markerLabel {
-      font-size: 20px;
-      stroke-width: 8px;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 12%, rgba(255, 210, 92, 0.48), transparent 24%),
+        radial-gradient(circle at 88% 10%, rgba(135, 206, 255, 0.48), transparent 28%),
+        radial-gradient(circle at 50% 92%, rgba(102, 220, 142, 0.32), transparent 34%),
+        linear-gradient(135deg, var(--bg1), var(--bg2) 52%, var(--bg3));
+      overflow-x: hidden;
     }
 
-    .groupPoint {
-      width: 36px;
-      height: 36px;
-      font-size: 11px;
-    }
-
-    .legend {
+    .page {
       width: 100%;
-      margin: 12px 0 0;
-      justify-content: center;
+      min-height: 100vh;
+      padding: 22px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .titleBlock {
+      padding: 14px 18px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 18px 42px rgba(43, 73, 110, 0.14);
+      backdrop-filter: blur(14px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .titleBlock::before {
+      content: "🌱 📖 ✨";
+      position: absolute;
+      right: 16px;
+      top: 12px;
+      font-size: 22px;
+      opacity: 0.45;
+    }
+
+    .eyebrow {
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      font-weight: 900;
+      color: #4f8cff;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 3.8vw, 48px);
+      line-height: 1.05;
+      letter-spacing: 0.03em;
+      color: #1f3654;
+      text-shadow: 0 3px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .searchPanel {
+      width: min(360px, 42vw);
+      position: relative;
+      z-index: 40;
+    }
+
+    .searchBox {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 16px 40px rgba(43, 73, 110, 0.16);
+      border-radius: 26px;
+      padding: 14px;
+      backdrop-filter: blur(14px);
+    }
+
+    .searchLabel {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .searchInput {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px 14px;
+      font-size: 18px;
+      font-weight: 900;
+      outline: none;
+      background: #fff;
+    }
+
+    .searchInput:focus {
+      border-color: rgba(79, 140, 255, 0.7);
+      box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.14);
+    }
+
+    .detailCard {
+      margin-top: 10px;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 16px 42px rgba(43, 73, 110, 0.18);
+      border-radius: 24px;
     }
 
     .detailCard.open {
-      max-height: 430px;
+      max-height: 520px;
+      opacity: 1;
+      padding: 16px;
+      overflow-y: auto;
     }
-  }
-</style>
+
+    .detailTitle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 22px;
+      font-weight: 950;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      font-size: 13px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(79, 140, 255, 0.12);
+      color: #2f6de0;
+      font-weight: 900;
+    }
+
+    .detailStats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      border-radius: 16px;
+      background: #f8fafc;
+      padding: 10px;
+      border: 1px solid rgba(36, 48, 64, 0.08);
+    }
+
+    .statLabel {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .statValue {
+      font-size: 18px;
+      font-weight: 950;
+      margin-top: 3px;
+    }
+
+    .bookList {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .bookRow {
+      display: grid;
+      grid-template-columns: 58px 1fr 70px;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 9px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .barFill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #4f8cff, #3ac17a);
+    }
+
+    .mapShell {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 36px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(255,255,255,0.92) 0 3%, transparent 3.4%),
+        radial-gradient(circle at 19% 25%, rgba(255,255,255,0.72) 0 2.2%, transparent 2.6%),
+        radial-gradient(circle at 76% 16%, rgba(255,255,255,0.88) 0 3.2%, transparent 3.6%),
+        linear-gradient(180deg, #8fd7ff 0%, #cdefff 34%, #d7f6be 68%, #aee48e 100%);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.85),
+        0 24px 70px rgba(43, 73, 110, 0.2);
+    }
+
+    .mapShell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 78%, rgba(255, 232, 134, 0.85) 0 1.3%, transparent 1.5%),
+        radial-gradient(circle at 21% 81%, rgba(255, 151, 125, 0.7) 0 1.1%, transparent 1.3%),
+        radial-gradient(circle at 24% 77%, rgba(130, 210, 106, 0.75) 0 1.2%, transparent 1.4%),
+        radial-gradient(circle at 72% 77%, rgba(255, 232, 134, 0.85) 0 1.2%, transparent 1.4%),
+        radial-gradient(circle at 75% 80%, rgba(255, 151, 125, 0.7) 0 1.1%, transparent 1.3%),
+        radial-gradient(circle at 82% 73%, rgba(130, 210, 106, 0.75) 0 1.2%, transparent 1.4%),
+        radial-gradient(circle at 8% 55%, rgba(255,255,255,0.45), transparent 14%),
+        radial-gradient(circle at 92% 50%, rgba(255,255,255,0.35), transparent 16%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .mapShell::after {
+      content: "✨ ✦ ✨          ✦          ✨";
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      top: 8%;
+      font-size: clamp(18px, 2vw, 30px);
+      letter-spacing: 1.8em;
+      color: rgba(255,255,255,0.8);
+      text-shadow: 0 2px 8px rgba(55, 100, 140, 0.16);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .sun {
+      position: absolute;
+      width: 10%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      right: 7%;
+      top: 7%;
+      background: radial-gradient(circle, #fff6b8 0 35%, #ffd05a 58%, #ffb13c 100%);
+      box-shadow:
+        0 0 0 14px rgba(255, 221, 105, 0.16),
+        0 0 42px rgba(255, 201, 85, 0.62);
+      z-index: 3;
+    }
+
+    .sun::before {
+      content: "☀";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: clamp(20px, 3vw, 44px);
+      color: rgba(255,255,255,0.86);
+    }
+
+    .hill {
+      position: absolute;
+      bottom: -12%;
+      width: 62%;
+      aspect-ratio: 2.2 / 1;
+      border-radius: 50% 50% 0 0;
+      background:
+        radial-gradient(circle at 25% 25%, rgba(255,255,255,0.22), transparent 24%),
+        linear-gradient(180deg, rgba(104, 212, 118, 0.58), rgba(67, 178, 98, 0.48));
+      z-index: 2;
+    }
+
+    .hill.h1 {
+      left: -9%;
+    }
+
+    .hill.h2 {
+      right: -13%;
+      bottom: -16%;
+      background:
+        radial-gradient(circle at 38% 20%, rgba(255,255,255,0.2), transparent 24%),
+        linear-gradient(180deg, rgba(89, 190, 224, 0.34), rgba(70, 172, 124, 0.35));
+    }
+
+    .cloud {
+      position: absolute;
+      width: 13%;
+      height: 6%;
+      background: rgba(255,255,255,0.82);
+      border-radius: 999px;
+      z-index: 4;
+      box-shadow: 0 8px 20px rgba(68, 117, 155, 0.08);
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: inherit;
+    }
+
+    .cloud::before {
+      width: 42%;
+      aspect-ratio: 1;
+      left: 16%;
+      top: -44%;
+    }
+
+    .cloud::after {
+      width: 50%;
+      aspect-ratio: 1;
+      right: 12%;
+      top: -58%;
+    }
+
+    .cloud.c1 {
+      left: 8%;
+      top: 15%;
+    }
+
+    .cloud.c2 {
+      left: 38%;
+      top: 9%;
+      transform: scale(0.72);
+    }
+
+    .trackSvg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      z-index: 8;
+    }
+
+    .routeShadow {
+      fill: none;
+      stroke: rgba(92, 85, 64, 0.18);
+      stroke-width: 52;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .routeBase {
+      fill: none;
+      stroke: rgba(255, 248, 226, 0.96);
+      stroke-width: 42;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .routeLine {
+      fill: none;
+      stroke: rgba(255, 173, 66, 0.55);
+      stroke-width: 5;
+      stroke-dasharray: 11 14;
+      stroke-linecap: round;
+    }
+
+    .markerLabel {
+      font-size: 18px;
+      font-weight: 950;
+      fill: rgba(36, 48, 64, 0.76);
+      paint-order: stroke;
+      stroke: rgba(255,255,255,0.96);
+      stroke-width: 7px;
+      dominant-baseline: middle;
+    }
+
+    .pointsLayer {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+    }
+
+    .groupPoint {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 950;
+      color: #fff;
+      border: 3px solid rgba(255,255,255,0.95);
+      box-shadow: 0 8px 18px rgba(29, 42, 67, 0.24);
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.18s ease, scale 0.18s ease, filter 0.18s ease;
+      user-select: none;
+      padding: 0;
+    }
+
+    .groupPoint.zero { background: var(--gray); }
+    .groupPoint.low { background: var(--blue); }
+    .groupPoint.mid { background: var(--green); }
+    .groupPoint.high { background: var(--orange); }
+    .groupPoint.top { background: var(--red); }
+    .groupPoint.done { background: var(--gold); color: #4b3600; }
+
+    .groupPoint.dim {
+      opacity: 0.18;
+      filter: grayscale(0.8);
+    }
+
+    .groupPoint.active {
+      z-index: 50;
+      scale: 1.52;
+      box-shadow:
+        0 0 0 9px rgba(79, 140, 255, 0.2),
+        0 0 0 18px rgba(79, 140, 255, 0.12),
+        0 14px 28px rgba(29, 42, 67, 0.26);
+      animation: racePulse 1.1s infinite;
+    }
+
+    @keyframes racePulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.2); }
+    }
+
+    .legend {
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+      margin: 14px auto 0;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 18;
+      padding: 10px 14px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 12px 28px rgba(43, 73, 110, 0.12);
+    }
+
+    .legendItem {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      color: rgba(36, 48, 64, 0.72);
+    }
+
+    .legendDot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 100;
+      background: rgba(255,255,255,0.62);
+      backdrop-filter: blur(8px);
+      font-size: 24px;
+      font-weight: 950;
+      color: #3b4b63;
+    }
+
+    .error {
+      color: #b91c1c;
+      font-weight: 900;
+      padding: 12px;
+      border-radius: 16px;
+      background: #fee2e2;
+      margin: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        padding: 12px;
+      }
+
+      .header {
+        display: block;
+      }
+
+      .titleBlock {
+        margin-bottom: 10px;
+      }
+
+      .searchPanel {
+        width: 100%;
+      }
+
+      .mapShell {
+        aspect-ratio: 9 / 16;
+        border-radius: 28px;
+      }
+
+      .mapShell::after {
+        top: 4%;
+        left: 8%;
+        right: 8%;
+        line-height: 2.1;
+        letter-spacing: 0.8em;
+      }
+
+      .markerLabel {
+        font-size: 20px;
+        stroke-width: 8px;
+      }
+
+      .groupPoint {
+        width: 36px;
+        height: 36px;
+        font-size: 11px;
+      }
+
+      .legend {
+        width: 100%;
+        margin: 12px 0 0;
+        justify-content: center;
+      }
+
+      .detailCard.open {
+        max-height: 430px;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -568,7 +584,13 @@
       <aside class="searchPanel">
         <div class="searchBox">
           <div class="searchLabel">搜尋小組編號</div>
-          <input id="searchInput" class="searchInput" type="text" placeholder="例如：001、032、100" autocomplete="off">
+          <input
+            id="searchInput"
+            class="searchInput"
+            type="text"
+            placeholder="例如：001、032、100"
+            autocomplete="off"
+          >
           <div id="detailCard" class="detailCard"></div>
         </div>
       </aside>
@@ -581,7 +603,12 @@
       <div class="hill h1"></div>
       <div class="hill h2"></div>
 
-      <svg class="trackSvg" id="trackSvg" viewBox="0 0 1600 900" preserveAspectRatio="none">
+      <svg
+        class="trackSvg"
+        id="trackSvg"
+        viewBox="0 0 1600 900"
+        preserveAspectRatio="none"
+      >
         <path id="routeShadow" class="routeShadow"></path>
         <path id="routeBase" class="routeBase"></path>
         <path id="routeLine" class="routeLine"></path>
@@ -591,7 +618,6 @@
       </svg>
 
       <div class="pointsLayer" id="pointsLayer"></div>
-
       <div class="loading" id="loading">讀取賽程中...</div>
     </main>
 
@@ -606,31 +632,36 @@
   </div>
 
   <script>
+    const GAS_WEB_APP_URL =
+      'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
     let raceData = null;
     let groupMap = new Map();
     let resizeTimer = null;
+    let jsonpSequence = 0;
 
     const DESKTOP_VIEWBOX = '0 0 1600 900';
     const MOBILE_VIEWBOX = '0 0 900 1600';
 
-    const DESKTOP_PATH = 'M 115 715 C 310 630, 450 650, 610 705 C 790 765, 1085 745, 1240 640 C 1390 540, 1325 410, 1135 405 C 930 400, 755 505, 555 448 C 340 385, 255 270, 430 205 C 625 132, 900 185, 1090 205 C 1235 220, 1348 205, 1460 150';
+    const DESKTOP_PATH =
+      'M 115 715 C 310 630, 450 650, 610 705 C 790 765, 1085 745, 1240 640 C 1390 540, 1325 410, 1135 405 C 930 400, 755 505, 555 448 C 340 385, 255 270, 430 205 C 625 132, 900 185, 1090 205 C 1235 220, 1348 205, 1460 150';
 
-    const MOBILE_PATH = 'M 140 1450 C 330 1360, 370 1225, 230 1128 C 105 1040, 146 872, 345 840 C 570 804, 705 710, 555 595 C 410 482, 245 490, 250 350 C 255 205, 455 145, 760 128';
+    const MOBILE_PATH =
+      'M 140 1450 C 330 1360, 370 1225, 230 1128 C 105 1040, 146 872, 345 840 C 570 804, 705 710, 555 595 C 410 482, 245 490, 250 350 C 255 205, 455 145, 760 128';
 
     document.addEventListener('DOMContentLoaded', initRacePage);
 
     function initRacePage() {
       applyRoute();
       bindEvents();
-
-      FamilyBibleApi.call('getRaceData')
-        .then(handleData)
-        .catch(handleError);
+      loadRaceData();
     }
 
     function bindEvents() {
-      document.getElementById('searchInput').addEventListener('input', e => {
-        const keyword = normalizeGroupId(e.target.value);
+      const searchInput = document.getElementById('searchInput');
+
+      searchInput.addEventListener('input', function(event) {
+        const keyword = normalizeGroupId(event.target.value);
 
         if (!keyword) {
           clearHighlight();
@@ -642,38 +673,166 @@
 
         if (group) {
           focusGroup(group.groupId);
-        } else {
-          showNotFound(keyword);
+          return;
         }
+
+        showNotFound(keyword);
       });
 
-      window.addEventListener('resize', () => {
+      window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
+
+        resizeTimer = setTimeout(function() {
           applyRoute();
           renderPoints();
         }, 160);
       });
     }
 
+    function loadRaceData() {
+      setLoadingText('讀取賽程中...');
+
+      callGASWebAppJsonp_('getRaceData')
+        .then(function(data) {
+          if (data && data.error) {
+            throw new Error(data.message || '賽程資料讀取失敗');
+          }
+
+          if (!data || !Array.isArray(data.groups)) {
+            throw new Error('賽程資料格式錯誤');
+          }
+
+          handleData(data);
+        })
+        .catch(handleError);
+    }
+
+    function callGASWebAppJsonp_(action) {
+      return new Promise(function(resolve, reject) {
+        const callbackName = '__raceJsonpCallback_' + Date.now() + '_' + (++jsonpSequence);
+        const script = document.createElement('script');
+        const timeoutMs = 15000;
+        let settled = false;
+
+        const cleanup = function() {
+          window.clearTimeout(timer);
+          script.remove();
+
+          try {
+            delete window[callbackName];
+          } catch (error) {
+            window[callbackName] = undefined;
+          }
+        };
+
+        const finish = function(handler, value) {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          handler(value);
+        };
+
+        const timer = window.setTimeout(function() {
+          finish(reject, new Error('讀取逾時，請確認 GAS Web App 已重新部署。'));
+        }, timeoutMs);
+
+        window[callbackName] = function(payload) {
+          finish(resolve, payload);
+        };
+
+        script.async = true;
+
+        script.onerror = function() {
+          finish(reject, new Error('無法連線至 GAS Web App。'));
+        };
+
+        script.src =
+          GAS_WEB_APP_URL +
+          '?action=' + encodeURIComponent(action) +
+          '&callback=' + encodeURIComponent(callbackName) +
+          '&_=' + Date.now();
+
+        document.head.appendChild(script);
+      });
+    }
+
     function handleData(data) {
-      raceData = data;
+      raceData = {
+        totalChapters: Math.max(0, Number(data.totalChapters) || 0),
+        updatedAt: String(data.updatedAt || '').trim(),
+        groups: data.groups
+          .filter(function(group) {
+            return group && String(group.groupId || '').trim();
+          })
+          .map(normalizeGroupData_)
+      };
+
       groupMap = new Map();
 
-      data.groups.forEach(g => {
-        groupMap.set(String(g.groupId), g);
+      raceData.groups.forEach(function(group) {
+        groupMap.set(String(group.groupId), group);
       });
 
-      document.getElementById('subtitle').textContent =
-        `共 ${data.groups.length} 組正在奔跑｜新約共 ${data.totalChapters} 章`;
+      const updatedText = raceData.updatedAt
+        ? '｜更新：' + raceData.updatedAt
+        : '';
 
-      document.getElementById('loading').style.display = 'none';
+      document.getElementById('subtitle').textContent =
+        '共 ' + raceData.groups.length + ' 組正在奔跑｜新約共 ' +
+        raceData.totalChapters + ' 章' + updatedText;
+
+      hideLoading();
       renderPoints();
     }
 
-    function handleError(err) {
+    function normalizeGroupData_(group) {
+      const totalChapters = Math.max(
+        0,
+        Number(group.totalChapters) ||
+        (raceData && raceData.totalChapters) ||
+        0
+      );
+
+      const totalDone = Math.max(0, Number(group.totalDone) || 0);
+      const percent = clampPercent_(group.percent);
+      const books = Array.isArray(group.books) ? group.books : [];
+
+      return {
+        groupId: normalizeGroupId(group.groupId) || String(group.groupId).trim(),
+        totalDone: Math.min(totalDone, totalChapters || totalDone),
+        totalChapters: totalChapters,
+        percent: percent,
+        books: books.map(function(book) {
+          const total = Math.max(0, Number(book.total) || 0);
+          const done = Math.max(0, Math.min(Number(book.done) || 0, total));
+
+          return {
+            shortName: String(book.shortName || book.name || '').trim(),
+            done: done,
+            total: total,
+            percent: clampPercent_(book.percent)
+          };
+        })
+      };
+    }
+
+    function handleError(error) {
+      const message = error && error.message
+        ? error.message
+        : String(error || '未知錯誤');
+
       document.getElementById('loading').innerHTML =
-        `<div class="error">讀取失敗：${escapeHtml(err.message || err)}</div>`;
+        '<div class="error">讀取失敗：' + escapeHtml(message) + '</div>';
+    }
+
+    function setLoadingText(text) {
+      const loading = document.getElementById('loading');
+      loading.textContent = text;
+      loading.style.display = 'grid';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').style.display = 'none';
     }
 
     function isMobile() {
@@ -697,7 +856,6 @@
       const route = document.getElementById('routeBase');
       const startLabel = document.getElementById('startLabel');
       const finishLabel = document.getElementById('finishLabel');
-
       const length = route.getTotalLength();
       const startPoint = route.getPointAtLength(0);
       const finishPoint = route.getPointAtLength(length);
@@ -710,51 +868,63 @@
         finishLabel.setAttribute('x', finishPoint.x - 30);
         finishLabel.setAttribute('y', finishPoint.y + 56);
         finishLabel.setAttribute('text-anchor', 'middle');
-      } else {
-        startLabel.setAttribute('x', startPoint.x - 14);
-        startLabel.setAttribute('y', startPoint.y + 48);
-        startLabel.setAttribute('text-anchor', 'middle');
-
-        finishLabel.setAttribute('x', finishPoint.x - 46);
-        finishLabel.setAttribute('y', finishPoint.y + 42);
-        finishLabel.setAttribute('text-anchor', 'middle');
+        return;
       }
+
+      startLabel.setAttribute('x', startPoint.x - 14);
+      startLabel.setAttribute('y', startPoint.y + 48);
+      startLabel.setAttribute('text-anchor', 'middle');
+
+      finishLabel.setAttribute('x', finishPoint.x - 46);
+      finishLabel.setAttribute('y', finishPoint.y + 42);
+      finishLabel.setAttribute('text-anchor', 'middle');
     }
 
     function renderPoints() {
       if (!raceData) return;
 
       const layer = document.getElementById('pointsLayer');
-      layer.innerHTML = '';
-
       const route = document.getElementById('routeBase');
       const length = route.getTotalLength();
-      const usedSlots = {};
+      const usedSlots = Object.create(null);
 
-      raceData.groups.forEach(group => {
-        const percent = Math.max(0, Math.min(100, Number(group.percent) || 0));
+      layer.replaceChildren();
+
+      raceData.groups.forEach(function(group) {
+        const percent = clampPercent_(group.percent);
         const basePoint = route.getPointAtLength(length * (percent / 100));
+        const bucket = Math.round(percent * 2) / 2;
 
-        const bucket = Math.round(percent);
         usedSlots[bucket] = (usedSlots[bucket] || 0) + 1;
 
         const offsetIndex = usedSlots[bucket] - 1;
         const ring = Math.floor(offsetIndex / 8);
         const angle = (offsetIndex % 8) * 45;
-        const radius = ring * 18;
-
+        const radius = ring === 0 ? 0 : 18 + ((ring - 1) * 14);
         const offsetX = Math.cos(angle * Math.PI / 180) * radius;
         const offsetY = Math.sin(angle * Math.PI / 180) * radius;
 
-        const point = document.createElement('div');
-        point.className = `groupPoint ${getPercentClass(percent)}`;
+        const point = document.createElement('button');
+        point.type = 'button';
+        point.className = 'groupPoint ' + getPercentClass(percent);
         point.dataset.groupId = group.groupId;
         point.textContent = group.groupId;
+        point.title = group.groupId + ' 組｜' + formatPercent_(percent) + '%';
 
-        point.style.left = `calc(${basePoint.x / getViewBoxWidth() * 100}% + ${offsetX}px)`;
-        point.style.top = `calc(${basePoint.y / getViewBoxHeight() * 100}% + ${offsetY}px)`;
+        point.setAttribute(
+          'aria-label',
+          group.groupId + ' 組，完成 ' + formatPercent_(percent) + '%'
+        );
 
-        point.addEventListener('click', () => {
+        point.style.left =
+          'calc(' + (basePoint.x / getViewBoxWidth() * 100) + '% + ' +
+          offsetX + 'px)';
+
+        point.style.top =
+          'calc(' + (basePoint.y / getViewBoxHeight() * 100) + '% + ' +
+          offsetY + 'px)';
+
+        point.addEventListener('click', function() {
           document.getElementById('searchInput').value = group.groupId;
           focusGroup(group.groupId);
         });
@@ -782,54 +952,58 @@
 
     function focusGroup(groupId) {
       const group = groupMap.get(String(groupId));
-      if (!group) return;
 
-      document.querySelectorAll('.groupPoint').forEach(el => {
-        const active = el.dataset.groupId === String(groupId);
-        el.classList.toggle('active', active);
-        el.classList.toggle('dim', !active);
+      if (!group) {
+        showNotFound(groupId);
+        return;
+      }
+
+      document.querySelectorAll('.groupPoint').forEach(function(element) {
+        const active = element.dataset.groupId === String(groupId);
+        element.classList.toggle('active', active);
+        element.classList.toggle('dim', !active);
       });
 
       showDetail(group);
     }
 
     function clearHighlight() {
-      document.querySelectorAll('.groupPoint').forEach(el => {
-        el.classList.remove('active', 'dim');
+      document.querySelectorAll('.groupPoint').forEach(function(element) {
+        element.classList.remove('active', 'dim');
       });
     }
 
     function showDetail(group) {
       const card = document.getElementById('detailCard');
+      const books = Array.isArray(group.books) ? group.books : [];
 
-      const booksHtml = group.books.length
-        ? group.books.map(book => `
-          <div class="bookRow">
-            <div>${escapeHtml(book.shortName)}</div>
-            <div class="bar">
-              <div class="barFill" style="width:${book.percent}%"></div>
-            </div>
-            <div>${book.done}/${book.total}</div>
-          </div>
-        `).join('')
-        : `<div style="color:#6b7280;font-weight:800;">尚無回報</div>`;
+      const booksHtml = books.length
+        ? books.map(function(book) {
+            return (
+              '<div class="bookRow">' +
+                '<div>' + escapeHtml(book.shortName) + '</div>' +
+                '<div class="bar">' +
+                  '<div class="barFill" style="width:' + clampPercent_(book.percent) + '%"></div>' +
+                '</div>' +
+                '<div>' + book.done + '/' + book.total + '</div>' +
+              '</div>'
+            );
+          }).join('')
+        : '<div style="color:#6b7280;font-weight:800;">尚無回報</div>';
 
-      card.innerHTML = `
-        <div class="detailTitle">
-          <span>${escapeHtml(group.groupId)} 組</span>
-          <span class="badge">${group.percent}%</span>
-        </div>
-
-        <div class="detailStats">
-          <div class="stat">
-            <div class="statLabel">完成章數</div>
-            <div class="statValue">${group.totalDone}/${group.totalChapters}</div>
-          </div>
-        </div>
-
-        <div style="font-size:14px;font-weight:950;margin-top:8px;">各卷進度</div>
-        <div class="bookList">${booksHtml}</div>
-      `;
+      card.innerHTML =
+        '<div class="detailTitle">' +
+          '<span>' + escapeHtml(group.groupId) + ' 組</span>' +
+          '<span class="badge">' + formatPercent_(group.percent) + '%</span>' +
+        '</div>' +
+        '<div class="detailStats">' +
+          '<div class="stat">' +
+            '<div class="statLabel">完成章數</div>' +
+            '<div class="statValue">' + group.totalDone + '/' + group.totalChapters + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:14px;font-weight:950;margin-top:8px;">各卷進度</div>' +
+        '<div class="bookList">' + booksHtml + '</div>';
 
       card.classList.add('open');
     }
@@ -838,28 +1012,43 @@
       clearHighlight();
 
       const card = document.getElementById('detailCard');
-      card.innerHTML = `
-        <div class="detailTitle">
-          <span>找不到 ${escapeHtml(keyword)} 組</span>
-        </div>
-        <div style="color:#6b7280;font-weight:800;">
-          請確認小組編號是否存在。
-        </div>
-      `;
+
+      card.innerHTML =
+        '<div class="detailTitle"><span>找不到 ' +
+        escapeHtml(keyword) +
+        ' 組</span></div>' +
+        '<div style="color:#6b7280;font-weight:800;">請確認小組編號是否存在。</div>';
+
       card.classList.add('open');
     }
 
     function closeDetail() {
       const card = document.getElementById('detailCard');
       card.classList.remove('open');
-      card.innerHTML = '';
+      card.replaceChildren();
     }
 
     function normalizeGroupId(value) {
       const text = String(value || '').trim();
+
       if (!text) return '';
-      if (/^\d+$/.test(text)) return String(Number(text)).padStart(3, '0');
+      if (/^\d+$/.test(text)) {
+        return String(Number(text)).padStart(3, '0');
+      }
+
       return text;
+    }
+
+    function clampPercent_(value) {
+      const number = Number(value);
+      return Math.max(0, Math.min(100, Number.isFinite(number) ? number : 0));
+    }
+
+    function formatPercent_(value) {
+      const percent = clampPercent_(value);
+      return Number.isInteger(percent)
+        ? String(percent)
+        : String(Math.round(percent * 10) / 10);
     }
 
     function escapeHtml(value) {
