@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>新約讀經賽程圖</title>
 
   <style>
     :root {
@@ -24,6 +24,10 @@
 
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
@@ -56,6 +60,8 @@
     }
 
     .titleBlock {
+      flex: 1 1 auto;
+      min-width: 0;
       padding: 14px 18px;
       border-radius: 26px;
       background: rgba(255, 255, 255, 0.78);
@@ -100,6 +106,7 @@
     }
 
     .searchPanel {
+      flex: 0 0 min(360px, 42vw);
       width: min(360px, 42vw);
       position: relative;
       z-index: 40;
@@ -126,10 +133,10 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 13px 14px;
-      font-size: 18px;
-      font-weight: 900;
+      font: 900 18px/1.2 inherit;
       outline: none;
       background: #fff;
+      color: var(--ink);
     }
 
     .searchInput:focus {
@@ -142,7 +149,7 @@
       max-height: 0;
       opacity: 0;
       overflow: hidden;
-      transition: all 0.25s ease;
+      transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
       background: rgba(255, 255, 255, 0.96);
       border: 1px solid rgba(255, 255, 255, 0.95);
       box-shadow: 0 16px 42px rgba(43, 73, 110, 0.18);
@@ -160,12 +167,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       font-size: 22px;
       font-weight: 950;
       margin-bottom: 10px;
     }
 
     .badge {
+      flex: 0 0 auto;
       font-size: 13px;
       padding: 5px 10px;
       border-radius: 999px;
@@ -208,7 +217,7 @@
 
     .bookRow {
       display: grid;
-      grid-template-columns: 58px 1fr 70px;
+      grid-template-columns: 58px minmax(0, 1fr) 70px;
       gap: 8px;
       align-items: center;
       font-size: 13px;
@@ -419,20 +428,19 @@
       position: absolute;
       width: 38px;
       height: 38px;
+      border: 3px solid rgba(255,255,255,0.95);
       border-radius: 999px;
       display: grid;
       place-items: center;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 950;
+      appearance: none;
+      padding: 0;
+      font: 950 12px/1 inherit;
       color: #fff;
-      border: 3px solid rgba(255,255,255,0.95);
-      box-shadow: 0 8px 18px rgba(29, 42, 67, 0.24);
+      box-shadow: 0 8px 18px rgba(29,42,67,0.24);
       cursor: pointer;
       transform: translate(-50%, -50%);
       transition: opacity 0.18s ease, scale 0.18s ease, filter 0.18s ease;
       user-select: none;
-      padding: 0;
     }
 
     .groupPoint.zero { background: var(--gray); }
@@ -451,9 +459,9 @@
       z-index: 50;
       scale: 1.52;
       box-shadow:
-        0 0 0 9px rgba(79, 140, 255, 0.2),
-        0 0 0 18px rgba(79, 140, 255, 0.12),
-        0 14px 28px rgba(29, 42, 67, 0.26);
+        0 0 0 9px rgba(79,140,255,0.2),
+        0 0 0 18px rgba(79,140,255,0.12),
+        0 14px 28px rgba(29,42,67,0.26);
       animation: racePulse 1.1s infinite;
     }
 
@@ -477,7 +485,7 @@
       background: rgba(255,255,255,0.82);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.9);
-      box-shadow: 0 12px 28px rgba(43, 73, 110, 0.12);
+      box-shadow: 0 12px 28px rgba(43,73,110,0.12);
     }
 
     .legendItem {
@@ -486,7 +494,7 @@
       gap: 6px;
       font-size: 12px;
       font-weight: 900;
-      color: rgba(36, 48, 64, 0.72);
+      color: rgba(36,48,64,0.72);
     }
 
     .legendDot {
@@ -501,11 +509,13 @@
       display: grid;
       place-items: center;
       z-index: 100;
+      padding: 20px;
       background: rgba(255,255,255,0.62);
       backdrop-filter: blur(8px);
       font-size: 24px;
       font-weight: 950;
       color: #3b4b63;
+      text-align: center;
     }
 
     .error {
@@ -514,11 +524,13 @@
       padding: 12px;
       border-radius: 16px;
       background: #fee2e2;
-      margin: 12px;
-      text-align: center;
+      max-width: min(94%, 520px);
+      margin: auto;
+      line-height: 1.45;
     }
 
-    @media (max-width: 768px) {
+    /* 手機直向：9:16 賽道、標題與搜尋框上下排列 */
+    @media (orientation: portrait) and (max-width: 1024px) {
       .page {
         padding: 12px;
       }
@@ -529,10 +541,24 @@
 
       .titleBlock {
         margin-bottom: 10px;
+        padding: 14px 16px;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .subtitle {
+        font-size: 14px;
       }
 
       .searchPanel {
         width: 100%;
+        max-width: none;
       }
 
       .mapShell {
@@ -563,10 +589,97 @@
         width: 100%;
         margin: 12px 0 0;
         justify-content: center;
+        gap: 7px;
+        padding: 9px 8px;
+      }
+
+      .legendItem {
+        font-size: 11px;
+        gap: 4px;
+      }
+
+      .legendDot {
+        width: 10px;
+        height: 10px;
       }
 
       .detailCard.open {
         max-height: 430px;
+      }
+    }
+
+    /* 手機橫向：16:9 賽道、壓縮上方區塊避免浪費空間 */
+    @media (orientation: landscape) and (max-height: 520px) {
+      .page {
+        padding: 10px;
+      }
+
+      .header {
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .titleBlock {
+        padding: 10px 14px;
+        border-radius: 20px;
+      }
+
+      .titleBlock::before {
+        font-size: 16px;
+        top: 8px;
+      }
+
+      .eyebrow {
+        font-size: 9px;
+        margin-bottom: 3px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .subtitle {
+        margin-top: 4px;
+        font-size: 11px;
+      }
+
+      .searchPanel {
+        flex-basis: min(310px, 40vw);
+        width: min(310px, 40vw);
+      }
+
+      .searchBox {
+        padding: 10px;
+        border-radius: 20px;
+      }
+
+      .searchLabel {
+        font-size: 11px;
+        margin-bottom: 5px;
+      }
+
+      .searchInput {
+        padding: 9px 11px;
+        font-size: 15px;
+        border-radius: 14px;
+      }
+
+      .mapShell {
+        max-height: calc(100vh - 150px);
+      }
+
+      .legend {
+        margin-top: 8px;
+        padding: 7px 12px;
+      }
+
+      .legendItem {
+        font-size: 10px;
+      }
+
+      .legendDot {
+        width: 10px;
+        height: 10px;
       }
     }
   </style>
@@ -588,6 +701,7 @@
             id="searchInput"
             class="searchInput"
             type="text"
+            inputmode="numeric"
             placeholder="例如：001、032、100"
             autocomplete="off"
           >
@@ -596,7 +710,7 @@
       </aside>
     </header>
 
-    <main class="mapShell" id="mapShell">
+    <main class="mapShell">
       <div class="sun"></div>
       <div class="cloud c1"></div>
       <div class="cloud c2"></div>
@@ -608,6 +722,7 @@
         id="trackSvg"
         viewBox="0 0 1600 900"
         preserveAspectRatio="none"
+        aria-label="新約讀經賽程地圖"
       >
         <path id="routeShadow" class="routeShadow"></path>
         <path id="routeBase" class="routeBase"></path>
@@ -635,11 +750,6 @@
     const GAS_WEB_APP_URL =
       'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
-    let raceData = null;
-    let groupMap = new Map();
-    let resizeTimer = null;
-    let jsonpSequence = 0;
-
     const DESKTOP_VIEWBOX = '0 0 1600 900';
     const MOBILE_VIEWBOX = '0 0 900 1600';
 
@@ -648,6 +758,11 @@
 
     const MOBILE_PATH =
       'M 140 1450 C 330 1360, 370 1225, 230 1128 C 105 1040, 146 872, 345 840 C 570 804, 705 710, 555 595 C 410 482, 245 490, 250 350 C 255 205, 455 145, 760 128';
+
+    let raceData = null;
+    let groupMap = new Map();
+    let resizeTimer = null;
+    let jsonpSequence = 0;
 
     document.addEventListener('DOMContentLoaded', initRacePage);
 
@@ -658,41 +773,39 @@
     }
 
     function bindEvents() {
-      const searchInput = document.getElementById('searchInput');
+      document.getElementById('searchInput').addEventListener('input', function(event) {
+        const groupId = normalizeGroupId(event.target.value);
 
-      searchInput.addEventListener('input', function(event) {
-        const keyword = normalizeGroupId(event.target.value);
-
-        if (!keyword) {
+        if (!groupId) {
           clearHighlight();
           closeDetail();
           return;
         }
 
-        const group = groupMap.get(keyword);
-
-        if (group) {
-          focusGroup(group.groupId);
-          return;
+        if (groupMap.has(groupId)) {
+          focusGroup(groupId);
+        } else {
+          showNotFound(groupId);
         }
-
-        showNotFound(keyword);
       });
 
-      window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
+      window.addEventListener('resize', scheduleResponsiveRefresh);
+      window.addEventListener('orientationchange', scheduleResponsiveRefresh);
+    }
 
-        resizeTimer = setTimeout(function() {
-          applyRoute();
-          renderPoints();
-        }, 160);
-      });
+    function scheduleResponsiveRefresh() {
+      window.clearTimeout(resizeTimer);
+
+      resizeTimer = window.setTimeout(function() {
+        applyRoute();
+        renderPoints();
+      }, 180);
     }
 
     function loadRaceData() {
-      setLoadingText('讀取賽程中...');
+      setLoading('讀取賽程中...');
 
-      callGASWebAppJsonp_('getRaceData')
+      callGAS('getRaceData')
         .then(function(data) {
           if (data && data.error) {
             throw new Error(data.message || '賽程資料讀取失敗');
@@ -702,19 +815,31 @@
             throw new Error('賽程資料格式錯誤');
           }
 
-          handleData(data);
+          setRaceData(data);
         })
-        .catch(handleError);
+        .catch(function(error) {
+          const message = error && error.message
+            ? error.message
+            : String(error || '未知錯誤');
+
+          document.getElementById('loading').innerHTML =
+            '<div class="error">讀取失敗：' + escapeHtml(message) + '</div>';
+        });
     }
 
-    function callGASWebAppJsonp_(action) {
+    function callGAS(action) {
       return new Promise(function(resolve, reject) {
-        const callbackName = '__raceJsonpCallback_' + Date.now() + '_' + (++jsonpSequence);
+        const callbackName =
+          '__raceDataCallback_' + Date.now() + '_' + (++jsonpSequence);
+
         const script = document.createElement('script');
-        const timeoutMs = 15000;
         let settled = false;
 
-        const cleanup = function() {
+        const timer = window.setTimeout(function() {
+          finish(reject, new Error('讀取逾時，請確認 GAS Web App 已重新部署。'));
+        }, 15000);
+
+        function cleanUp() {
           window.clearTimeout(timer);
           script.remove();
 
@@ -723,18 +848,17 @@
           } catch (error) {
             window[callbackName] = undefined;
           }
-        };
+        }
 
-        const finish = function(handler, value) {
-          if (settled) return;
+        function finish(handler, value) {
+          if (settled) {
+            return;
+          }
+
           settled = true;
-          cleanup();
+          cleanUp();
           handler(value);
-        };
-
-        const timer = window.setTimeout(function() {
-          finish(reject, new Error('讀取逾時，請確認 GAS Web App 已重新部署。'));
-        }, timeoutMs);
+        }
 
         window[callbackName] = function(payload) {
           finish(resolve, payload);
@@ -756,173 +880,184 @@
       });
     }
 
-    function handleData(data) {
+    function setRaceData(data) {
+      const totalChapters = Math.max(0, Number(data.totalChapters) || 0);
+
       raceData = {
-        totalChapters: Math.max(0, Number(data.totalChapters) || 0),
+        totalChapters: totalChapters,
         updatedAt: String(data.updatedAt || '').trim(),
         groups: data.groups
           .filter(function(group) {
             return group && String(group.groupId || '').trim();
           })
-          .map(normalizeGroupData_)
+          .map(function(group) {
+            const groupTotal = Math.max(
+              0,
+              Number(group.totalChapters) || totalChapters
+            );
+
+            const groupDone = Math.max(
+              0,
+              Math.min(
+                Number(group.totalDone) || 0,
+                groupTotal || Number(group.totalDone) || 0
+              )
+            );
+
+            return {
+              groupId: normalizeGroupId(group.groupId) || String(group.groupId).trim(),
+              totalDone: groupDone,
+              totalChapters: groupTotal,
+              percent: clampPercent(group.percent),
+              books: Array.isArray(group.books)
+                ? group.books.map(function(book) {
+                    const total = Math.max(0, Number(book.total) || 0);
+
+                    return {
+                      shortName: String(book.shortName || book.name || '').trim(),
+                      done: Math.max(0, Math.min(Number(book.done) || 0, total)),
+                      total: total,
+                      percent: clampPercent(book.percent)
+                    };
+                  })
+                : []
+            };
+          })
       };
 
       groupMap = new Map();
 
       raceData.groups.forEach(function(group) {
-        groupMap.set(String(group.groupId), group);
+        groupMap.set(group.groupId, group);
       });
 
-      const updatedText = raceData.updatedAt
-        ? '｜更新：' + raceData.updatedAt
-        : '';
-
       document.getElementById('subtitle').textContent =
-        '共 ' + raceData.groups.length + ' 組正在奔跑｜新約共 ' +
-        raceData.totalChapters + ' 章' + updatedText;
+        '共 ' + raceData.groups.length +
+        ' 組正在奔跑｜新約共 ' +
+        raceData.totalChapters +
+        ' 章' +
+        (raceData.updatedAt ? '｜更新：' + raceData.updatedAt : '');
 
-      hideLoading();
+      document.getElementById('loading').style.display = 'none';
+
       renderPoints();
     }
 
-    function normalizeGroupData_(group) {
-      const totalChapters = Math.max(
-        0,
-        Number(group.totalChapters) ||
-        (raceData && raceData.totalChapters) ||
-        0
-      );
-
-      const totalDone = Math.max(0, Number(group.totalDone) || 0);
-      const percent = clampPercent_(group.percent);
-      const books = Array.isArray(group.books) ? group.books : [];
-
-      return {
-        groupId: normalizeGroupId(group.groupId) || String(group.groupId).trim(),
-        totalDone: Math.min(totalDone, totalChapters || totalDone),
-        totalChapters: totalChapters,
-        percent: percent,
-        books: books.map(function(book) {
-          const total = Math.max(0, Number(book.total) || 0);
-          const done = Math.max(0, Math.min(Number(book.done) || 0, total));
-
-          return {
-            shortName: String(book.shortName || book.name || '').trim(),
-            done: done,
-            total: total,
-            percent: clampPercent_(book.percent)
-          };
-        })
-      };
-    }
-
-    function handleError(error) {
-      const message = error && error.message
-        ? error.message
-        : String(error || '未知錯誤');
-
-      document.getElementById('loading').innerHTML =
-        '<div class="error">讀取失敗：' + escapeHtml(message) + '</div>';
-    }
-
-    function setLoadingText(text) {
+    function setLoading(text) {
       const loading = document.getElementById('loading');
       loading.textContent = text;
       loading.style.display = 'grid';
     }
 
-    function hideLoading() {
-      document.getElementById('loading').style.display = 'none';
-    }
-
-    function isMobile() {
-      return window.matchMedia('(max-width: 768px)').matches;
+    function isPortraitPhoneLayout() {
+      return (
+        window.matchMedia('(orientation: portrait)').matches &&
+        Math.min(window.innerWidth, window.innerHeight) <= 1024
+      );
     }
 
     function applyRoute() {
       const svg = document.getElementById('trackSvg');
-      const path = isMobile() ? MOBILE_PATH : DESKTOP_PATH;
+      const mobile = isPortraitPhoneLayout();
+      const path = mobile ? MOBILE_PATH : DESKTOP_PATH;
 
-      svg.setAttribute('viewBox', isMobile() ? MOBILE_VIEWBOX : DESKTOP_VIEWBOX);
+      svg.setAttribute(
+        'viewBox',
+        mobile ? MOBILE_VIEWBOX : DESKTOP_VIEWBOX
+      );
 
       document.getElementById('routeShadow').setAttribute('d', path);
       document.getElementById('routeBase').setAttribute('d', path);
       document.getElementById('routeLine').setAttribute('d', path);
 
-      updateRouteLabels();
+      updateRouteLabels(mobile);
     }
 
-    function updateRouteLabels() {
+    function updateRouteLabels(mobile) {
       const route = document.getElementById('routeBase');
       const startLabel = document.getElementById('startLabel');
       const finishLabel = document.getElementById('finishLabel');
-      const length = route.getTotalLength();
-      const startPoint = route.getPointAtLength(0);
-      const finishPoint = route.getPointAtLength(length);
 
-      if (isMobile()) {
-        startLabel.setAttribute('x', startPoint.x - 18);
-        startLabel.setAttribute('y', startPoint.y - 45);
+      const length = route.getTotalLength();
+      const start = route.getPointAtLength(0);
+      const finish = route.getPointAtLength(length);
+
+      if (mobile) {
+        startLabel.setAttribute('x', start.x - 18);
+        startLabel.setAttribute('y', start.y - 45);
         startLabel.setAttribute('text-anchor', 'middle');
 
-        finishLabel.setAttribute('x', finishPoint.x - 30);
-        finishLabel.setAttribute('y', finishPoint.y + 56);
+        finishLabel.setAttribute('x', finish.x - 30);
+        finishLabel.setAttribute('y', finish.y + 56);
         finishLabel.setAttribute('text-anchor', 'middle');
         return;
       }
 
-      startLabel.setAttribute('x', startPoint.x - 14);
-      startLabel.setAttribute('y', startPoint.y + 48);
+      startLabel.setAttribute('x', start.x - 14);
+      startLabel.setAttribute('y', start.y + 48);
       startLabel.setAttribute('text-anchor', 'middle');
 
-      finishLabel.setAttribute('x', finishPoint.x - 46);
-      finishLabel.setAttribute('y', finishPoint.y + 42);
+      finishLabel.setAttribute('x', finish.x - 46);
+      finishLabel.setAttribute('y', finish.y + 42);
       finishLabel.setAttribute('text-anchor', 'middle');
     }
 
     function renderPoints() {
-      if (!raceData) return;
+      if (!raceData) {
+        return;
+      }
 
       const layer = document.getElementById('pointsLayer');
       const route = document.getElementById('routeBase');
       const length = route.getTotalLength();
+      const mobile = isPortraitPhoneLayout();
+      const viewBoxWidth = mobile ? 900 : 1600;
+      const viewBoxHeight = mobile ? 1600 : 900;
       const usedSlots = Object.create(null);
 
       layer.replaceChildren();
 
       raceData.groups.forEach(function(group) {
-        const percent = clampPercent_(group.percent);
-        const basePoint = route.getPointAtLength(length * (percent / 100));
-        const bucket = Math.round(percent * 2) / 2;
+        const percent = clampPercent(group.percent);
+        const basePoint = route.getPointAtLength(length * percent / 100);
 
-        usedSlots[bucket] = (usedSlots[bucket] || 0) + 1;
+        const slot = String(Math.round(percent * 2) / 2);
+        const index = usedSlots[slot] || 0;
+        usedSlots[slot] = index + 1;
 
-        const offsetIndex = usedSlots[bucket] - 1;
-        const ring = Math.floor(offsetIndex / 8);
-        const angle = (offsetIndex % 8) * 45;
-        const radius = ring === 0 ? 0 : 18 + ((ring - 1) * 14);
+        const ring = Math.floor(index / 8);
+        const angle = (index % 8) * 45;
+        const radius = ring === 0 ? 0 : 18 + (ring - 1) * 14;
+
         const offsetX = Math.cos(angle * Math.PI / 180) * radius;
         const offsetY = Math.sin(angle * Math.PI / 180) * radius;
 
         const point = document.createElement('button');
+
         point.type = 'button';
         point.className = 'groupPoint ' + getPercentClass(percent);
         point.dataset.groupId = group.groupId;
         point.textContent = group.groupId;
-        point.title = group.groupId + ' 組｜' + formatPercent_(percent) + '%';
+        point.title = group.groupId + ' 組｜' + formatPercent(percent) + '%';
 
         point.setAttribute(
           'aria-label',
-          group.groupId + ' 組，完成 ' + formatPercent_(percent) + '%'
+          group.groupId + ' 組，完成 ' + formatPercent(percent) + '%'
         );
 
         point.style.left =
-          'calc(' + (basePoint.x / getViewBoxWidth() * 100) + '% + ' +
-          offsetX + 'px)';
+          'calc(' +
+          (basePoint.x / viewBoxWidth * 100) +
+          '% + ' +
+          offsetX +
+          'px)';
 
         point.style.top =
-          'calc(' + (basePoint.y / getViewBoxHeight() * 100) + '% + ' +
-          offsetY + 'px)';
+          'calc(' +
+          (basePoint.y / viewBoxHeight * 100) +
+          '% + ' +
+          offsetY +
+          'px)';
 
         point.addEventListener('click', function() {
           document.getElementById('searchInput').value = group.groupId;
@@ -933,23 +1068,6 @@
       });
     }
 
-    function getViewBoxWidth() {
-      return isMobile() ? 900 : 1600;
-    }
-
-    function getViewBoxHeight() {
-      return isMobile() ? 1600 : 900;
-    }
-
-    function getPercentClass(percent) {
-      if (percent >= 100) return 'done';
-      if (percent >= 75) return 'top';
-      if (percent >= 50) return 'high';
-      if (percent >= 25) return 'mid';
-      if (percent > 0) return 'low';
-      return 'zero';
-    }
-
     function focusGroup(groupId) {
       const group = groupMap.get(String(groupId));
 
@@ -958,32 +1076,32 @@
         return;
       }
 
-      document.querySelectorAll('.groupPoint').forEach(function(element) {
-        const active = element.dataset.groupId === String(groupId);
-        element.classList.toggle('active', active);
-        element.classList.toggle('dim', !active);
+      document.querySelectorAll('.groupPoint').forEach(function(point) {
+        const active = point.dataset.groupId === String(groupId);
+
+        point.classList.toggle('active', active);
+        point.classList.toggle('dim', !active);
       });
 
       showDetail(group);
     }
 
     function clearHighlight() {
-      document.querySelectorAll('.groupPoint').forEach(function(element) {
-        element.classList.remove('active', 'dim');
+      document.querySelectorAll('.groupPoint').forEach(function(point) {
+        point.classList.remove('active', 'dim');
       });
     }
 
     function showDetail(group) {
-      const card = document.getElementById('detailCard');
-      const books = Array.isArray(group.books) ? group.books : [];
-
-      const booksHtml = books.length
-        ? books.map(function(book) {
+      const booksHtml = group.books.length
+        ? group.books.map(function(book) {
             return (
               '<div class="bookRow">' +
                 '<div>' + escapeHtml(book.shortName) + '</div>' +
                 '<div class="bar">' +
-                  '<div class="barFill" style="width:' + clampPercent_(book.percent) + '%"></div>' +
+                  '<div class="barFill" style="width:' +
+                    clampPercent(book.percent) +
+                    '%"></div>' +
                 '</div>' +
                 '<div>' + book.done + '/' + book.total + '</div>' +
               '</div>'
@@ -991,15 +1109,21 @@
           }).join('')
         : '<div style="color:#6b7280;font-weight:800;">尚無回報</div>';
 
+      const card = document.getElementById('detailCard');
+
       card.innerHTML =
         '<div class="detailTitle">' +
           '<span>' + escapeHtml(group.groupId) + ' 組</span>' +
-          '<span class="badge">' + formatPercent_(group.percent) + '%</span>' +
+          '<span class="badge">' + formatPercent(group.percent) + '%</span>' +
         '</div>' +
         '<div class="detailStats">' +
           '<div class="stat">' +
             '<div class="statLabel">完成章數</div>' +
-            '<div class="statValue">' + group.totalDone + '/' + group.totalChapters + '</div>' +
+            '<div class="statValue">' +
+              group.totalDone +
+              '/' +
+              group.totalChapters +
+            '</div>' +
           '</div>' +
         '</div>' +
         '<div style="font-size:14px;font-weight:950;margin-top:8px;">各卷進度</div>' +
@@ -1008,15 +1132,15 @@
       card.classList.add('open');
     }
 
-    function showNotFound(keyword) {
+    function showNotFound(groupId) {
       clearHighlight();
 
       const card = document.getElementById('detailCard');
 
       card.innerHTML =
-        '<div class="detailTitle"><span>找不到 ' +
-        escapeHtml(keyword) +
-        ' 組</span></div>' +
+        '<div class="detailTitle">' +
+          '<span>找不到 ' + escapeHtml(groupId) + ' 組</span>' +
+        '</div>' +
         '<div style="color:#6b7280;font-weight:800;">請確認小組編號是否存在。</div>';
 
       card.classList.add('open');
@@ -1028,27 +1152,40 @@
       card.replaceChildren();
     }
 
+    function getPercentClass(percent) {
+      if (percent >= 100) return 'done';
+      if (percent >= 75) return 'top';
+      if (percent >= 50) return 'high';
+      if (percent >= 25) return 'mid';
+      if (percent > 0) return 'low';
+      return 'zero';
+    }
+
+    function clampPercent(value) {
+      const number = Number(value);
+
+      return Math.max(
+        0,
+        Math.min(100, Number.isFinite(number) ? number : 0)
+      );
+    }
+
+    function formatPercent(value) {
+      const number = clampPercent(value);
+
+      return Number.isInteger(number)
+        ? String(number)
+        : String(Math.round(number * 10) / 10);
+    }
+
     function normalizeGroupId(value) {
       const text = String(value || '').trim();
 
-      if (!text) return '';
       if (/^\d+$/.test(text)) {
         return String(Number(text)).padStart(3, '0');
       }
 
       return text;
-    }
-
-    function clampPercent_(value) {
-      const number = Number(value);
-      return Math.max(0, Math.min(100, Number.isFinite(number) ? number : 0));
-    }
-
-    function formatPercent_(value) {
-      const percent = clampPercent_(value);
-      return Number.isInteger(percent)
-        ? String(percent)
-        : String(Math.round(percent * 10) / 10);
     }
 
     function escapeHtml(value) {
