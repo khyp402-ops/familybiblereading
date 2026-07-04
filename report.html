@@ -1041,6 +1041,80 @@
   </div>
 
   <script>
+    /*
+     * GitHub Pages 無法直接使用 google.script.run。
+     * 此橋接器以 JSONP 呼叫 GAS Web App，並在逾時或後端錯誤時明確回傳錯誤，
+     * 不會讓下拉選單永久停在「資料載入中」。
+     */
+    const FAMILY_BIBLE_API_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    const FamilyBibleApi = (function() {
+      const REQUEST_TIMEOUT_MS = 25000;
+      let sequence = 0;
+
+      function call(action, payload) {
+        return new Promise(function(resolve, reject) {
+          const callbackName = '__familyBibleJsonp_' + Date.now().toString(36) + '_' + (++sequence);
+          const script = document.createElement('script');
+          let finished = false;
+
+          function cleanup() {
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+
+            try {
+              delete window[callbackName];
+            } catch (err) {
+              window[callbackName] = undefined;
+            }
+          }
+
+          function fail(message) {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timeoutId);
+            cleanup();
+            reject(new Error(message));
+          }
+
+          const timeoutId = setTimeout(function() {
+            fail('連線逾時，請確認 GAS 已重新部署為目前版本後再試。');
+          }, REQUEST_TIMEOUT_MS);
+
+          window[callbackName] = function(data) {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timeoutId);
+            cleanup();
+
+            if (data && data.error) {
+              reject(new Error(data.message || '伺服器處理失敗'));
+              return;
+            }
+
+            resolve(data || {});
+          };
+
+          script.async = true;
+          script.onerror = function() {
+            fail('無法連線至 GAS Web App，請確認 Web App 網址與部署權限。');
+          };
+
+          const separator = FAMILY_BIBLE_API_URL.indexOf('?') === -1 ? '?' : '&';
+          script.src = FAMILY_BIBLE_API_URL + separator +
+            'action=' + encodeURIComponent(action) +
+            '&payload=' + encodeURIComponent(JSON.stringify(payload || {})) +
+            '&callback=' + encodeURIComponent(callbackName) +
+            '&_=' + Date.now();
+
+          document.head.appendChild(script);
+        });
+      }
+
+      return { call: call };
+    })();
+
     let systemData = {
       groups: [],
       books: [],
@@ -1055,15 +1129,43 @@
     let tokenLoginInfo = null;
 
     window.onload = function() {
+      loadReportSystem();
+    };
+
+    function loadReportSystem() {
+      const groupSelect = document.getElementById('groupSelect');
+      const bookSelect = document.getElementById('bookSelect');
+      const tokenStatus = document.getElementById('tokenLoginStatus');
+
       const params = new URLSearchParams(window.location.search);
       const urlToken = String(params.get('token') || '').trim();
       const savedToken = localStorage.getItem('reading_report_token') || '';
 
       currentToken = urlToken || savedToken || '';
+      tokenLoginInfo = null;
+      currentProgress = null;
+      selectedCompleted = 0;
+      lockedCompleted = 0;
+
+      groupSelect.disabled = true;
+      bookSelect.disabled = true;
+      groupSelect.innerHTML = '<option value="">資料載入中...</option>';
+      bookSelect.innerHTML = '<option value="">請選擇卷名</option>';
+      tokenStatus.textContent = '';
+      document.getElementById('chapterGrid').innerHTML = '';
+      document.getElementById('chapterHint').textContent = '正在讀取回報資料...';
+      document.getElementById('resultArea').innerHTML = '';
+      document.getElementById('achievementArea').textContent = '請先選擇報名小組編號，再查詢已取得徽章。';
+      setStatus('資料讀取中...', false);
 
       FamilyBibleApi.call('getReportSystemInitData', { token: currentToken })
         .then(function(data) {
-          systemData = data || systemData;
+          systemData = {
+            groups: data && Array.isArray(data.groups) ? data.groups : [],
+            books: data && Array.isArray(data.books) ? data.books : [],
+            totalChapters: Number(data && data.totalChapters || 0),
+            expectedProgress: data && data.expectedProgress ? data.expectedProgress : null
+          };
           tokenLoginInfo = data && data.tokenLogin && data.tokenLogin.ok ? data.tokenLogin : null;
 
           if (tokenLoginInfo && currentToken) {
@@ -1072,17 +1174,44 @@
 
           renderGroupOptions();
           renderBookOptions();
+          bookSelect.disabled = systemData.books.length === 0;
           applyTokenLogin();
-          document.getElementById('formStatus').textContent = '';
+
+          if (!(tokenLoginInfo && tokenLoginInfo.group)) {
+            setStatus('', false);
+          }
         })
         .catch(function(err) {
-          showError(err);
+          showInitError(err);
         });
-    };
+    }
+
+    function showInitError(err) {
+      const message = err && err.message ? err.message : String(err);
+      const groupSelect = document.getElementById('groupSelect');
+      const bookSelect = document.getElementById('bookSelect');
+      const tokenStatus = document.getElementById('tokenLoginStatus');
+
+      groupSelect.disabled = true;
+      bookSelect.disabled = true;
+      groupSelect.innerHTML = '<option value="">資料讀取失敗</option>';
+      bookSelect.innerHTML = '<option value="">請選擇卷名</option>';
+      document.getElementById('chapterGrid').innerHTML = '';
+      document.getElementById('chapterHint').textContent = '無法讀取資料，請重新載入。';
+      tokenStatus.innerHTML = '資料讀取失敗：' + escapeHtml(message) +
+        '　<a href="javascript:void(0)" onclick="loadReportSystem()">重新載入</a>';
+      setStatus('資料讀取失敗，請點選上方「重新載入」。', true);
+    }
 
     function renderGroupOptions() {
       const select = document.getElementById('groupSelect');
       select.innerHTML = '<option value="">請選擇報名小組編號</option>';
+
+      if (!systemData.groups.length) {
+        select.innerHTML = '<option value="">目前沒有可回報的小組資料</option>';
+        select.disabled = true;
+        return;
+      }
 
       systemData.groups.forEach(function(item) {
         const option = document.createElement('option');
@@ -1090,6 +1219,8 @@
         option.textContent = item.displayText;
         select.appendChild(option);
       });
+
+      select.disabled = false;
     }
 
     function applyTokenLogin() {
