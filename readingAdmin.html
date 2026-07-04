@@ -13,11 +13,8 @@
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
       --green: #16a34a;
-      --red: #dc2626;
-      --amber: #f59e0b;
       --soft-blue: #eff6ff;
       --soft-green: #ecfdf5;
-      --soft-amber: #fffbeb;
       --radius: 18px;
     }
 
@@ -142,6 +139,12 @@
 
     button:hover {
       background: var(--primary-dark);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      box-shadow: none;
     }
 
     button.secondary {
@@ -332,6 +335,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="page">
     <section class="hero">
@@ -342,32 +346,44 @@
 
     <section id="loginCard" class="card login">
       <h2>管理者登入</h2>
+
       <div>
         <label>管理密碼</label>
-        <input id="loginPassword" type="password" placeholder="請輸入管理密碼">
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="請輸入管理密碼"
+          autocomplete="current-password"
+        >
       </div>
+
       <div class="btns">
-        <button onclick="login()">進入設定頁</button>
+        <button id="loginButton" type="button" onclick="login()">進入設定頁</button>
       </div>
+
       <div id="loginMsg" class="notice hidden"></div>
     </section>
 
     <main id="adminArea" class="hidden">
       <section class="card">
         <h2>基本設定</h2>
+
         <div class="grid">
           <div>
             <label>計畫名稱</label>
             <input id="planName" type="text">
           </div>
+
           <div>
             <label>開始日</label>
             <input id="startDate" type="date">
           </div>
+
           <div>
             <label>指定結束日（可空白）</label>
             <input id="targetEndDate" type="date">
           </div>
+
           <div>
             <label>每週開始日</label>
             <select id="weekStartDay">
@@ -385,19 +401,23 @@
 
       <section class="card">
         <h2>讀經範圍</h2>
+
         <div class="grid">
           <div>
             <label>起始卷</label>
             <select id="startBook" onchange="syncChapterOptions()"></select>
           </div>
+
           <div>
             <label>起始章</label>
             <select id="startChapter"></select>
           </div>
+
           <div>
             <label>結束卷</label>
             <select id="endBook" onchange="syncChapterOptions()"></select>
           </div>
+
           <div>
             <label>結束章</label>
             <select id="endChapter"></select>
@@ -414,6 +434,7 @@
             <input type="text" readonly value="選「無」：這個階段不安排展覽聚會">
             <input id="exhibitionWeekday" type="hidden" value="0">
           </div>
+
           <div>
             <label>指定日期說明</label>
             <input type="text" readonly value="選「指定日期」：必須填寫右側指定展覽日期">
@@ -441,24 +462,26 @@
 
       <section class="card">
         <h2>管理設定</h2>
+
         <div class="grid-2">
           <div>
             <label>變更管理密碼（不改可空白）</label>
             <input id="newAdminPassword" type="password" placeholder="空白則維持原密碼">
           </div>
+
           <div>
             <label>參加者進度表連結</label>
             <div class="url-box">
               <input id="publicUrl" type="text" readonly>
-              <button class="secondary" onclick="copyPublicUrl()">複製</button>
+              <button class="secondary" type="button" onclick="copyPublicUrl()">複製</button>
             </div>
           </div>
         </div>
 
         <div class="btns">
-          <button class="secondary" onclick="loadDefault()">載入預設節奏</button>
-          <button onclick="generatePreview()">產生預覽</button>
-          <button class="green" onclick="saveSchedule()">寫入讀經進度表</button>
+          <button class="secondary" type="button" onclick="loadDefault()">載入預設節奏</button>
+          <button type="button" onclick="generatePreview()">產生預覽</button>
+          <button class="green" type="button" onclick="saveSchedule()">寫入讀經進度表</button>
         </div>
 
         <div id="actionMsg" class="notice hidden"></div>
@@ -466,33 +489,40 @@
 
       <section id="summaryCard" class="card hidden">
         <h2>產生結果</h2>
+
         <div class="summary">
           <div class="item">
             <div class="label">總週數</div>
             <div id="sumTotalWeeks" class="value">0</div>
           </div>
+
           <div class="item">
             <div class="label">讀經週</div>
             <div id="sumReadingWeeks" class="value">0</div>
           </div>
+
           <div class="item">
             <div class="label">緩衝展覽週</div>
             <div id="sumBufferWeeks" class="value">0</div>
           </div>
+
           <div class="item">
             <div class="label">總章數</div>
             <div id="sumTotalChapters" class="value">0</div>
           </div>
+
           <div class="item">
             <div class="label">完成日</div>
             <div id="sumCompletionDate" class="value" style="font-size:20px;">-</div>
           </div>
         </div>
+
         <div id="summaryWarning" class="notice hidden"></div>
       </section>
 
       <section id="previewCard" class="card hidden">
         <h2>進度表預覽</h2>
+
         <div class="table-wrap">
           <table>
             <thead>
@@ -513,12 +543,27 @@
     </main>
   </div>
 
-  <script src="./api.js"></script>
   <script>
+    /*
+     * 本頁直接呼叫 GAS Web App。
+     * 不使用、不需要、也不載入 api.js。
+     */
+    const GAS_WEB_APP_URL =
+      'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    const GAS_JSONP_TIMEOUT_MS = 30000;
+
     let adminPassword = '';
     let books = [];
     let currentConfig = null;
     let latestPreviewRows = [];
+    let loginPending = false;
+    let jsonpSequence = 0;
+
+    function getErrorMessage(error) {
+      if (!error) return '連線失敗，請重新整理後再試。';
+      return error.message ? String(error.message) : String(error);
+    }
 
     function showMsg(id, text, type) {
       const el = document.getElementById(id);
@@ -541,7 +586,82 @@
       return String(value).replace(/-/g, '/');
     }
 
+    function callGasApi(action, payload) {
+      return new Promise(function(resolve, reject) {
+        const callbackName =
+          '__readingAdminJsonp_' +
+          Date.now().toString(36) +
+          '_' +
+          (++jsonpSequence).toString(36);
+
+        const script = document.createElement('script');
+        let completed = false;
+        let timeoutId = null;
+
+        function cleanup() {
+          if (timeoutId) {
+            window.clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          try {
+            delete window[callbackName];
+          } catch (error) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        function finish(error, result) {
+          if (completed) return;
+
+          completed = true;
+          cleanup();
+
+          if (error) {
+            reject(error instanceof Error ? error : new Error(String(error)));
+            return;
+          }
+
+          if (result && result.error) {
+            reject(new Error(result.message || 'GAS 處理失敗。'));
+            return;
+          }
+
+          resolve(result || {});
+        }
+
+        window[callbackName] = function(result) {
+          finish(null, result);
+        };
+
+        script.async = true;
+
+        script.onerror = function() {
+          finish(new Error('無法連線至 GAS Web App。請確認 Web App 已部署且網址正確。'));
+        };
+
+        const query = new URLSearchParams();
+        query.set('action', String(action || ''));
+        query.set('payload', JSON.stringify(payload || {}));
+        query.set('callback', callbackName);
+        query.set('_', String(Date.now()));
+
+        timeoutId = window.setTimeout(function() {
+          finish(new Error('GAS 在 30 秒內沒有回應，請重新整理後再試。'));
+        }, GAS_JSONP_TIMEOUT_MS);
+
+        script.src = GAS_WEB_APP_URL + '?' + query.toString();
+        document.head.appendChild(script);
+      });
+    }
+
     function login() {
+      if (loginPending) return;
+
       adminPassword = document.getElementById('loginPassword').value.trim();
 
       if (!adminPassword) {
@@ -549,33 +669,52 @@
         return;
       }
 
+      loginPending = true;
+
+      const loginButton = document.getElementById('loginButton');
+      loginButton.disabled = true;
+      loginButton.textContent = '驗證中...';
+
       showMsg('loginMsg', '驗證中...', '');
 
-      FamilyBibleApi.call('readingVerifyAdminPassword', {
+      callGasApi('readingVerifyAdminPassword', {
         password: adminPassword
       })
-        .then(function (res) {
+        .then(function(res) {
           if (!res || !res.success) {
-            showMsg('loginMsg', res && res.message ? res.message : '驗證失敗。', 'error');
+            showMsg(
+              'loginMsg',
+              res && res.message ? res.message : '驗證失敗。',
+              'error'
+            );
             return;
           }
 
-          books = res.books || [];
-          currentConfig = res.config;
+          books = Array.isArray(res.books) ? res.books : [];
+          currentConfig = res.config || null;
 
-          document.getElementById('loginCard').classList.add('hidden');
-          document.getElementById('adminArea').classList.remove('hidden');
+          if (!currentConfig || books.length === 0) {
+            throw new Error('GAS 未完整回傳讀經設定或書卷資料。');
+          }
 
           buildBookOptions();
           fillConfig(currentConfig);
 
-          const publicUrl = res.publicUrl || buildPublicUrl();
-          document.getElementById('publicUrl').value = publicUrl;
+          document.getElementById('publicUrl').value =
+            res.publicUrl || buildPublicUrl();
+
+          document.getElementById('loginCard').classList.add('hidden');
+          document.getElementById('adminArea').classList.remove('hidden');
 
           hideMsg('loginMsg');
         })
-        .catch(function (err) {
-          showMsg('loginMsg', err.message || String(err), 'error');
+        .catch(function(error) {
+          showMsg('loginMsg', getErrorMessage(error), 'error');
+        })
+        .finally(function() {
+          loginPending = false;
+          loginButton.disabled = false;
+          loginButton.textContent = '進入設定頁';
         });
     }
 
@@ -588,6 +727,7 @@
       input.select();
       input.setSelectionRange(0, 99999);
       document.execCommand('copy');
+
       showMsg('actionMsg', '已複製參加者進度表連結。', 'success');
     }
 
@@ -598,22 +738,23 @@
       startBook.innerHTML = '';
       endBook.innerHTML = '';
 
-      books.forEach(function (book) {
-        const option1 = document.createElement('option');
-        option1.value = book.chineseName;
-        option1.textContent = book.chineseName;
-        startBook.appendChild(option1);
+      books.forEach(function(book) {
+        const startOption = document.createElement('option');
+        startOption.value = book.chineseName;
+        startOption.textContent = book.chineseName;
+        startBook.appendChild(startOption);
 
-        const option2 = document.createElement('option');
-        option2.value = book.chineseName;
-        option2.textContent = book.chineseName;
-        endBook.appendChild(option2);
+        const endOption = document.createElement('option');
+        endOption.value = book.chineseName;
+        endOption.textContent = book.chineseName;
+        endBook.appendChild(endOption);
       });
     }
 
     function buildChapterOptions(selectId, bookName, selectedChapter) {
       const select = document.getElementById(selectId);
-      const book = books.find(function (item) {
+
+      const book = books.find(function(item) {
         return item.chineseName === bookName;
       });
 
@@ -621,10 +762,10 @@
 
       if (!book) return;
 
-      for (let i = 1; i <= Number(book.chapters); i++) {
+      for (let chapter = 1; chapter <= Number(book.chapters); chapter++) {
         const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i + '章';
+        option.value = chapter;
+        option.textContent = chapter + '章';
         select.appendChild(option);
       }
 
@@ -635,8 +776,11 @@
       const startBook = document.getElementById('startBook').value;
       const endBook = document.getElementById('endBook').value;
 
-      const oldStartChapter = document.getElementById('startChapter').value || 1;
-      const oldEndChapter = document.getElementById('endChapter').value || 1;
+      const oldStartChapter =
+        document.getElementById('startChapter').value || 1;
+
+      const oldEndChapter =
+        document.getElementById('endChapter').value || 1;
 
       buildChapterOptions('startChapter', startBook, oldStartChapter);
       buildChapterOptions('endChapter', endBook, oldEndChapter);
@@ -647,14 +791,23 @@
       document.getElementById('startDate').value = toDateInput(config.startDate);
       document.getElementById('targetEndDate').value = toDateInput(config.targetEndDate);
       document.getElementById('weekStartDay').value = String(config.weekStartDay);
-      document.getElementById('startBook').value = config.startBook || '馬太福音';
-      document.getElementById('endBook').value = config.endBook || '啟示錄';
-      document.getElementById('exhibitionWeekday').value = String(config.exhibitionWeekday || 0);
+
+      document.getElementById('startBook').value =
+        config.startBook || '馬太福音';
+
+      document.getElementById('endBook').value =
+        config.endBook || '啟示錄';
+
+      document.getElementById('exhibitionWeekday').value =
+        String(config.exhibitionWeekday || 0);
 
       syncChapterOptions();
 
-      document.getElementById('startChapter').value = String(config.startChapter || 1);
-      document.getElementById('endChapter').value = String(config.endChapter || 22);
+      document.getElementById('startChapter').value =
+        String(config.startChapter || 1);
+
+      document.getElementById('endChapter').value =
+        String(config.endChapter || 22);
 
       renderStages(config.stages || []);
     }
@@ -669,36 +822,97 @@
       return '無';
     }
 
+    function monthSelect(className, value) {
+      let html = '<select class="' + className + '">';
+
+      for (let month = 1; month <= 12; month++) {
+        html +=
+          '<option value="' + month + '"' +
+          (Number(value) === month ? ' selected' : '') +
+          '>' + month + '月</option>';
+      }
+
+      html += '</select>';
+      return html;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
     function renderStages(stages) {
       const tbody = document.getElementById('stageBody');
       tbody.innerHTML = '';
 
-      stages.forEach(function (stage, index) {
+      stages.forEach(function(stage, index) {
         const tr = document.createElement('tr');
         tr.dataset.index = index;
 
+        const exhibitionMode = normalizeExhibitionMode(stage.exhibitionMode);
+
         tr.innerHTML = `
-          <td><input type="checkbox" class="stage-enabled" ${stage.enabled === false ? '' : 'checked'}></td>
-          <td><input type="text" class="stage-name" value="${escapeHtml(stage.name || '')}"></td>
+          <td>
+            <input
+              type="checkbox"
+              class="stage-enabled"
+              ${stage.enabled === false ? '' : 'checked'}
+            >
+          </td>
+
+          <td>
+            <input
+              type="text"
+              class="stage-name"
+              value="${escapeHtml(stage.name || '')}"
+            >
+          </td>
+
           <td>${monthSelect('stage-start-month', stage.startMonth)}</td>
           <td>${monthSelect('stage-end-month', stage.endMonth)}</td>
-          <td><input type="number" class="stage-chapters" min="1" value="${Number(stage.chaptersPerWeek || 3)}"></td>
-          <td><input type="number" class="stage-buffer" min="0" value="${Number(stage.bufferWeeks || 0)}"></td>
+
           <td>
-            <select class="stage-exhibition-mode" onchange="toggleManualDate(this)">
-              <option value="無" ${normalizeExhibitionMode(stage.exhibitionMode || '無') === '無' ? 'selected' : ''}>無</option>
-              <option value="指定日期" ${normalizeExhibitionMode(stage.exhibitionMode || '') === '指定日期' ? 'selected' : ''}>指定日期</option>
+            <input
+              type="number"
+              class="stage-chapters"
+              min="1"
+              value="${Number(stage.chaptersPerWeek || 3)}"
+            >
+          </td>
+
+          <td>
+            <input
+              type="number"
+              class="stage-buffer"
+              min="0"
+              value="${Number(stage.bufferWeeks || 0)}"
+            >
+          </td>
+
+          <td>
+            <select
+              class="stage-exhibition-mode"
+              onchange="toggleManualDate(this)"
+            >
+              <option value="無" ${exhibitionMode === '無' ? 'selected' : ''}>無</option>
+              <option value="指定日期" ${exhibitionMode === '指定日期' ? 'selected' : ''}>指定日期</option>
             </select>
           </td>
+
           <td>
-            <input type="date" class="stage-manual-exhibition-date" value="${toDateInput(stage.manualExhibitionDate || '')}">
+            <input
+              type="date"
+              class="stage-manual-exhibition-date"
+              value="${toDateInput(stage.manualExhibitionDate || '')}"
+            >
           </td>
         `;
 
         tbody.appendChild(tr);
-
-        const modeSelect = tr.querySelector('.stage-exhibition-mode');
-        toggleManualDate(modeSelect);
+        toggleManualDate(tr.querySelector('.stage-exhibition-mode'));
       });
     }
 
@@ -714,88 +928,117 @@
       }
     }
 
-    function monthSelect(className, value) {
-      let html = `<select class="${className}">`;
-      for (let i = 1; i <= 12; i++) {
-        html += `<option value="${i}" ${Number(value) === i ? 'selected' : ''}>${i}月</option>`;
-      }
-      html += '</select>';
-      return html;
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
     function collectConfig() {
-      const stages = Array.from(document.querySelectorAll('#stageBody tr')).map(function (tr, index) {
-        const exhibitionMode = tr.querySelector('.stage-exhibition-mode').value;
-        const manualDate = tr.querySelector('.stage-manual-exhibition-date').value;
+      const stages = Array.from(
+        document.querySelectorAll('#stageBody tr')
+      ).map(function(tr, index) {
+        const exhibitionMode =
+          tr.querySelector('.stage-exhibition-mode').value;
+
+        const manualDate =
+          tr.querySelector('.stage-manual-exhibition-date').value;
 
         return {
-          id: currentConfig && currentConfig.stages && currentConfig.stages[index] ? currentConfig.stages[index].id : 'stage_' + (index + 1),
+          id:
+            currentConfig &&
+            currentConfig.stages &&
+            currentConfig.stages[index]
+              ? currentConfig.stages[index].id
+              : 'stage_' + (index + 1),
+
           name: tr.querySelector('.stage-name').value.trim(),
           startMonth: Number(tr.querySelector('.stage-start-month').value),
           endMonth: Number(tr.querySelector('.stage-end-month').value),
           chaptersPerWeek: Number(tr.querySelector('.stage-chapters').value),
           bufferWeeks: Number(tr.querySelector('.stage-buffer').value),
           exhibitionMode: exhibitionMode,
-          manualExhibitionDate: exhibitionMode === '指定日期' ? fromDateInput(manualDate) : '',
+          manualExhibitionDate:
+            exhibitionMode === '指定日期'
+              ? fromDateInput(manualDate)
+              : '',
           enabled: tr.querySelector('.stage-enabled').checked
         };
       });
 
       return {
-        planId: currentConfig && currentConfig.planId ? currentConfig.planId : 'PLAN001',
+        planId:
+          currentConfig && currentConfig.planId
+            ? currentConfig.planId
+            : 'PLAN001',
+
         planName: document.getElementById('planName').value.trim(),
         startDate: fromDateInput(document.getElementById('startDate').value),
-        targetEndDate: fromDateInput(document.getElementById('targetEndDate').value),
-        weekStartDay: Number(document.getElementById('weekStartDay').value),
+        targetEndDate: fromDateInput(
+          document.getElementById('targetEndDate').value
+        ),
+
+        weekStartDay: Number(
+          document.getElementById('weekStartDay').value
+        ),
+
         rangeType: '自訂範圍',
         startBook: document.getElementById('startBook').value,
         startChapter: Number(document.getElementById('startChapter').value),
         endBook: document.getElementById('endBook').value,
         endChapter: Number(document.getElementById('endChapter').value),
-        exhibitionWeekday: Number(document.getElementById('exhibitionWeekday').value),
-        adminPassword: currentConfig && currentConfig.adminPassword ? currentConfig.adminPassword : '',
-        newAdminPassword: document.getElementById('newAdminPassword').value.trim(),
+
+        exhibitionWeekday: Number(
+          document.getElementById('exhibitionWeekday').value
+        ),
+
+        adminPassword:
+          currentConfig && currentConfig.adminPassword
+            ? currentConfig.adminPassword
+            : '',
+
+        newAdminPassword:
+          document.getElementById('newAdminPassword').value.trim(),
+
         stages: stages
       };
     }
 
     function validateConfig(config) {
-      const manualMissing = config.stages.filter(function (stage) {
-        return stage.enabled && stage.exhibitionMode === '指定日期' && !stage.manualExhibitionDate;
+      const manualMissing = config.stages.filter(function(stage) {
+        return (
+          stage.enabled &&
+          stage.exhibitionMode === '指定日期' &&
+          !stage.manualExhibitionDate
+        );
       });
 
-      if (manualMissing.length) {
-        return '以下階段選了「指定日期」，但沒有填展覽日：\n' +
-          manualMissing.map(function (stage) { return '・' + stage.name; }).join('\n');
-      }
+      if (!manualMissing.length) return '';
 
-      return '';
+      return (
+        '以下階段選了「指定日期」，但沒有填展覽日：\n' +
+        manualMissing.map(function(stage) {
+          return '・' + stage.name;
+        }).join('\n')
+      );
     }
 
     function loadDefault() {
-      FamilyBibleApi.call('readingLoadDefaultConfig')
-        .then(function (res) {
+      callGasApi('readingLoadDefaultConfig', {})
+        .then(function(res) {
           if (!res || !res.success) {
             showMsg('actionMsg', '載入預設失敗。', 'error');
             return;
           }
 
-          currentConfig = res.config;
-          books = res.books || books;
+          currentConfig = res.config || currentConfig;
+          books = Array.isArray(res.books) ? res.books : books;
+
           buildBookOptions();
           fillConfig(currentConfig);
-          showMsg('actionMsg', '已載入預設節奏。尚未寫入試算表。', 'success');
+
+          showMsg(
+            'actionMsg',
+            '已載入預設節奏。尚未寫入試算表。',
+            'success'
+          );
         })
-        .catch(function (err) {
-          showMsg('actionMsg', err.message || String(err), 'error');
+        .catch(function(error) {
+          showMsg('actionMsg', getErrorMessage(error), 'error');
         });
     }
 
@@ -810,26 +1053,35 @@
 
       showMsg('actionMsg', '正在產生預覽...', '');
 
-      FamilyBibleApi.call('readingGeneratePreview', {
+      callGasApi('readingGeneratePreview', {
         config: config
       })
-        .then(function (res) {
+        .then(function(res) {
           if (!res || !res.success) {
-            showMsg('actionMsg', '產生失敗。', 'error');
+            showMsg(
+              'actionMsg',
+              res && res.message ? res.message : '產生失敗。',
+              'error'
+            );
             return;
           }
 
           latestPreviewRows = res.rows || [];
-          renderSummary(res.summary);
+
+          renderSummary(res.summary || {});
           renderPreview(latestPreviewRows);
 
           document.getElementById('summaryCard').classList.remove('hidden');
           document.getElementById('previewCard').classList.remove('hidden');
 
-          showMsg('actionMsg', '預覽已產生。確認後可寫入讀經進度表。', 'success');
+          showMsg(
+            'actionMsg',
+            '預覽已產生。確認後可寫入讀經進度表。',
+            'success'
+          );
         })
-        .catch(function (err) {
-          showMsg('actionMsg', err.message || String(err), 'error');
+        .catch(function(error) {
+          showMsg('actionMsg', getErrorMessage(error), 'error');
         });
     }
 
@@ -848,20 +1100,24 @@
 
       showMsg('actionMsg', '正在寫入讀經進度表...', '');
 
-      FamilyBibleApi.call('readingSavePlanAndSchedule', {
+      callGasApi('readingSavePlanAndSchedule', {
         password: adminPassword,
         config: config
       })
-        .then(function (res) {
+        .then(function(res) {
           if (!res || !res.success) {
-            showMsg('actionMsg', res && res.message ? res.message : '寫入失敗。', 'error');
+            showMsg(
+              'actionMsg',
+              res && res.message ? res.message : '寫入失敗。',
+              'error'
+            );
             return;
           }
 
-          currentConfig = res.config;
+          currentConfig = res.config || currentConfig;
           latestPreviewRows = res.rows || [];
 
-          renderSummary(res.summary);
+          renderSummary(res.summary || {});
           renderPreview(latestPreviewRows);
 
           document.getElementById('summaryCard').classList.remove('hidden');
@@ -872,19 +1128,29 @@
           }
 
           document.getElementById('newAdminPassword').value = '';
+
           showMsg('actionMsg', '已寫入讀經進度表。', 'success');
         })
-        .catch(function (err) {
-          showMsg('actionMsg', err.message || String(err), 'error');
+        .catch(function(error) {
+          showMsg('actionMsg', getErrorMessage(error), 'error');
         });
     }
 
     function renderSummary(summary) {
-      document.getElementById('sumTotalWeeks').textContent = summary.totalWeeks || 0;
-      document.getElementById('sumReadingWeeks').textContent = summary.readingWeeks || 0;
-      document.getElementById('sumBufferWeeks').textContent = summary.bufferWeeks || 0;
-      document.getElementById('sumTotalChapters').textContent = summary.totalChapters || 0;
-      document.getElementById('sumCompletionDate').textContent = summary.completionDate || '-';
+      document.getElementById('sumTotalWeeks').textContent =
+        summary.totalWeeks || 0;
+
+      document.getElementById('sumReadingWeeks').textContent =
+        summary.readingWeeks || 0;
+
+      document.getElementById('sumBufferWeeks').textContent =
+        summary.bufferWeeks || 0;
+
+      document.getElementById('sumTotalChapters').textContent =
+        summary.totalChapters || 0;
+
+      document.getElementById('sumCompletionDate').textContent =
+        summary.completionDate || '-';
 
       if (summary.targetWarning) {
         showMsg('summaryWarning', summary.targetWarning, 'error');
@@ -897,11 +1163,13 @@
       const tbody = document.getElementById('previewBody');
       tbody.innerHTML = '';
 
-      rows.forEach(function (row) {
+      rows.forEach(function(row) {
         const tr = document.createElement('tr');
-        const typeBadge = row.weekType === '緩衝展覽週'
-          ? '<span class="badge buffer">緩衝展覽週</span>'
-          : '<span class="badge">讀經週</span>';
+
+        const typeBadge =
+          row.weekType === '緩衝展覽週'
+            ? '<span class="badge buffer">緩衝展覽週</span>'
+            : '<span class="badge">讀經週</span>';
 
         tr.innerHTML = `
           <td>${row.weekNo}</td>
@@ -916,6 +1184,16 @@
         tbody.appendChild(tr);
       });
     }
+
+    document.getElementById('loginPassword').addEventListener(
+      'keydown',
+      function(event) {
+        if (event.key !== 'Enter') return;
+
+        event.preventDefault();
+        login();
+      }
+    );
   </script>
 </body>
 </html>
