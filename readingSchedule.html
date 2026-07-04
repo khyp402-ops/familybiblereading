@@ -3,6 +3,8 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     :root {
       --bg1: #fff4df;
@@ -558,26 +560,106 @@
   </div>
 
   <script>
+    const READING_API_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+
+    const FamilyBibleApi = window.FamilyBibleApi || {
+      call: function(action, payload) {
+        return new Promise(function(resolve, reject) {
+          const callbackName = '__familyBibleJsonp_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+          const script = document.createElement('script');
+
+          const query = [
+            'action=' + encodeURIComponent(String(action || '')),
+            'callback=' + encodeURIComponent(callbackName),
+            'v=' + Date.now()
+          ];
+
+          if (payload !== undefined && payload !== null) {
+            query.push('payload=' + encodeURIComponent(JSON.stringify(payload)));
+          }
+
+          const cleanup = function() {
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+
+            try {
+              delete window[callbackName];
+            } catch (err) {
+              window[callbackName] = undefined;
+            }
+          };
+
+          const timer = window.setTimeout(function() {
+            cleanup();
+            reject(new Error('讀經進度資料載入逾時，請重新整理後再試。'));
+          }, 15000);
+
+          window[callbackName] = function(response) {
+            window.clearTimeout(timer);
+            cleanup();
+
+            if (response && response.error) {
+              reject(new Error(response.message || '伺服器回傳錯誤。'));
+              return;
+            }
+
+            resolve(response);
+          };
+
+          script.async = true;
+          script.src = READING_API_URL + '?' + query.join('&');
+
+          script.onerror = function() {
+            window.clearTimeout(timer);
+            cleanup();
+            reject(new Error('無法連線至讀經進度服務。'));
+          };
+
+          document.head.appendChild(script);
+        });
+      }
+    };
+
     let currentWeekNo = null;
     let allRows = [];
     let taipeiTodayDate = null;
 
-    window.addEventListener('load', function () {
+    window.addEventListener('load', function() {
       FamilyBibleApi.call('readingGetPublicSchedule')
         .then(renderPage)
-        .catch(function (err) {
-          const notice = document.getElementById('emptyNotice');
-          notice.style.display = 'block';
-          notice.textContent = err.message || String(err);
-        });
+        .catch(showLoadError);
     });
 
+    function showLoadError(err) {
+      const notice = document.getElementById('emptyNotice');
+      const contentArea = document.getElementById('contentArea');
+
+      contentArea.style.display = 'none';
+      notice.style.display = 'block';
+      notice.textContent = err && err.message
+        ? err.message
+        : '讀經進度資料載入失敗，請重新整理後再試。';
+    }
+
     function renderPage(res) {
-      if (!res || !res.success || !res.rows || !res.rows.length) {
-        document.getElementById('emptyNotice').style.display = 'block';
+      if (!res || res.error) {
+        throw new Error(res && res.message ? res.message : '讀經進度資料載入失敗。');
+      }
+
+      if (!res.success) {
+        throw new Error(res.message || '讀經進度資料載入失敗。');
+      }
+
+      if (!res.rows || !res.rows.length) {
+        const notice = document.getElementById('emptyNotice');
+        document.getElementById('contentArea').style.display = 'none';
+        notice.style.display = 'block';
+        notice.textContent = '目前尚未產生讀經進度表。請管理者先到設定頁面產生並寫入進度。';
         return;
       }
 
+      document.getElementById('emptyNotice').style.display = 'none';
       document.getElementById('contentArea').style.display = 'block';
 
       const config = res.config || {};
@@ -629,9 +711,11 @@
 
       let lastMonthKey = '';
 
-      rows.forEach(function (row) {
+      rows.forEach(function(row) {
         const startDate = parseDate(row.startDate);
-        const monthKey = startDate ? startDate.getFullYear() + '-' + pad2(startDate.getMonth() + 1) : '';
+        const monthKey = startDate
+          ? startDate.getFullYear() + '-' + pad2(startDate.getMonth() + 1)
+          : '';
 
         if (monthKey && monthKey !== lastMonthKey) {
           lastMonthKey = monthKey;
@@ -657,17 +741,19 @@
           ? '<span class="tag buffer">緩衝展覽週</span>'
           : '<span class="tag reading">讀經週</span>';
 
+        const normalNote = escapeHtml(row.note || '');
+
         const noteHtml = hasExhibition
           ? `
             <div class="note-title">備註</div>
             <div class="exhibit-note">
-              展覽聚會
+              ${normalNote || '展覽聚會'}
               <span class="exhibit-date-small">${formatShortDate(row.exhibitionDate)}｜分享讀經享受</span>
             </div>
           `
           : `
             <div class="note-title">備註</div>
-            <div class="note-empty">—</div>
+            <div class="note-empty">${normalNote || '—'}</div>
           `;
 
         card.innerHTML = `
@@ -722,7 +808,7 @@
       let bestRow = allRows[0];
       let bestDistance = Infinity;
 
-      allRows.forEach(function (row) {
+      allRows.forEach(function(row) {
         const start = parseDate(row.startDate);
 
         if (!start) return;
@@ -767,7 +853,7 @@
       const todayTime = stripTime(today).getTime();
       let next = null;
 
-      rows.forEach(function (row) {
+      rows.forEach(function(row) {
         const exhibit = parseDate(row.exhibitionDate);
 
         if (!exhibit) return;
