@@ -36,6 +36,9 @@
     body {
       margin: 0;
       min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      color: var(--ink);
       font-family:
         system-ui,
         -apple-system,
@@ -43,18 +46,17 @@
         "Segoe UI",
         "Noto Sans TC",
         sans-serif;
-      color: var(--ink);
       background:
         radial-gradient(circle at 8% 12%, rgba(255, 210, 92, 0.48), transparent 24%),
         radial-gradient(circle at 88% 10%, rgba(135, 206, 255, 0.48), transparent 28%),
         radial-gradient(circle at 50% 92%, rgba(102, 220, 142, 0.32), transparent 34%),
         linear-gradient(135deg, var(--bg1), var(--bg2) 52%, var(--bg3));
-      overflow-x: hidden;
     }
 
     .page {
       width: 100%;
       min-height: 100vh;
+      min-height: 100dvh;
       padding: 22px;
     }
 
@@ -72,13 +74,13 @@
       flex: 1 1 auto;
       min-width: 0;
       padding: 14px 18px;
+      overflow: hidden;
+      position: relative;
       border: 1px solid rgba(255, 255, 255, 0.95);
       border-radius: 26px;
       background: rgba(255, 255, 255, 0.78);
       box-shadow: 0 18px 42px rgba(43, 73, 110, 0.14);
       backdrop-filter: blur(14px);
-      overflow: hidden;
-      position: relative;
     }
 
     .titleBlock::before {
@@ -88,6 +90,7 @@
       right: 16px;
       font-size: 22px;
       opacity: 0.45;
+      pointer-events: none;
     }
 
     .eyebrow {
@@ -157,12 +160,12 @@
     .detailCard {
       max-height: 0;
       margin-top: 10px;
+      overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.95);
       border-radius: 24px;
       background: rgba(255, 255, 255, 0.96);
       box-shadow: 0 16px 42px rgba(43, 73, 110, 0.18);
       opacity: 0;
-      overflow: hidden;
       transition:
         max-height 0.25s ease,
         opacity 0.25s ease,
@@ -172,8 +175,8 @@
     .detailCard.open {
       max-height: 520px;
       padding: 16px;
-      opacity: 1;
       overflow-y: auto;
+      opacity: 1;
     }
 
     .detailTitle {
@@ -254,6 +257,7 @@
       width: 100%;
       aspect-ratio: 16 / 9;
       overflow: hidden;
+      position: relative;
       border-radius: 36px;
       background:
         radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.92) 0 3%, transparent 3.4%),
@@ -263,7 +267,6 @@
       box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.85),
         0 24px 70px rgba(43, 73, 110, 0.2);
-      position: relative;
     }
 
     .mapShell::before {
@@ -454,7 +457,7 @@
       transform: translate(-50%, -50%);
       transition:
         opacity 0.18s ease,
-        scale 0.18s ease,
+        transform 0.18s ease,
         filter 0.18s ease;
       user-select: none;
     }
@@ -491,7 +494,7 @@
 
     .groupPoint.active {
       z-index: 50;
-      scale: 1.52;
+      transform: translate(-50%, -50%) scale(1.5);
       box-shadow:
         0 0 0 9px rgba(79, 140, 255, 0.2),
         0 0 0 18px rgba(79, 140, 255, 0.12),
@@ -519,13 +522,13 @@
       gap: 8px;
       margin: 14px auto 0;
       padding: 10px 14px;
+      position: relative;
+      z-index: 18;
       border: 1px solid rgba(255, 255, 255, 0.9);
       border-radius: 20px;
       background: rgba(255, 255, 255, 0.82);
       box-shadow: 0 12px 28px rgba(43, 73, 110, 0.12);
       backdrop-filter: blur(10px);
-      position: relative;
-      z-index: 18;
     }
 
     .legendItem {
@@ -713,7 +716,7 @@
       }
 
       html[data-race-layout="landscape"] .mapShell {
-        max-height: calc(100vh - 150px);
+        max-height: calc(100dvh - 150px);
       }
 
       html[data-race-layout="landscape"] .legend {
@@ -812,28 +815,78 @@
     const GAS_WEB_APP_URL =
       'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
-    const DESKTOP_VIEWBOX = '0 0 1600 900';
-    const MOBILE_VIEWBOX = '0 0 900 1600';
+    const ROUTES = {
+      landscape: {
+        viewBox: '0 0 1600 900',
+        width: 1600,
+        height: 900,
+        path:
+          'M 115 715 C 310 630, 450 650, 610 705 C 790 765, 1085 745, 1240 640 C 1390 540, 1325 410, 1135 405 C 930 400, 755 505, 555 448 C 340 385, 255 270, 430 205 C 625 132, 900 185, 1090 205 C 1235 220, 1348 205, 1460 150',
+        startLabel: {
+          x: 112,
+          y: 768,
+          anchor: 'middle'
+        },
+        finishLabel: {
+          x: 1375,
+          y: 112,
+          anchor: 'middle'
+        },
+        start: [115, 715],
+        segments: [
+          [310, 630, 450, 650, 610, 705],
+          [790, 765, 1085, 745, 1240, 640],
+          [1390, 540, 1325, 410, 1135, 405],
+          [930, 400, 755, 505, 555, 448],
+          [340, 385, 255, 270, 430, 205],
+          [625, 132, 900, 185, 1090, 205],
+          [1235, 220, 1348, 205, 1460, 150]
+        ]
+      },
 
-    const DESKTOP_PATH =
-      'M 115 715 C 310 630, 450 650, 610 705 C 790 765, 1085 745, 1240 640 C 1390 540, 1325 410, 1135 405 C 930 400, 755 505, 555 448 C 340 385, 255 270, 430 205 C 625 132, 900 185, 1090 205 C 1235 220, 1348 205, 1460 150';
-
-    const MOBILE_PATH =
-      'M 140 1450 C 330 1360, 370 1225, 230 1128 C 105 1040, 146 872, 345 840 C 570 804, 705 710, 555 595 C 410 482, 245 490, 250 350 C 255 205, 455 145, 760 128';
+      portrait: {
+        viewBox: '0 0 900 1600',
+        width: 900,
+        height: 1600,
+        path:
+          'M 140 1450 C 330 1360, 370 1225, 230 1128 C 105 1040, 146 872, 345 840 C 570 804, 705 710, 555 595 C 410 482, 245 490, 250 350 C 255 205, 455 145, 760 128',
+        startLabel: {
+          x: 140,
+          y: 1510,
+          anchor: 'middle'
+        },
+        finishLabel: {
+          x: 685,
+          y: 185,
+          anchor: 'middle'
+        },
+        start: [140, 1450],
+        segments: [
+          [330, 1360, 370, 1225, 230, 1128],
+          [105, 1040, 146, 872, 345, 840],
+          [570, 804, 705, 710, 555, 595],
+          [410, 482, 245, 490, 250, 350],
+          [255, 205, 455, 145, 760, 128]
+        ]
+      }
+    };
 
     let raceData = null;
     let groupMap = new Map();
     let selectedGroupId = '';
     let resizeTimer = null;
     let jsonpSequence = 0;
-    let routeRetryCount = 0;
     let isLoadingData = false;
 
-    document.addEventListener('DOMContentLoaded', initRacePage);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initRacePage);
+    } else {
+      initRacePage();
+    }
 
     function initRacePage() {
-      syncRaceLayout();
       bindEvents();
+      syncRaceLayout();
       loadRaceData();
     }
 
@@ -859,8 +912,17 @@
         showNotFound(groupId);
       });
 
-      window.addEventListener('resize', scheduleResponsiveRefresh, { passive: true });
-      window.addEventListener('orientationchange', scheduleResponsiveRefresh, { passive: true });
+      window.addEventListener('resize', scheduleResponsiveRefresh, {
+        passive: true
+      });
+
+      window.addEventListener('orientationchange', function() {
+        syncRaceLayout();
+        window.setTimeout(syncRaceLayout, 120);
+        window.setTimeout(syncRaceLayout, 360);
+      }, {
+        passive: true
+      });
 
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', scheduleResponsiveRefresh, {
@@ -874,36 +936,45 @@
 
       resizeTimer = window.setTimeout(function() {
         syncRaceLayout();
-      }, 50);
-
-      window.setTimeout(syncRaceLayout, 180);
-      window.setTimeout(syncRaceLayout, 500);
+      }, 40);
     }
 
     function getViewportSize() {
       const viewport = window.visualViewport;
 
-      const width = Math.round(
-        viewport && viewport.width ? viewport.width : window.innerWidth
+      const width = Math.max(
+        1,
+        Math.round(
+          viewport && viewport.width
+            ? viewport.width
+            : window.innerWidth
+        )
       );
 
-      const height = Math.round(
-        viewport && viewport.height ? viewport.height : window.innerHeight
+      const height = Math.max(
+        1,
+        Math.round(
+          viewport && viewport.height
+            ? viewport.height
+            : window.innerHeight
+        )
       );
 
       return {
-        width: Math.max(1, width),
-        height: Math.max(1, height)
+        width: width,
+        height: height
       };
     }
 
     function getRaceLayout() {
       const viewport = getViewportSize();
-      return viewport.height > viewport.width ? 'portrait' : 'landscape';
+      return viewport.height > viewport.width
+        ? 'portrait'
+        : 'landscape';
     }
 
-    function isPortraitRaceLayout() {
-      return getRaceLayout() === 'portrait';
+    function getCurrentRoute() {
+      return ROUTES[getRaceLayout()];
     }
 
     function syncRaceLayout() {
@@ -914,10 +985,33 @@
 
       applyRoute();
 
-      window.requestAnimationFrame(function() {
-        applyRoute();
+      if (raceData) {
         renderPoints();
-      });
+      }
+    }
+
+    function applyRoute() {
+      const route = getCurrentRoute();
+      const svg = document.getElementById('trackSvg');
+      const shadow = document.getElementById('routeShadow');
+      const base = document.getElementById('routeBase');
+      const line = document.getElementById('routeLine');
+      const startLabel = document.getElementById('startLabel');
+      const finishLabel = document.getElementById('finishLabel');
+
+      svg.setAttribute('viewBox', route.viewBox);
+
+      shadow.setAttribute('d', route.path);
+      base.setAttribute('d', route.path);
+      line.setAttribute('d', route.path);
+
+      startLabel.setAttribute('x', String(route.startLabel.x));
+      startLabel.setAttribute('y', String(route.startLabel.y));
+      startLabel.setAttribute('text-anchor', route.startLabel.anchor);
+
+      finishLabel.setAttribute('x', String(route.finishLabel.x));
+      finishLabel.setAttribute('y', String(route.finishLabel.y));
+      finishLabel.setAttribute('text-anchor', route.finishLabel.anchor);
     }
 
     function loadRaceData() {
@@ -952,10 +1046,6 @@
         });
     }
 
-    function retryLoadRaceData() {
-      loadRaceData();
-    }
-
     function callGAS(action) {
       return new Promise(function(resolve, reject) {
         const callbackName =
@@ -968,10 +1058,10 @@
         let settled = false;
 
         const timer = window.setTimeout(function() {
-          finish(reject, new Error('讀取逾時，請重新讀取。'));
+          finish(reject, new Error('讀取逾時，請按重新讀取。'));
         }, 20000);
 
-        function cleanUp() {
+        function cleanup() {
           window.clearTimeout(timer);
 
           if (script.parentNode) {
@@ -991,7 +1081,7 @@
           }
 
           settled = true;
-          cleanUp();
+          cleanup();
           handler(value);
         }
 
@@ -1002,15 +1092,7 @@
         script.async = true;
 
         script.onerror = function() {
-          finish(reject, new Error('無法讀取賽程資料。'));
-        };
-
-        script.onload = function() {
-          window.setTimeout(function() {
-            if (!settled) {
-              finish(reject, new Error('賽程資料回應格式錯誤。'));
-            }
-          }, 0);
+          finish(reject, new Error('無法連線至賽程資料。'));
         };
 
         script.src =
@@ -1027,7 +1109,10 @@
     }
 
     function setRaceData(data) {
-      const totalChapters = Math.max(0, Number(data.totalChapters) || 0);
+      const totalChapters = Math.max(
+        0,
+        Number(data.totalChapters) || 0
+      );
 
       raceData = {
         totalChapters: totalChapters,
@@ -1070,11 +1155,17 @@
 
               books: Array.isArray(group.books)
                 ? group.books.map(function(book) {
-                    const total = Math.max(0, Number(book.total) || 0);
+                    const total = Math.max(
+                      0,
+                      Number(book.total) || 0
+                    );
 
                     const done = Math.max(
                       0,
-                      Math.min(Number(book.done) || 0, total)
+                      Math.min(
+                        Number(book.done) || 0,
+                        total
+                      )
                     );
 
                     const calculatedBookPercent = total
@@ -1113,131 +1204,21 @@
         ' 組正在奔跑｜新約共 ' +
         raceData.totalChapters +
         ' 章' +
-        (raceData.updatedAt
-          ? '｜更新：' + raceData.updatedAt
-          : '');
+        (
+          raceData.updatedAt
+            ? '｜更新：' + raceData.updatedAt
+            : ''
+        );
 
       hideLoading();
-      routeRetryCount = 0;
-
       syncRaceLayout();
 
-      const inputGroupId = normalizeGroupId(
+      const searchedGroupId = normalizeGroupId(
         document.getElementById('searchInput').value
       );
 
-      if (inputGroupId && groupMap.has(inputGroupId)) {
-        focusGroup(inputGroupId);
-      }
-    }
-
-    function setLoading(text) {
-      const loading = document.getElementById('loading');
-      loading.textContent = text;
-      loading.style.display = 'grid';
-    }
-
-    function hideLoading() {
-      document.getElementById('loading').style.display = 'none';
-    }
-
-    function showLoadingError(message) {
-      const loading = document.getElementById('loading');
-
-      loading.replaceChildren();
-
-      const errorBox = document.createElement('div');
-      errorBox.className = 'error';
-
-      const text = document.createElement('div');
-      text.textContent = '讀取失敗：' + String(message || '未知錯誤');
-
-      const retryButton = document.createElement('button');
-      retryButton.type = 'button';
-      retryButton.className = 'retryButton';
-      retryButton.textContent = '重新讀取';
-      retryButton.addEventListener('click', retryLoadRaceData);
-
-      errorBox.appendChild(text);
-      errorBox.appendChild(retryButton);
-
-      loading.appendChild(errorBox);
-      loading.style.display = 'grid';
-    }
-
-    function applyRoute() {
-      const svg = document.getElementById('trackSvg');
-      const routeShadow = document.getElementById('routeShadow');
-      const routeBase = document.getElementById('routeBase');
-      const routeLine = document.getElementById('routeLine');
-
-      if (!svg || !routeShadow || !routeBase || !routeLine) {
-        return;
-      }
-
-      const isPortrait = isPortraitRaceLayout();
-      const path = isPortrait ? MOBILE_PATH : DESKTOP_PATH;
-
-      svg.setAttribute(
-        'viewBox',
-        isPortrait ? MOBILE_VIEWBOX : DESKTOP_VIEWBOX
-      );
-
-      routeShadow.setAttribute('d', path);
-      routeBase.setAttribute('d', path);
-      routeLine.setAttribute('d', path);
-
-      updateRouteLabels(isPortrait);
-    }
-
-    function updateRouteLabels(isPortrait) {
-      const startLabel = document.getElementById('startLabel');
-      const finishLabel = document.getElementById('finishLabel');
-
-      if (!startLabel || !finishLabel) {
-        return;
-      }
-
-      if (isPortrait) {
-        startLabel.setAttribute('x', '140');
-        startLabel.setAttribute('y', '1400');
-        startLabel.setAttribute('text-anchor', 'middle');
-
-        finishLabel.setAttribute('x', '700');
-        finishLabel.setAttribute('y', '200');
-        finishLabel.setAttribute('text-anchor', 'middle');
-        return;
-      }
-
-      startLabel.setAttribute('x', '100');
-      startLabel.setAttribute('y', '765');
-      startLabel.setAttribute('text-anchor', 'middle');
-
-      finishLabel.setAttribute('x', '1370');
-      finishLabel.setAttribute('y', '205');
-      finishLabel.setAttribute('text-anchor', 'middle');
-    }
-
-    function getRouteMetrics() {
-      const route = document.getElementById('routeBase');
-
-      if (!route || typeof route.getTotalLength !== 'function') {
-        return null;
-      }
-
-      try {
-        const length = route.getTotalLength();
-
-        if (!Number.isFinite(length) || length <= 0) {
-          return null;
-        }
-
-        return {
-          route: route,
-          length: length
-        };
-      } catch (error) {
-        return null;
+      if (searchedGroupId && groupMap.has(searchedGroupId)) {
+        focusGroup(searchedGroupId);
       }
     }
 
@@ -1247,54 +1228,24 @@
       }
 
       const layer = document.getElementById('pointsLayer');
-      const metrics = getRouteMetrics();
-
-      if (!layer) {
-        return;
-      }
-
-      if (!metrics) {
-        if (routeRetryCount < 8) {
-          routeRetryCount += 1;
-
-          window.setTimeout(function() {
-            applyRoute();
-            renderPoints();
-          }, 120);
-        }
-
-        return;
-      }
-
-      routeRetryCount = 0;
-
-      const mobile = isPortraitRaceLayout();
-      const viewBoxWidth = mobile ? 900 : 1600;
-      const viewBoxHeight = mobile ? 1600 : 900;
-      const usedSlots = Object.create(null);
+      const route = getCurrentRoute();
+      const slotCount = Object.create(null);
 
       layer.replaceChildren();
 
       raceData.groups.forEach(function(group) {
         const percent = clampPercent(group.percent);
-
-        let basePoint;
-
-        try {
-          basePoint = metrics.route.getPointAtLength(
-            metrics.length * percent / 100
-          );
-        } catch (error) {
-          return;
-        }
+        const basePoint = getPointOnRoute(route, percent);
 
         const slot = String(Math.round(percent * 2) / 2);
-        const index = usedSlots[slot] || 0;
-        usedSlots[slot] = index + 1;
+        const index = slotCount[slot] || 0;
+        slotCount[slot] = index + 1;
 
         const ring = Math.floor(index / 8);
         const angle = index % 8 * 45;
-        const radius = ring === 0 ? 0 : 18 + (ring - 1) * 14;
+        const radius = ring === 0
+          ? 0
+          : 18 + (ring - 1) * 14;
 
         const offsetX =
           Math.cos(angle * Math.PI / 180) * radius;
@@ -1310,6 +1261,7 @@
 
         point.dataset.groupId = group.groupId;
         point.textContent = group.groupId;
+
         point.title =
           group.groupId +
           ' 組｜' +
@@ -1326,14 +1278,14 @@
 
         point.style.left =
           'calc(' +
-          basePoint.x / viewBoxWidth * 100 +
+          basePoint.x / route.width * 100 +
           '% + ' +
           offsetX +
           'px)';
 
         point.style.top =
           'calc(' +
-          basePoint.y / viewBoxHeight * 100 +
+          basePoint.y / route.height * 100 +
           '% + ' +
           offsetY +
           'px)';
@@ -1349,6 +1301,147 @@
       });
 
       applyCurrentHighlight();
+    }
+
+    function getPointOnRoute(route, percent) {
+      const samples = getRouteSamples(route);
+      const targetDistance =
+        samples.totalLength * clampPercent(percent) / 100;
+
+      if (targetDistance <= 0) {
+        return {
+          x: samples.points[0].x,
+          y: samples.points[0].y
+        };
+      }
+
+      if (targetDistance >= samples.totalLength) {
+        const last = samples.points[samples.points.length - 1];
+
+        return {
+          x: last.x,
+          y: last.y
+        };
+      }
+
+      let low = 0;
+      let high = samples.points.length - 1;
+
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+
+        if (samples.points[middle].distance < targetDistance) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+
+      const next = samples.points[low];
+      const previous = samples.points[Math.max(0, low - 1)];
+
+      const range = next.distance - previous.distance;
+      const ratio = range > 0
+        ? (targetDistance - previous.distance) / range
+        : 0;
+
+      return {
+        x: previous.x + (next.x - previous.x) * ratio,
+        y: previous.y + (next.y - previous.y) * ratio
+      };
+    }
+
+    function getRouteSamples(route) {
+      if (route.samples) {
+        return route.samples;
+      }
+
+      const points = [];
+      let current = {
+        x: route.start[0],
+        y: route.start[1]
+      };
+
+      points.push({
+        x: current.x,
+        y: current.y,
+        distance: 0
+      });
+
+      let totalDistance = 0;
+
+      route.segments.forEach(function(segment) {
+        const control1 = {
+          x: segment[0],
+          y: segment[1]
+        };
+
+        const control2 = {
+          x: segment[2],
+          y: segment[3]
+        };
+
+        const end = {
+          x: segment[4],
+          y: segment[5]
+        };
+
+        const start = {
+          x: current.x,
+          y: current.y
+        };
+
+        const steps = 90;
+
+        for (let step = 1; step <= steps; step += 1) {
+          const point = cubicBezierPoint(
+            start,
+            control1,
+            control2,
+            end,
+            step / steps
+          );
+
+          const previous = points[points.length - 1];
+          const dx = point.x - previous.x;
+          const dy = point.y - previous.y;
+
+          totalDistance += Math.sqrt(dx * dx + dy * dy);
+
+          points.push({
+            x: point.x,
+            y: point.y,
+            distance: totalDistance
+          });
+        }
+
+        current = end;
+      });
+
+      route.samples = {
+        points: points,
+        totalLength: totalDistance
+      };
+
+      return route.samples;
+    }
+
+    function cubicBezierPoint(start, control1, control2, end, t) {
+      const inverse = 1 - t;
+
+      return {
+        x:
+          inverse * inverse * inverse * start.x +
+          3 * inverse * inverse * t * control1.x +
+          3 * inverse * t * t * control2.x +
+          t * t * t * end.x,
+
+        y:
+          inverse * inverse * inverse * start.y +
+          3 * inverse * inverse * t * control1.y +
+          3 * inverse * t * t * control2.y +
+          t * t * t * end.y
+      };
     }
 
     function focusGroup(groupId) {
@@ -1469,6 +1562,46 @@
       card.replaceChildren();
     }
 
+    function setLoading(text) {
+      const loading = document.getElementById('loading');
+
+      loading.textContent = text;
+      loading.style.display = 'grid';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    function showLoadingError(message) {
+      const loading = document.getElementById('loading');
+
+      loading.replaceChildren();
+
+      const box = document.createElement('div');
+      box.className = 'error';
+
+      const text = document.createElement('div');
+      text.textContent =
+        '讀取失敗：' +
+        String(message || '未知錯誤');
+
+      const retryButton = document.createElement('button');
+      retryButton.type = 'button';
+      retryButton.className = 'retryButton';
+      retryButton.textContent = '重新讀取';
+
+      retryButton.addEventListener('click', function() {
+        loadRaceData();
+      });
+
+      box.appendChild(text);
+      box.appendChild(retryButton);
+
+      loading.appendChild(box);
+      loading.style.display = 'grid';
+    }
+
     function getPercentClass(percent) {
       if (percent >= 100) return 'done';
       if (percent >= 75) return 'top';
@@ -1485,7 +1618,9 @@
         0,
         Math.min(
           100,
-          Number.isFinite(number) ? number : 0
+          Number.isFinite(number)
+            ? number
+            : 0
         )
       );
     }
