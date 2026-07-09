@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
   <base target="_top">
   <meta charset="UTF-8">
@@ -760,31 +760,72 @@
     </section>
   </div>
 
-  <script>
+<script>
+    const GAS_WEB_APP_URL =
+      window.ADMIN_GAS_WEB_APP_URL ||
+      document.querySelector('meta[name="gas-web-app-url"]')?.content ||
+      localStorage.getItem('ADMIN_GAS_WEB_APP_URL') ||
+      'PASTE_YOUR_GAS_WEB_APP_EXEC_URL_HERE';
+
     const FamilyBibleApi = {
-      call: function(functionName, payload) {
+      call: function(action, payload) {
         return new Promise(function(resolve, reject) {
-          if (!window.google || !google.script || !google.script.run) {
-            reject(new Error('此頁必須從 GAS Web App 開啟，不能直接用本機檔案或 GitHub Pages 開啟。'));
+          const apiUrl = String(GAS_WEB_APP_URL || '').trim();
+
+          if (!apiUrl || apiUrl === 'PASTE_YOUR_GAS_WEB_APP_EXEC_URL_HERE') {
+            reject(new Error('尚未設定 GAS Web App /exec 網址。請在 admin.html 的 GAS_WEB_APP_URL 填入你的 Web App 網址。'));
             return;
           }
 
-          try {
-            const runner = google.script.run
-              .withSuccessHandler(resolve)
-              .withFailureHandler(function(error) {
-                const message = error && error.message ? error.message : String(error || 'GAS 執行失敗');
-                reject(new Error(message));
-              });
+          const callbackName = '__adminAnalyticsCallback_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+          const params = new URLSearchParams();
 
-            if (payload === undefined) {
-              runner[functionName]();
-            } else {
-              runner[functionName](payload);
-            }
-          } catch (error) {
-            reject(error);
+          params.set('action', action);
+          params.set('callback', callbackName);
+
+          if (payload !== undefined && payload !== null) {
+            params.set('payload', JSON.stringify(payload));
           }
+
+          const script = document.createElement('script');
+          const separator = apiUrl.indexOf('?') === -1 ? '?' : '&';
+          const timeoutId = window.setTimeout(function() {
+            cleanup();
+            reject(new Error('GAS API 連線逾時。請確認 Web App URL、部署權限、入口系統 action 路由。'));
+          }, 30000);
+
+          window[callbackName] = function(response) {
+            cleanup();
+
+            if (response && response.error) {
+              reject(new Error(response.message || 'GAS API 執行失敗'));
+              return;
+            }
+
+            resolve(response || {});
+          };
+
+          script.onerror = function() {
+            cleanup();
+            reject(new Error('無法連線 GAS API。請確認 GAS Web App /exec 網址正確，且部署為可存取。'));
+          };
+
+          function cleanup() {
+            window.clearTimeout(timeoutId);
+
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+
+            try {
+              delete window[callbackName];
+            } catch (error) {
+              window[callbackName] = undefined;
+            }
+          }
+
+          script.src = apiUrl + separator + params.toString();
+          document.head.appendChild(script);
         });
       }
     };
@@ -858,6 +899,11 @@
     });
 
     function reloadData() {
+      if (!window.FamilyBibleApi || typeof FamilyBibleApi.call !== 'function') {
+        setStatus('找不到 api.js 或 FamilyBibleApi.call 未定義，請確認 admin.html 與 api.js 在同一層，且 api.js 已設定 GAS Web App URL。', true);
+        return;
+      }
+
       setStatus('資料載入中...', false);
       document.getElementById('mainContent').style.display = 'none';
       hideSuggestions();
