@@ -457,6 +457,9 @@
     .chapter-circle {
       width: 42px;
       height: 42px;
+      margin-top: 0;
+      padding: 0;
+      font-family: inherit;
       border-radius: 999px;
       border: 1.5px solid var(--sage);
       background: #fffdf8;
@@ -971,7 +974,7 @@
           <span>回報及查詢系統</span>
         </div>
         <div class="title-accent"></div>
-        <div class="subtitle">依報名小組回報完成章數，並查詢各卷與新約總進度</div>
+        <div class="subtitle">依報名小組勾選已完成章節，可跳章回報並查詢新約總進度</div>
       </div>
     </div>
 
@@ -990,7 +993,7 @@
       </select>
 
       <div class="chapter-area">
-        <div class="chapter-title">完成章數</div>
+        <div class="chapter-title">完成章節</div>
         <div id="chapterGrid" class="chapter-grid"></div>
         <div id="chapterHint" class="chapter-hint">請先選擇報名小組編號與卷名</div>
       </div>
@@ -1123,8 +1126,8 @@
     };
 
     let currentProgress = null;
-    let selectedCompleted = 0;
-    let lockedCompleted = 0;
+    let selectedChapterMap = {};
+    let lockedChapterMap = {};
     let currentToken = '';
     let tokenLoginInfo = null;
 
@@ -1144,8 +1147,8 @@
       currentToken = urlToken || savedToken || '';
       tokenLoginInfo = null;
       currentProgress = null;
-      selectedCompleted = 0;
-      lockedCompleted = 0;
+      resetSelectedChapters();
+      lockedChapterMap = {};
 
       groupSelect.disabled = true;
       bookSelect.disabled = true;
@@ -1254,8 +1257,8 @@
       select.value = '';
       document.getElementById('tokenLoginStatus').textContent = '';
       currentProgress = null;
-      selectedCompleted = 0;
-      lockedCompleted = 0;
+      resetSelectedChapters();
+      lockedChapterMap = {};
       renderChapterCircles();
       document.getElementById('resultArea').innerHTML = '';
     }
@@ -1276,8 +1279,8 @@
     function handleGroupChange() {
       const group = document.getElementById('groupSelect').value;
 
-      selectedCompleted = 0;
-      lockedCompleted = 0;
+      resetSelectedChapters();
+      lockedChapterMap = {};
       renderChapterCircles();
 
       if (group) {
@@ -1288,7 +1291,8 @@
     }
 
     function handleBookChange() {
-      selectedCompleted = 0;
+      resetSelectedChapters();
+      lockedChapterMap = {};
       renderChapterCircles();
     }
 
@@ -1314,50 +1318,107 @@
         return;
       }
 
-      lockedCompleted = getLockedCompleted(book);
-      selectedCompleted = Math.max(selectedCompleted, lockedCompleted);
+      lockedChapterMap = getLockedChapterMap(book, bookData.totalChapters);
 
       for (let i = 1; i <= bookData.totalChapters; i++) {
-        const circle = document.createElement('div');
+        const circle = document.createElement('button');
+        circle.type = 'button';
         circle.className = 'chapter-circle';
         circle.textContent = i;
 
-        if (i <= lockedCompleted) {
+        if (lockedChapterMap[i]) {
           circle.classList.add('locked');
-        } else if (i <= selectedCompleted) {
+          circle.disabled = true;
+        } else if (selectedChapterMap[i]) {
           circle.classList.add('selected');
         }
 
-        if (i > lockedCompleted) {
+        if (!lockedChapterMap[i]) {
           circle.onclick = function() {
-            selectedCompleted = i;
-            renderChapterCircles();
+            toggleSelectedChapter(i);
           };
         }
 
         grid.appendChild(circle);
       }
 
-      if (lockedCompleted > 0) {
-        hint.textContent = '已回報到第 ' + lockedCompleted + ' 章；灰色章數不能更改。';
+      const lockedCount = countChapterMap_(lockedChapterMap);
+      const selectedCount = getSelectedChapters().length;
+
+      if (lockedCount > 0 && selectedCount > 0) {
+        hint.textContent = '已回報 ' + lockedCount + ' 章；本次已選 ' + selectedCount + ' 章。灰色章節已回報，不能重複送出。';
+      } else if (lockedCount > 0) {
+        hint.textContent = '已回報 ' + lockedCount + ' 章。可直接跳著點選尚未回報的章節。';
+      } else if (selectedCount > 0) {
+        hint.textContent = '本次已選 ' + selectedCount + ' 章。可再次點選取消。';
       } else {
-        hint.textContent = '請點選已完成到第幾章。';
+        hint.textContent = '請勾選本次已完成的章節，可跳著選，不必連續。';
       }
     }
 
-    function getLockedCompleted(book) {
-      if (!currentProgress || !currentProgress.bookProgress) return 0;
+    function toggleSelectedChapter(chapter) {
+      if (lockedChapterMap[chapter]) return;
+
+      if (selectedChapterMap[chapter]) {
+        delete selectedChapterMap[chapter];
+      } else {
+        selectedChapterMap[chapter] = true;
+      }
+
+      renderChapterCircles();
+    }
+
+    function resetSelectedChapters() {
+      selectedChapterMap = {};
+    }
+
+    function getSelectedChapters() {
+      return Object.keys(selectedChapterMap)
+        .map(function(key) { return Number(key); })
+        .filter(function(chapter) { return chapter >= 1; })
+        .sort(function(a, b) { return a - b; });
+    }
+
+    function countChapterMap_(chapterMap) {
+      return Object.keys(chapterMap || {}).length;
+    }
+
+    function getLockedChapterMap(book, totalChapters) {
+      const map = {};
+      if (!currentProgress || !currentProgress.bookProgress) return map;
 
       const item = currentProgress.bookProgress.find(function(row) {
         return row.book === book;
       });
 
-      return item ? Number(item.completedChapters || 0) : 0;
+      if (!item) return map;
+
+      const list = Array.isArray(item.completedChapterList)
+        ? item.completedChapterList
+        : expandChapterListFromCount_(Number(item.completedChapters || 0));
+
+      list.forEach(function(chapter) {
+        const number = Number(chapter || 0);
+        if (number >= 1 && (!totalChapters || number <= totalChapters)) {
+          map[number] = true;
+        }
+      });
+
+      return map;
+    }
+
+    function expandChapterListFromCount_(count) {
+      const list = [];
+      for (let chapter = 1; chapter <= Number(count || 0); chapter++) {
+        list.push(chapter);
+      }
+      return list;
     }
 
     function submitReport() {
       const group = document.getElementById('groupSelect').value.trim();
       const book = document.getElementById('bookSelect').value.trim();
+      const selectedChapters = getSelectedChapters();
 
       if (!group) {
         setStatus('請選擇報名小組編號', true);
@@ -1369,8 +1430,8 @@
         return;
       }
 
-      if (!selectedCompleted || selectedCompleted <= lockedCompleted) {
-        setStatus('請點選新的完成章數', true);
+      if (!selectedChapters.length) {
+        setStatus('請至少勾選一個尚未回報的完成章節', true);
         return;
       }
 
@@ -1380,7 +1441,8 @@
       FamilyBibleApi.call('submitReadingReport', {
         group: group,
         book: book,
-        completedChapters: selectedCompleted,
+        selectedChapters: selectedChapters,
+        completedChapters: selectedChapters[selectedChapters.length - 1] || 0,
         token: currentToken
       })
         .then(function(progressData) {
@@ -1408,8 +1470,8 @@
 
       document.getElementById('bookSelect').value = '';
 
-      selectedCompleted = 0;
-      lockedCompleted = 0;
+      resetSelectedChapters();
+      lockedChapterMap = {};
 
       document.getElementById('chapterGrid').innerHTML = '';
       document.getElementById('chapterHint').textContent = tokenLoginInfo ? '請選擇卷名' : '請先選擇報名小組編號與卷名';
@@ -1477,6 +1539,7 @@
       html += '<tr>';
       html += '<th>卷名</th>';
       html += '<th>完成章數</th>';
+      html += '<th>完成章節</th>';
       html += '<th>總章數</th>';
       html += '<th>百分比</th>';
       html += '<th>進度</th>';
@@ -1488,6 +1551,7 @@
         html += '<tr>';
         html += '<td>' + escapeHtml(item.book) + '</td>';
         html += '<td>' + item.completedChapters + '</td>';
+        html += '<td>' + escapeHtml(formatChapterText(item)) + '</td>';
         html += '<td>' + item.totalChapters + '</td>';
         html += '<td>' + item.percent + '%</td>';
         html += '<td>';
@@ -1503,6 +1567,59 @@
 
       area.innerHTML = html;
     }
+
+    function formatChapterText(item) {
+      if (!item) return '';
+
+      if (item.completedChapterText) {
+        return item.completedChapterText;
+      }
+
+      if (Array.isArray(item.completedChapterList) && item.completedChapterList.length) {
+        return compressChapterListForDisplay_(item.completedChapterList);
+      }
+
+      if (Number(item.completedChapters || 0) > 0) {
+        return '1–' + Number(item.completedChapters || 0);
+      }
+
+      return '-';
+    }
+
+    function compressChapterListForDisplay_(chapters) {
+      const map = {};
+
+      chapters.forEach(function(chapter) {
+        const number = Number(chapter || 0);
+        if (number >= 1) map[number] = true;
+      });
+
+      const list = Object.keys(map)
+        .map(function(key) { return Number(key); })
+        .sort(function(a, b) { return a - b; });
+
+      if (!list.length) return '-';
+
+      const parts = [];
+      let start = list[0];
+      let prev = list[0];
+
+      for (let i = 1; i <= list.length; i++) {
+        const current = list[i];
+
+        if (current === prev + 1) {
+          prev = current;
+          continue;
+        }
+
+        parts.push(start === prev ? String(start) : start + '–' + prev);
+        start = current;
+        prev = current;
+      }
+
+      return parts.join('、');
+    }
+
 
 function renderExpectedProgressItem(expected) {
   let html = '';
