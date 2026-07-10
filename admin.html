@@ -899,8 +899,8 @@
     });
 
     function reloadData() {
-      if (!window.FamilyBibleApi || typeof FamilyBibleApi.call !== 'function') {
-        setStatus('找不到 api.js 或 FamilyBibleApi.call 未定義，請確認 admin.html 與 api.js 在同一層，且 api.js 已設定 GAS Web App URL。', true);
+      if (!FamilyBibleApi || typeof FamilyBibleApi.call !== 'function') {
+        setStatus('API 呼叫器未初始化，請重新整理頁面後再試。', true);
         return;
       }
 
