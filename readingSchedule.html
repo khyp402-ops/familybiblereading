@@ -562,7 +562,7 @@
   <script>
     const READING_API_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
-    const FamilyBibleApi = window.FamilyBibleApi || {
+    const FamilyBibleApi = {
       call: function(action, payload) {
         return new Promise(function(resolve, reject) {
           const callbackName = '__familyBibleJsonp_' + Date.now() + '_' + Math.random().toString(36).slice(2);
