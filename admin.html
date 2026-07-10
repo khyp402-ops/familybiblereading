@@ -761,19 +761,15 @@
   </div>
 
 <script>
-    const GAS_WEB_APP_URL =
-      window.ADMIN_GAS_WEB_APP_URL ||
-      document.querySelector('meta[name="gas-web-app-url"]')?.content ||
-      localStorage.getItem('ADMIN_GAS_WEB_APP_URL') ||
-      'PASTE_YOUR_GAS_WEB_APP_EXEC_URL_HERE';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
     const FamilyBibleApi = {
       call: function(action, payload) {
         return new Promise(function(resolve, reject) {
           const apiUrl = String(GAS_WEB_APP_URL || '').trim();
 
-          if (!apiUrl || apiUrl === 'PASTE_YOUR_GAS_WEB_APP_EXEC_URL_HERE') {
-            reject(new Error('https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec'));
+          if (!apiUrl) {
+            reject(new Error('尚未設定 GAS Web App /exec 網址。'));
             return;
           }
 
