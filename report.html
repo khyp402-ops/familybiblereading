@@ -1441,8 +1441,8 @@
       FamilyBibleApi.call('submitReadingReport', {
         group: group,
         book: book,
-        selectedChapters: selectedChapters,
-        completedChapters: selectedChapters[selectedChapters.length - 1] || 0,
+        completedChapterList: selectedChapters,
+        completedChapters: selectedChapters.length,
         token: currentToken
       })
         .then(function(progressData) {
