@@ -593,6 +593,25 @@
       margin-top: 22px;
     }
 
+    .intro-confirm-btn:not(.ready) {
+      background: linear-gradient(135deg, #8a8d8b, #a9aaa8);
+      color: #f4f4f4;
+      box-shadow: none;
+    }
+
+    .intro-validation {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(185,65,50,0.3);
+      border-radius: 14px;
+      background: rgba(185,65,50,0.09);
+      color: var(--danger);
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.5;
+      text-align: center;
+    }
+
     .footer-space {
       height: 8px;
     }
@@ -859,6 +878,8 @@
     <div class="overlay-box" role="dialog" aria-modal="true" aria-labelledby="introOverlayTitle">
       <div id="introOverlayTitle" class="overlay-title">報名前說明</div>
 
+      <form id="introForm" onsubmit="return closeIntroOverlay(event)">
+
       <section class="intro-section">
         <h2 class="intro-section-title">負擔說明</h2>
         <ol class="intro-list">
@@ -871,23 +892,28 @@
         <h2 class="intro-section-title">愛的提醒</h2>
         <div class="reminder-list">
           <label class="reminder-checkbox">
-            <input type="checkbox">
+            <input class="intro-reminder-check" type="checkbox" required onchange="updateIntroConfirmButton()" oninvalid="showIntroValidation()">
             <span>優先以家長或家中實際照顧者擔任陪伴者。</span>
           </label>
           <label class="reminder-checkbox">
-            <input type="checkbox">
+            <input class="intro-reminder-check" type="checkbox" required onchange="updateIntroConfirmButton()" oninvalid="showIntroValidation()">
             <span>陪伴者操練多聶聽，專注並珍賞主話本身。</span>
           </label>
           <label class="reminder-checkbox">
-            <input type="checkbox">
+            <input class="intro-reminder-check" type="checkbox" required onchange="updateIntroConfirmButton()" oninvalid="showIntroValidation()">
             <span>一天最多一章，重在持之以恆而非趕進度。</span>
           </label>
         </div>
       </section>
 
-      <button class="overlay-btn intro-confirm-btn" type="button" onclick="closeIntroOverlay()">
+      <div id="introValidation" class="intro-validation hidden" role="alert">
+        請先勾選上方三項愛的提醒
+      </div>
+
+      <button id="introConfirmBtn" class="overlay-btn intro-confirm-btn" type="submit" aria-disabled="true">
         已閱讀以上說明
       </button>
+      </form>
     </div>
   </div>
 
@@ -1448,8 +1474,46 @@
       document.getElementById('warningOverlay').classList.add('hidden');
     }
 
-    function closeIntroOverlay() {
+    function updateIntroConfirmButton() {
+      const checkboxes = document.querySelectorAll('.intro-reminder-check');
+      const allChecked = Array.from(checkboxes).every(function (checkbox) {
+        return checkbox.checked;
+      });
+
+      const confirmBtn = document.getElementById('introConfirmBtn');
+      const validation = document.getElementById('introValidation');
+
+      confirmBtn.classList.toggle('ready', allChecked);
+      confirmBtn.setAttribute('aria-disabled', String(!allChecked));
+
+      if (allChecked) {
+        validation.classList.add('hidden');
+      }
+    }
+
+    function showIntroValidation() {
+      document.getElementById('introValidation').classList.remove('hidden');
+    }
+
+    function closeIntroOverlay(event) {
+      if (event) {
+        event.preventDefault();
+      }
+
+      const checkboxes = document.querySelectorAll('.intro-reminder-check');
+      const allChecked = Array.from(checkboxes).every(function (checkbox) {
+        return checkbox.checked;
+      });
+
+      if (!allChecked) {
+        const validation = document.getElementById('introValidation');
+        validation.classList.remove('hidden');
+        validation.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return false;
+      }
+
       document.getElementById('introOverlay').classList.add('hidden');
+      return false;
     }
 
     function closeError() {
