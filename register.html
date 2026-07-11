@@ -513,6 +513,86 @@
       gap: 15px;
     }
 
+    .intro-overlay .overlay-box {
+      max-width: 700px;
+      max-height: calc(100vh - 32px);
+      padding: 38px 28px 28px;
+      text-align: left;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .intro-overlay .overlay-title {
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    .intro-section {
+      padding: 20px;
+      border: 1px solid rgba(123,81,52,0.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.6);
+    }
+
+    .intro-section + .intro-section {
+      margin-top: 18px;
+    }
+
+    .intro-section-title {
+      margin: 0 0 14px;
+      color: #3f2a1c;
+      font-size: 27px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .intro-list {
+      margin: 0;
+      padding-left: 1.55em;
+      color: #34413d;
+      font-size: 22px;
+      line-height: 1.7;
+    }
+
+    .intro-list li + li {
+      margin-top: 8px;
+    }
+
+    .reminder-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .reminder-checkbox {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      align-items: start;
+      gap: 12px;
+      margin: 0;
+      padding: 13px 14px;
+      border-radius: 15px;
+      background: rgba(215,231,227,0.5);
+      color: #34413d;
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1.55;
+      cursor: pointer;
+    }
+
+    .reminder-checkbox input {
+      width: 28px;
+      height: 28px;
+      margin: 2px 0 0;
+      padding: 0;
+      accent-color: var(--teal);
+      box-shadow: none;
+      cursor: pointer;
+    }
+
+    .intro-confirm-btn {
+      margin-top: 22px;
+    }
+
     .footer-space {
       height: 8px;
     }
@@ -641,6 +721,25 @@
       .overlay-text {
         font-size: 24px;
       }
+
+      .intro-overlay .overlay-box {
+        max-height: calc(100vh - 20px);
+        padding: 34px 16px 18px;
+        border-radius: 24px;
+      }
+
+      .intro-section {
+        padding: 16px 14px;
+      }
+
+      .intro-section-title {
+        font-size: 25px;
+      }
+
+      .intro-list,
+      .reminder-checkbox {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
@@ -754,6 +853,42 @@
         <div class="footer-space"></div>
       </section>
     </main>
+  </div>
+
+  <div id="introOverlay" class="overlay intro-overlay">
+    <div class="overlay-box" role="dialog" aria-modal="true" aria-labelledby="introOverlayTitle">
+      <div id="introOverlayTitle" class="overlay-title">報名前說明</div>
+
+      <section class="intro-section">
+        <h2 class="intro-section-title">負擔說明</h2>
+        <ol class="intro-list">
+          <li>操練屬靈到家，將神的話帶入日常生活中。</li>
+          <li>建立家人彼此傾聽、分享與關懷的好時光。</li>
+        </ol>
+      </section>
+
+      <section class="intro-section">
+        <h2 class="intro-section-title">愛的提醒</h2>
+        <div class="reminder-list">
+          <label class="reminder-checkbox">
+            <input type="checkbox">
+            <span>優先以家長或家中實際照顧者擔任陪伴者。</span>
+          </label>
+          <label class="reminder-checkbox">
+            <input type="checkbox">
+            <span>陪伴者操練多聶聽，專注並珍賞主話本身。</span>
+          </label>
+          <label class="reminder-checkbox">
+            <input type="checkbox">
+            <span>一天最多一章，重在持之以恆而非趕進度。</span>
+          </label>
+        </div>
+      </section>
+
+      <button class="overlay-btn intro-confirm-btn" type="button" onclick="closeIntroOverlay()">
+        已閱讀以上說明
+      </button>
+    </div>
   </div>
 
   <div id="warningOverlay" class="overlay hidden">
@@ -1311,6 +1446,10 @@
 
     function closeWarning() {
       document.getElementById('warningOverlay').classList.add('hidden');
+    }
+
+    function closeIntroOverlay() {
+      document.getElementById('introOverlay').classList.add('hidden');
     }
 
     function closeError() {
