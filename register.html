@@ -869,6 +869,20 @@
 
         <button id="submitBtn" class="submit-btn" type="button" onclick="submitForm()">提交報名</button>
 
+        <section class="card" aria-labelledby="lookupTitle" style="margin-top:24px">
+          <h2 id="lookupTitle" class="section-title">查詢已報名組別</h2>
+          <p class="hint">姓名必填，E-Mail 選填；當初未填 E-Mail 也能查詢。</p>
+          <form id="registrationLookupForm">
+            <label for="lookupApplicantName">填表者姓名（必填）</label>
+            <input id="lookupApplicantName" type="text" required autocomplete="name" placeholder="請輸入報名時的填表者姓名">
+            <label for="lookupEmail">E-Mail（選填）</label>
+            <input id="lookupEmail" type="email" autocomplete="email" placeholder="若當初未填，可留空">
+            <button id="lookupBtn" class="submit-btn" type="submit" style="margin-top:16px">查詢組別</button>
+          </form>
+          <p id="lookupStatus" role="status" aria-live="polite"></p>
+          <div id="lookupResults"></div>
+        </section>
+
         <div class="footer-space"></div>
       </section>
     </main>
@@ -1535,6 +1549,83 @@
       document.getElementById('errorOverlayText').textContent = '';
       document.getElementById('errorOverlay').classList.add('hidden');
     }
+  </script>
+  <script>
+    // 獨立查詢表單，不讀取或修改原報名欄位。
+    document.getElementById('registrationLookupForm').addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const button = document.getElementById('lookupBtn');
+      if (button.disabled) return;
+      const status = document.getElementById('lookupStatus');
+      const results = document.getElementById('lookupResults');
+      const applicantName = document.getElementById('lookupApplicantName').value.trim();
+      const email = document.getElementById('lookupEmail').value.trim();
+      results.replaceChildren();
+      if (!applicantName) {
+        status.textContent = '請填寫填表者姓名';
+        document.getElementById('lookupApplicantName').focus();
+        return;
+      }
+      button.disabled = true;
+      button.textContent = '查詢中...';
+      status.textContent = '正在查詢報名資料…';
+      try {
+        const data = await FamilyBibleApi.call('findRegistrationGroups', { applicantName, email });
+        if (!data || data.success !== true || !Array.isArray(data.groups)) {
+          throw new Error(data && data.message || '查詢回應格式錯誤，請稍後重試');
+        }
+        const groups = data.groups;
+        status.textContent = groups.length
+          ? '找到 ' + groups.length + ' 組符合「' + applicantName + '」的報名資料，請依梯次、孩子資訊或查詢碼確認。'
+          : '查無符合資料，請確認填表者姓名及 E-Mail；若當初未填 E-Mail，可留空再查詢。';
+        if (email && groups.length && !data.exactEmailCount) {
+          status.textContent += ' 沒有找到 E-Mail 完全符合的資料，以下為姓名符合、且原報名未填 E-Mail 的資料。';
+        } else if (email && data.exactEmailCount > 1) {
+          status.textContent += ' 此姓名與 E-Mail 找到多組報名資料，請選擇正確組別。';
+        }
+        groups.forEach(function (group) {
+          const card = document.createElement('article');
+          card.className = 'card';
+          function line(label, value) {
+            const p = document.createElement('p');
+            p.textContent = label + (value || '—');
+            card.appendChild(p);
+          }
+          line('組別：', group.groupNo);
+          line('梯次：', group.batchName || group.batchId);
+          line('填表者身份：', group.applicantRole);
+          line('孩子：', group.childrenText);
+          line('查詢碼：', group.queryCode);
+          if (group.originalEmailBlank) {
+            line('', '姓名符合，但原報名資料未填 E-Mail，請依組別、梯次或查詢碼確認。');
+          } else if (group.matchType === 'exactEmail') {
+            line('', '姓名與 E-Mail 完全符合');
+          }
+          let reportUrl = null;
+          try {
+            const url = new URL(group.reportUrl, window.location.href);
+            if (group.reportUrl && ['https:', 'http:'].includes(url.protocol)) reportUrl = url.href;
+          } catch (_) {}
+          if (reportUrl) {
+            const link = document.createElement('a');
+            link.href = reportUrl;
+            link.textContent = '開啟專屬回報頁';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            card.appendChild(link);
+          } else {
+            line('', group.reportUnavailableReason || '此組尚無可用專屬回報連結，請聯絡同工確認。');
+          }
+          results.appendChild(card);
+        });
+      } catch (error) {
+        results.replaceChildren();
+        status.textContent = '查詢失敗：' + (error && error.message || '請稍後重試');
+      } finally {
+        button.disabled = false;
+        button.textContent = '查詢組別';
+      }
+    });
   </script>
 </body>
 </html>
