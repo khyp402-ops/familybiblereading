@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>查詢已報名組別｜青少年共讀聖經</title>
+  <style>
+    :root{--teal-dark:#27565b;--teal:#477b7a;--teal-soft:#d7e7e3;--wood:#b9865d;--wood-light:#d8b083;--wood-soft:#f4e6d5;--wood-dark:#7b5134;--ink:#27302e;--cream:#f7f1e7;--paper:#fffaf2;--line:rgba(69,55,42,.18);--danger:#b94132;--shadow:0 18px 46px rgba(24,31,30,.22);--soft-shadow:0 10px 28px rgba(30,36,34,.14)}
+    *{box-sizing:border-box}html{width:100%;min-height:100%;-webkit-text-size-adjust:100%}
+    body{margin:0;min-height:100vh;font-family:Arial,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:radial-gradient(circle at 12% 20%,rgba(215,176,131,.28),transparent 34%),radial-gradient(circle at 88% 0%,rgba(71,123,122,.22),transparent 36%),linear-gradient(135deg,#254f55 0%,#376f70 34%,#e7d4bd 34.2%,#f1e2ce 100%);overflow-x:hidden}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.05),transparent 20%,rgba(0,0,0,.08)),repeating-linear-gradient(90deg,rgba(97,64,39,.035) 0 1px,transparent 1px 84px);opacity:.8;z-index:-1}
+    button,input{font-family:inherit}.hidden{display:none!important}.page-shell{width:100%;min-height:100vh;padding:34px 18px 72px}
+    .workspace{width:100%;max-width:920px;margin:0 auto;background:linear-gradient(180deg,rgba(255,250,242,.96),rgba(246,235,221,.97));border:1px solid rgba(255,255,255,.56);border-radius:32px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+    .workspace::before{content:"";position:absolute;left:0;right:0;top:0;height:18px;background:linear-gradient(90deg,#6b432b,#c99568 18%,#8e5c3b 38%,#d3a477 61%,#68422e 100%);opacity:.92}
+    .hero{position:relative;padding:52px 34px 30px;background:linear-gradient(135deg,rgba(35,38,37,.94),rgba(45,54,52,.95));color:#fffaf2;overflow:hidden}
+    .hero::before{content:"";position:absolute;inset:18px 24px auto auto;width:210px;height:116px;border-radius:0 0 0 28px;background:linear-gradient(90deg,rgba(190,140,96,.95),rgba(220,177,132,.92));opacity:.36}.hero::after{content:"";position:absolute;right:48px;bottom:-28px;width:170px;height:170px;border-radius:50%;border:26px solid rgba(71,123,122,.42)}
+    h1{position:relative;margin:0;font-size:42px;line-height:1.25;letter-spacing:.04em;font-weight:900;color:#fff8ea}.subtitle{position:relative;margin-top:12px;font-size:20px;line-height:1.6;color:rgba(255,250,242,.78)}
+    .content{padding:30px 34px 38px}.description-box{background:linear-gradient(135deg,rgba(244,230,213,.96),rgba(255,250,242,.96));border:1px solid rgba(123,81,52,.22);border-left:10px solid var(--wood);color:#5b3a25;border-radius:22px;padding:22px 24px;margin:0 0 26px;font-size:21px;line-height:1.75;box-shadow:var(--soft-shadow)}
+    .card,.result-card{position:relative;background:linear-gradient(180deg,rgba(255,250,242,.98),rgba(250,242,232,.98));border:1px solid var(--line);border-radius:26px;padding:26px;margin-bottom:24px;box-shadow:var(--soft-shadow);overflow:hidden}.card::before,.result-card::before{content:"";position:absolute;inset:0 0 auto;height:8px;background:linear-gradient(90deg,var(--wood-dark),var(--wood),var(--wood-light));opacity:.9}
+    .section-title{display:flex;align-items:center;gap:12px;font-size:27px;font-weight:900;margin:4px 0 20px;color:#3f2a1c;letter-spacing:.03em}.section-title::before{content:"";width:12px;height:32px;border-radius:99px;background:var(--teal);box-shadow:0 0 0 6px rgba(71,123,122,.12)}
+    label{display:block;font-size:22px;font-weight:800;margin:20px 0 9px;color:#34413d}input{width:100%;font-size:22px;padding:17px 16px;border:1.8px solid rgba(87,68,51,.22);border-radius:16px;background:rgba(255,255,255,.9);color:#27302e;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 8px 18px rgba(65,51,38,.07)}input:focus{border-color:var(--teal);background:#fffdf8;box-shadow:0 0 0 5px rgba(71,123,122,.13),0 10px 24px rgba(65,51,38,.09)}
+    .required{color:var(--danger)}.hint,.notice{font-size:19px;color:#60706c;margin-top:12px;line-height:1.6;background:rgba(71,123,122,.09);border-left:6px solid rgba(71,123,122,.52);border-radius:14px;padding:13px 15px}.notice{margin:0 0 20px;color:#34413d;font-weight:700}.notice.blank-email{background:rgba(185,134,93,.13);border-left-color:var(--wood)}
+    .submit-btn{width:100%;border:0;border-radius:22px;font-size:27px;font-weight:900;padding:21px;cursor:pointer;letter-spacing:.04em;background:linear-gradient(135deg,#6f452c,#b9865d 48%,#d8b083);color:#fffaf2;margin-top:26px;box-shadow:0 18px 34px rgba(91,58,37,.32)}.submit-btn:disabled{background:linear-gradient(135deg,#8a8d8b,#a9aaa8);box-shadow:none;cursor:not-allowed}
+    .results-heading{font-size:26px;font-weight:900;color:#27565b;margin:4px 0 18px}.result-card{border-left:8px solid var(--teal);padding:24px}.result-card::before{height:6px}.group-no{font-size:30px;font-weight:900;color:#3f2a1c;margin-bottom:13px}.detail{display:grid;grid-template-columns:140px 1fr;gap:8px 14px;font-size:21px;line-height:1.55}.detail dt{font-weight:900;color:#5b3a25}.detail dd{margin:0;overflow-wrap:anywhere}.tag{display:inline-block;margin:0 0 15px;padding:8px 13px;border-radius:999px;background:var(--teal-soft);color:var(--teal-dark);font-size:18px;font-weight:900}.tag.blank{background:var(--wood-soft);color:var(--wood-dark)}.report-link{display:block;text-align:center;margin-top:20px;padding:16px;border-radius:17px;background:linear-gradient(135deg,#27565b,#477b7a);color:#fffaf2;font-size:22px;font-weight:900;text-decoration:none}.unavailable{margin-top:18px;font-size:18px;color:#7b5134;line-height:1.5}
+    .overlay{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(39,86,91,.35),rgba(0,0,0,.66));z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(5px)}.overlay-box{width:100%;max-width:640px;background:linear-gradient(180deg,#fffaf2,#f1dfc9);border:1px solid rgba(255,255,255,.55);border-radius:30px;padding:42px 28px 30px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.36);position:relative;overflow:hidden}.overlay-box::before{content:"";position:absolute;inset:0 0 auto;height:12px;background:linear-gradient(90deg,var(--wood-dark),var(--wood),var(--wood-light),var(--teal))}.overlay-title{font-size:36px;font-weight:900;color:#3f2a1c;margin-bottom:18px}.overlay-text{font-size:25px;line-height:1.55;color:#34413d;margin-bottom:30px;white-space:pre-wrap}.overlay-btn{width:100%;border:0;border-radius:20px;background:linear-gradient(135deg,#27565b,#477b7a);color:#fffaf2;font-size:26px;font-weight:900;padding:19px;cursor:pointer}.footer-space{height:8px}
+    @media(max-width:720px){.page-shell{padding:18px 10px 56px}.workspace{border-radius:26px}.hero{padding:48px 22px 26px}h1{font-size:34px;text-align:center}.subtitle{text-align:center;font-size:18px}.content{padding:22px 14px 28px}.description-box{font-size:21px;padding:20px}.card,.result-card{padding:22px 16px;border-radius:23px}.section-title{font-size:26px}label,input{font-size:22px}.submit-btn{font-size:26px}.detail{grid-template-columns:1fr;gap:2px}.detail dd{margin-bottom:9px}}
+    @media(max-width:430px){.page-shell{padding-left:8px;padding-right:8px}.workspace{border-radius:22px}.hero{padding-left:16px;padding-right:16px}h1{font-size:31px}.content{padding-left:10px;padding-right:10px}.overlay-box{padding-left:20px;padding-right:20px}.overlay-title{font-size:34px}.overlay-text{font-size:23px}}
+  </style>
+</head>
+<body>
+  <div class="page-shell"><main class="workspace">
+    <section class="hero"><h1>查詢已報名組別</h1><div class="subtitle">青少年共讀聖經｜輸入填表者資料查詢</div></section>
+    <section class="content">
+      <div class="description-box">請輸入報名時使用的「填表者姓名」。E-Mail 為選填；若當初沒有填寫 E-Mail，請直接留空。</div>
+      <form id="lookupForm" class="card" novalidate>
+        <div class="section-title">查詢資料</div>
+        <label for="applicantName">填表者姓名 <span class="required">＊</span></label>
+        <input id="applicantName" name="applicantName" type="text" placeholder="請輸入報名時的姓名" autocomplete="name" required>
+        <label for="email">E-Mail（選填）</label>
+        <input id="email" name="email" type="email" placeholder="若當初未填，可留空" autocomplete="email" inputmode="email">
+        <div class="hint">只填姓名時，會列出所有同名的報名組別；同一個 E-Mail 報名多組時，也會分組完整列出。</div>
+        <button id="lookupBtn" class="submit-btn" type="submit">查詢組別</button>
+      </form>
+      <section id="resultsSection" class="hidden" aria-live="polite">
+        <div id="resultsNotice"></div><div id="resultsHeading" class="results-heading"></div><div id="resultsList"></div>
+      </section><div class="footer-space"></div>
+    </section>
+  </main></div>
+  <div id="messageOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
+    <div class="overlay-box"><div id="overlayTitle" class="overlay-title">提醒</div><div id="overlayText" class="overlay-text"></div><button class="overlay-btn" type="button" onclick="closeOverlay()">我知道了</button></div>
+  </div>
+  <script>
+    window.FamilyBibleApi=(function(){
+      const GAS_WEB_APP_URL='https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
+      function call(action,payload){return new Promise(function(resolve,reject){
+        if(!GAS_WEB_APP_URL){reject(new Error('尚未設定 GAS_WEB_APP_URL'));return}
+        const callbackName='familyBibleCallback_'+Date.now()+'_'+Math.random().toString(36).slice(2);const script=document.createElement('script');
+        const timer=setTimeout(function(){cleanup();reject(new Error('讀取逾時，請確認 Google Apps Script 網頁應用程式網址是否正確'))},30000);
+        function cleanup(){clearTimeout(timer);if(script&&script.parentNode)script.parentNode.removeChild(script);try{delete window[callbackName]}catch(e){window[callbackName]=undefined}}
+        window[callbackName]=function(data){cleanup();if(data&&data.error){reject(new Error(data.message||'執行失敗'));return}resolve(data||{})};
+        script.onerror=function(){cleanup();reject(new Error('無法連線到 Google Apps Script，請確認部署權限與網址'))};
+        const params=['action='+encodeURIComponent(action),'callback='+encodeURIComponent(callbackName),'_='+Date.now()];
+        if(payload!==undefined&&payload!==null)params.push('payload='+encodeURIComponent(JSON.stringify(payload)));
+        script.src=GAS_WEB_APP_URL+(GAS_WEB_APP_URL.indexOf('?')>=0?'&':'?')+params.join('&');document.body.appendChild(script)
+      })}return{call:call}})();
+    const form=document.getElementById('lookupForm');
+    form.addEventListener('submit',function(event){event.preventDefault();lookupGroups()});
+    function lookupGroups(){
+      const name=document.getElementById('applicantName').value.trim();const email=document.getElementById('email').value.trim();
+      if(!name){showOverlay('資料未完成','請填寫填表者姓名。');document.getElementById('applicantName').focus();return}
+      if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showOverlay('格式不正確','請確認 E-Mail 格式，或將欄位留空。');document.getElementById('email').focus();return}
+      const btn=document.getElementById('lookupBtn');btn.disabled=true;btn.textContent='查詢中…';clearResults();
+      FamilyBibleApi.call('findRegistrationGroups',{applicantName:name,email:email}).then(renderResults).catch(function(err){showOverlay('查詢失敗',err&&err.message?err.message:'發生錯誤，請稍後再試')}).finally(function(){btn.disabled=false;btn.textContent='查詢組別'})
+    }
+    function renderResults(data){
+      const groups=Array.isArray(data.groups)?data.groups:[];const section=document.getElementById('resultsSection');section.classList.remove('hidden');
+      if(!groups.length){document.getElementById('resultsHeading').textContent='沒有找到符合的報名資料';document.getElementById('resultsNotice').innerHTML='<div class="notice">請確認姓名是否與報名時完全相同。若有輸入 E-Mail，也可嘗試留空後再查詢。</div>';section.scrollIntoView({behavior:'smooth',block:'start'});return}
+      const email=document.getElementById('email').value.trim();const noEmailCount=Number(data.noEmailButNameMatchedCount)||groups.filter(function(g){return g.originalEmailBlank}).length;
+      let message=groups.length>1?'共找到 '+groups.length+' 組報名資料，請依梯次、孩子或查詢碼確認。':'找到 1 組報名資料。';
+      if(email&&groups.length>1&&(Number(data.exactEmailCount)||0)>1)message='此 E-Mail 找到多組報名資料，請選擇正確組別。';
+      if(noEmailCount)message+=(email?' 另有 '+noEmailCount+' 組姓名符合，但原報名資料未填 E-Mail。':' 其中有資料在原報名時未填 E-Mail。');
+      document.getElementById('resultsNotice').innerHTML='<div class="notice'+(noEmailCount?' blank-email':'')+'">'+escapeHtml(message)+'</div>';
+      document.getElementById('resultsHeading').textContent='查詢結果';document.getElementById('resultsList').innerHTML=groups.map(groupCard).join('');section.scrollIntoView({behavior:'smooth',block:'start'})
+    }
+    function groupCard(g){
+      const blank=g.originalEmailBlank||g.matchType==='noEmail';const tag=blank?'<span class="tag blank">原報名未填 E-Mail</span>':g.matchType==='exactEmail'?'<span class="tag">姓名與 E-Mail 符合</span>':'<span class="tag">姓名符合</span>';
+      const rows=[['梯次',g.batchName||g.batchId||'未提供'],['填表者身份',g.applicantRole||'未提供'],['孩子',g.childrenText||'未提供'],['查詢碼',g.queryCode||'未提供']];
+      const details=rows.map(function(r){return '<dt>'+escapeHtml(r[0])+'</dt><dd>'+escapeHtml(r[1])+'</dd>'}).join('');
+      const action=g.reportUrl?'<a class="report-link" href="'+escapeAttr(g.reportUrl)+'">開啟專屬回報頁</a>':'<div class="unavailable">'+escapeHtml(g.reportUnavailableReason||'此組尚無可用專屬回報連結，請聯絡同工確認。')+'</div>';
+      return '<article class="result-card">'+tag+'<div class="group-no">組別：'+escapeHtml(g.groupNo||'未提供')+'</div><dl class="detail">'+details+'</dl>'+action+'</article>'
+    }
+    function escapeHtml(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]})}
+    function escapeAttr(value){return escapeHtml(value)}
+    function clearResults(){document.getElementById('resultsSection').classList.add('hidden');document.getElementById('resultsNotice').innerHTML='';document.getElementById('resultsHeading').textContent='';document.getElementById('resultsList').innerHTML=''}
+    function showOverlay(title,text){document.getElementById('overlayTitle').textContent=title;document.getElementById('overlayText').textContent=text;document.getElementById('messageOverlay').classList.remove('hidden')}
+    function closeOverlay(){document.getElementById('messageOverlay').classList.add('hidden')}
+  </script>
+</body>
+</html>
