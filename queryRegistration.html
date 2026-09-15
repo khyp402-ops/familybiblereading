@@ -31,14 +31,14 @@
   <div class="page-shell"><main class="workspace">
     <section class="hero"><h1>查詢已報名組別</h1><div class="subtitle">青少年共讀聖經｜輸入填表者資料查詢</div></section>
     <section class="content">
-      <div class="description-box">請輸入報名時使用的「填表者姓名」。E-Mail 為選填；若當初沒有填寫 E-Mail，請直接留空。</div>
+      <div class="description-box">請輸入報名時使用的「填表者姓名」。若報名時有填寫 E-Mail，查詢時必須輸入相同的 E-Mail；原報名未填 E-Mail 者才可留空。</div>
       <form id="lookupForm" class="card" novalidate>
         <div class="section-title">查詢資料</div>
         <label for="applicantName">填表者姓名 <span class="required">＊</span></label>
         <input id="applicantName" name="applicantName" type="text" placeholder="請輸入報名時的姓名" autocomplete="name" required>
-        <label for="email">E-Mail（選填）</label>
-        <input id="email" name="email" type="email" placeholder="若當初未填，可留空" autocomplete="email" inputmode="email">
-        <div class="hint">只填姓名時，會列出所有同名的報名組別；同一個 E-Mail 報名多組時，也會分組完整列出。</div>
+        <label for="email">E-Mail（報名時有填者必填）</label>
+        <input id="email" name="email" type="email" placeholder="請輸入報名時的 E-Mail；當初未填才留空" autocomplete="email" inputmode="email">
+        <div class="hint">為保護報名資料，原報名有填 E-Mail 時必須輸入完全相符的 E-Mail。當初未填 E-Mail 者可只用姓名查詢；同一姓名及 E-Mail 報名多組時，會分組完整列出。</div>
         <button id="lookupBtn" class="submit-btn" type="submit">查詢組別</button>
       </form>
       <section id="resultsSection" class="hidden" aria-live="polite">
@@ -74,7 +74,7 @@
     }
     function renderResults(data){
       const groups=Array.isArray(data.groups)?data.groups:[];const section=document.getElementById('resultsSection');section.classList.remove('hidden');
-      if(!groups.length){document.getElementById('resultsHeading').textContent='沒有找到符合的報名資料';document.getElementById('resultsNotice').innerHTML='<div class="notice">請確認姓名是否與報名時完全相同。若有輸入 E-Mail，也可嘗試留空後再查詢。</div>';section.scrollIntoView({behavior:'smooth',block:'start'});return}
+      if(!groups.length){document.getElementById('resultsHeading').textContent='沒有找到符合的報名資料';document.getElementById('resultsNotice').innerHTML='<div class="notice">請確認姓名是否與報名時完全相同。若報名時有填寫 E-Mail，請輸入當時使用的相同 E-Mail；只有原報名未填 E-Mail 者才可留空查詢。</div>';section.scrollIntoView({behavior:'smooth',block:'start'});return}
       const email=document.getElementById('email').value.trim();const noEmailCount=Number(data.noEmailButNameMatchedCount)||groups.filter(function(g){return g.originalEmailBlank}).length;
       let message=groups.length>1?'共找到 '+groups.length+' 組報名資料，請依梯次、孩子或查詢碼確認。':'找到 1 組報名資料。';
       if(email&&groups.length>1&&(Number(data.exactEmailCount)||0)>1)message='此 E-Mail 找到多組報名資料，請選擇正確組別。';
