@@ -861,7 +861,6 @@
     const ANALYSIS_CACHE_DB = 'familyBibleAdminAnalysisCache';
     const ANALYSIS_CACHE_STORE = 'snapshots';
     const ANALYSIS_CACHE_KEY = 'adminAnalysis:v1:' + GAS_WEB_APP_URL;
-    const ANALYSIS_CACHE_FRESH_MS = 3 * 60 * 1000;
     const ANALYSIS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
     const ANALYSIS_CACHE_OPEN_TIMEOUT_MS = 1800;
 
@@ -1048,7 +1047,7 @@
           };
 
           script.onerror = function() {
-            finish(new Error('GAS API 請求無法載入。請檢查網路、Web App /exec 網址及部署存取權限。'));
+            finish(new Error('GAS 分析請求載入失敗：瀏覽器未取得可執行的 API 回應。可能是連線中斷、GAS 執行失敗或回應傳輸異常，無法僅憑前端確定原因。'));
           };
 
           timeoutId = window.setTimeout(function() {
@@ -1077,6 +1076,7 @@
     let currentSuggestions = [];
     let isAnalysisLoading = false;
     let analysisLastSavedAt = 0;
+    let analysisFreshLoaded = false;
 
     const pieValueLabelPlugin = {
       id: 'pieValueLabelPlugin',
@@ -1190,110 +1190,105 @@
       renderAll();
     }
 
-    async function initializeAnalysisPage() {
-      setStatus('正在讀取管理分析資料…', false);
-      let snapshot = null;
+    /**
+     * 開頁立即要求最新資料；本機快取獨立讀取，不能拖延 GAS 請求。
+     * 若新資料先到，晚到的舊快取不能覆蓋它。
+     */
+    function initializeAnalysisPage() {
+      reloadData();
 
-      try {
-        snapshot = await AdminAnalysisCache.read();
-      } catch (error) {
-        // 瀏覽器拒絕使用儲存空間時，仍可直接向 GAS 讀取。
-      }
+      AdminAnalysisCache.read().then(function(snapshot) {
+        if (analysisFreshLoaded || adminData) return;
 
-      const savedAt = Number(snapshot && snapshot.savedAt);
-      const cacheAge = Date.now() - savedAt;
-      const cacheValid = snapshot && snapshot.version === 1 &&
-        Number.isFinite(savedAt) && savedAt > 0 &&
-        cacheAge >= -60000 && cacheAge <= ANALYSIS_CACHE_MAX_AGE_MS &&
-        isUsableAnalysisData(snapshot.data);
+        const savedAt = Number(snapshot && snapshot.savedAt);
+        const cacheAge = Date.now() - savedAt;
+        const cacheValid = snapshot && snapshot.version === 1 &&
+          Number.isFinite(savedAt) && savedAt > 0 &&
+          cacheAge >= -60000 && cacheAge <= ANALYSIS_CACHE_MAX_AGE_MS &&
+          isUsableAnalysisData(snapshot.data);
 
-      if (cacheValid) {
+        if (!cacheValid) return;
+
         try {
           displayAnalysisData(snapshot.data, true, savedAt);
-          showRetryButton(false);
-
-          if (cacheAge < ANALYSIS_CACHE_FRESH_MS) {
-            // 三分鐘內的成功結果不再次觸發耗時分析，按「重新整理」可強制更新。
-            setStatus('已載入最近 3 分鐘內的本機快取；需要最新資料請按「重新整理」。', false);
-            return;
+          if (isAnalysisLoading) {
+            setStatus('先顯示上次資料，正在取得最新統計…', false);
+          } else {
+            setStatus('目前顯示上次成功的資料，尚未取得最新統計；請按「重新整理」再試。', true);
           }
         } catch (error) {
-          // 快取雖通過格式檢查但無法渲染時，改向後端取新資料。
+          // 快取資料即使受損，也不影響正在進行的 GAS 請求。
           adminData = null;
           analysisLastSavedAt = 0;
           document.getElementById('mainContent').style.display = 'none';
         }
-      }
-
-      // 有快取時：先顯示舊結果再背景同步；無快取時：正常載入。
-      reloadData();
+      }).catch(function() {
+        // 無法使用本機快取時，仍由已啟動的 GAS 請求取得最新資料。
+      });
     }
 
+    /**
+     * 全頁唯一的分析 API 請求入口。按鈕永遠可按，同一時刻只送一次 API。
+     */
     function reloadData() {
-      // 同一分頁同時只能有一筆分析請求；失敗後不自動重試，以免加重 GAS 負載。
-      if (isAnalysisLoading) return;
+      if (isAnalysisLoading) {
+        setStatus(adminData
+          ? '已在取得最新統計，目前仍可檢視現有資料。'
+          : '正在向 GAS 取得資料，請等待這次請求完成。', false);
+        return;
+      }
+
       if (!FamilyBibleApi || typeof FamilyBibleApi.call !== 'function') {
-        setStatus('API 呼叫器未初始化，請重新整理頁面後再試。', true);
+        setStatus('API 呼叫器未初始化，請重新整理網頁後再試。', true);
         showRetryButton(true);
         return;
       }
 
       const hadData = !!adminData;
-      const mainContent = document.getElementById('mainContent');
-      const reloadButton = document.getElementById('reloadButton');
       isAnalysisLoading = true;
-      if (reloadButton) reloadButton.disabled = true;
       showRetryButton(false);
-      setStatus(
-        hadData
-          ? '目前顯示已取得的資料，正在向 GAS 更新最新分析…'
-          : '正在向 GAS 取得分析資料（首次載入可能較久）…',
-        false
-      );
-      if (!hadData) mainContent.style.display = 'none';
+      setStatus(hadData
+        ? '目前顯示已取得的資料，正在向 GAS 更新最新分析…'
+        : '正在向 GAS 取得最新分析資料…', false);
+      if (!hadData) document.getElementById('mainContent').style.display = 'none';
       hideSuggestions();
 
       FamilyBibleApi.call('getAdminAnalysisData', null, {
         timeoutMs: ANALYSIS_REQUEST_TIMEOUT_MS,
         onSlow: function() {
-          setStatus(
-            hadData
-              ? '仍未收到 GAS 最新回應；畫面保留已取得的資料，請稍候。'
-              : '超過 12 秒尚未收到 GAS 回應；無法確定後端是否正在運算，請稍候。',
-            false
-          );
+          setStatus(adminData
+            ? '最新資料尚未回應，原有報表仍可使用。'
+            : '超過 12 秒未收到 GAS 回應，請稍候；這不代表後端一定在運算。', false);
         }
       })
         .then(function(data) {
           if (!isUsableAnalysisData(data)) {
-            throw new Error('GAS 已回應，但分析資料格式不完整（缺少 groups 或 summary）。');
+            throw new Error('管理分析回傳格式不完整（缺少 groups 或 summary）。');
           }
 
           const savedAt = Date.now();
           displayAnalysisData(data, false, savedAt);
+          // 新統計已經成功顯示；晚到的舊快取不能覆蓋這次結果。
+          analysisFreshLoaded = true;
           setStatus('', false);
           showRetryButton(false);
 
-          // 儲存失敗不影響已取得的資料或其他功能。
-          AdminAnalysisCache.write(data, savedAt).then(function(saved) {
-            if (!saved) console.warn('管理分析資料可顯示，但瀏覽器禁止保留本機快取。');
-          }).catch(function(error) {
-            console.warn('管理分析本機快取儲存失敗：', error);
+          AdminAnalysisCache.write(data, savedAt).catch(function(error) {
+            console.warn('瀏覽器無法儲存管理分析快取：', error);
           });
         })
         .catch(function(error) {
           const reason = error && error.message ? error.message : String(error);
           setStatus(
-            reason + (hadData
-              ? '\n目前保留先前資料（快取儲存時間：' + formatAnalysisSavedTime(analysisLastSavedAt) + '）。資料可能已過期。'
-              : '\n尚無可用的本機快取，請按「重新嘗試載入」。'),
+            reason + (adminData
+              ? '\n目前保留先前資料，請注意畫面標示的統計時間。'
+              : '\n目前沒有可顯示的快取資料，請按「重新嘗試載入」。'),
             true
           );
           showRetryButton(true);
         })
         .finally(function() {
           isAnalysisLoading = false;
-          if (reloadButton) reloadButton.disabled = false;
         });
     }
 
