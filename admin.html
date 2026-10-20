@@ -861,7 +861,6 @@
     const ANALYSIS_CACHE_DB = 'familyBibleAdminAnalysisCache';
     const ANALYSIS_CACHE_STORE = 'snapshots';
     const ANALYSIS_CACHE_KEY = 'adminAnalysis:v1:' + GAS_WEB_APP_URL;
-    const ANALYSIS_CACHE_FRESH_MS = 3 * 60 * 1000;
     const ANALYSIS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
     const ANALYSIS_CACHE_OPEN_TIMEOUT_MS = 1800;
 
@@ -1212,11 +1211,7 @@
           displayAnalysisData(snapshot.data, true, savedAt);
           showRetryButton(false);
 
-          if (cacheAge < ANALYSIS_CACHE_FRESH_MS) {
-            // 三分鐘內的成功結果不再次觸發耗時分析，按「重新整理」可強制更新。
-            setStatus('已載入最近 3 分鐘內的本機快取；需要最新資料請按「重新整理」。', false);
-            return;
-          }
+          // 無論快取儲存多久，每次開啟都會在顯示快取後向 GAS 同步最新資料。
         } catch (error) {
           // 快取雖通過格式檢查但無法渲染時，改向後端取新資料。
           adminData = null;
