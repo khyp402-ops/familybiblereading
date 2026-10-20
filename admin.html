@@ -856,6 +856,133 @@
     const EXPORT_REQUEST_TIMEOUT_MS = 45000;
     const SLOW_REQUEST_NOTICE_MS = 12000;
 
+
+    // 本機快取只服務管理分析頁，不修改 GAS 或其他頁面。
+    const ANALYSIS_CACHE_DB = 'familyBibleAdminAnalysisCache';
+    const ANALYSIS_CACHE_STORE = 'snapshots';
+    const ANALYSIS_CACHE_KEY = 'adminAnalysis:v1:' + GAS_WEB_APP_URL;
+    const ANALYSIS_CACHE_FRESH_MS = 3 * 60 * 1000;
+    const ANALYSIS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+    const ANALYSIS_CACHE_OPEN_TIMEOUT_MS = 1800;
+
+    // 資料優先儲存在 IndexedDB；不支援時以同分頁 sessionStorage 作備援。
+    // 不使用 localStorage，避免在低容量儲存區強行放入大量分析資料。
+    const AdminAnalysisCache = {
+      open: function() {
+        return new Promise(function(resolve) {
+          if (!window.indexedDB) {
+            resolve(null);
+            return;
+          }
+
+          let finished = false;
+          const timer = window.setTimeout(function() {
+            finish(null);
+          }, ANALYSIS_CACHE_OPEN_TIMEOUT_MS);
+
+          function finish(db) {
+            if (finished) {
+              if (db) db.close();
+              return;
+            }
+            finished = true;
+            window.clearTimeout(timer);
+            resolve(db);
+          }
+
+          try {
+            const request = window.indexedDB.open(ANALYSIS_CACHE_DB, 1);
+            request.onupgradeneeded = function() {
+              const db = request.result;
+              if (!db.objectStoreNames.contains(ANALYSIS_CACHE_STORE)) {
+                db.createObjectStore(ANALYSIS_CACHE_STORE);
+              }
+            };
+            request.onsuccess = function() { finish(request.result); };
+            request.onerror = function() { finish(null); };
+            request.onblocked = function() { finish(null); };
+          } catch (error) {
+            finish(null);
+          }
+        });
+      },
+
+      readSession: function() {
+        try {
+          const raw = sessionStorage.getItem(ANALYSIS_CACHE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          return null;
+        }
+      },
+
+      read: async function() {
+        const db = await this.open();
+        if (!db) return this.readSession();
+
+        const stored = await new Promise(function(resolve) {
+          let value = null;
+          let finished = false;
+
+          function finish(result) {
+            if (finished) return;
+            finished = true;
+            db.close();
+            resolve(result);
+          }
+
+          try {
+            const tx = db.transaction(ANALYSIS_CACHE_STORE, 'readonly');
+            tx.objectStore(ANALYSIS_CACHE_STORE).get(ANALYSIS_CACHE_KEY).onsuccess = function(event) {
+              value = event.target.result || null;
+            };
+            tx.oncomplete = function() { finish(value); };
+            tx.onerror = function() { finish(null); };
+            tx.onabort = function() { finish(null); };
+          } catch (error) {
+            finish(null);
+          }
+        });
+
+        return stored || this.readSession();
+      },
+
+      write: async function(data, savedAt) {
+        const snapshot = { version: 1, savedAt: savedAt, data: data };
+        const db = await this.open();
+        if (db) {
+          const success = await new Promise(function(resolve) {
+            let finished = false;
+            function finish(ok) {
+              if (finished) return;
+              finished = true;
+              db.close();
+              resolve(ok);
+            }
+
+            try {
+              const tx = db.transaction(ANALYSIS_CACHE_STORE, 'readwrite');
+              tx.objectStore(ANALYSIS_CACHE_STORE).put(snapshot, ANALYSIS_CACHE_KEY);
+              tx.oncomplete = function() { finish(true); };
+              tx.onerror = function() { finish(false); };
+              tx.onabort = function() { finish(false); };
+            } catch (error) {
+              finish(false);
+            }
+          });
+          if (success) return true;
+        }
+
+        try {
+          sessionStorage.setItem(ANALYSIS_CACHE_KEY, JSON.stringify(snapshot));
+          return true;
+        } catch (error) {
+          // 備援儲存也不可用時，仍保留目前頁面記憶體內的資料。
+          return false;
+        }
+      }
+    };
+
     const FamilyBibleApi = {
       call: function(action, payload, options) {
         const opts = options || {};
@@ -949,6 +1076,7 @@
     let chartInstances = {};
     let currentSuggestions = [];
     let isAnalysisLoading = false;
+    let analysisLastSavedAt = 0;
 
     const pieValueLabelPlugin = {
       id: 'pieValueLabelPlugin',
@@ -1011,7 +1139,7 @@
 
     let tableViewportResizeTimer = null;
 
-    window.addEventListener('load', reloadData);
+    window.addEventListener('load', initializeAnalysisPage);
 
     window.addEventListener('resize', function() {
       window.clearTimeout(tableViewportResizeTimer);
@@ -1034,8 +1162,75 @@
       if (bar) bar.hidden = !show;
     }
 
+    // 快取僅用於畫面展示；絕不當作最新資料在後端寫入。
+    function isUsableAnalysisData(data) {
+      return !!(data && !data.error && Array.isArray(data.groups) &&
+        data.summary && typeof data.summary === 'object' && !Array.isArray(data.summary));
+    }
+
+    function formatAnalysisSavedTime(timestamp) {
+      const date = new Date(timestamp);
+      return Number.isFinite(date.getTime()) ? date.toLocaleString('zh-TW', { hour12: false }) : '時間不明';
+    }
+
+    function displayAnalysisData(data, fromCache, savedAt) {
+      adminData = data;
+      analysisLastSavedAt = savedAt;
+      filteredGroups = data.groups;
+
+      const generatedAt = data.generatedAt || '未提供';
+      document.getElementById('updateTime').textContent = fromCache
+        ? '統計產生時間：' + generatedAt + '｜瀏覽器快取儲存時間：' + formatAnalysisSavedTime(savedAt) + '（非即時資料）'
+        : '更新時間：' + generatedAt;
+
+      // 先顯示容器再建立圖表，並沿用目前的查詢篩選條件。
+      document.getElementById('mainContent').style.display = 'block';
+      initFilters();
+      applyFilters(true);
+      renderAll();
+    }
+
+    async function initializeAnalysisPage() {
+      setStatus('正在讀取管理分析資料…', false);
+      let snapshot = null;
+
+      try {
+        snapshot = await AdminAnalysisCache.read();
+      } catch (error) {
+        // 瀏覽器拒絕使用儲存空間時，仍可直接向 GAS 讀取。
+      }
+
+      const savedAt = Number(snapshot && snapshot.savedAt);
+      const cacheAge = Date.now() - savedAt;
+      const cacheValid = snapshot && snapshot.version === 1 &&
+        Number.isFinite(savedAt) && savedAt > 0 &&
+        cacheAge >= -60000 && cacheAge <= ANALYSIS_CACHE_MAX_AGE_MS &&
+        isUsableAnalysisData(snapshot.data);
+
+      if (cacheValid) {
+        try {
+          displayAnalysisData(snapshot.data, true, savedAt);
+          showRetryButton(false);
+
+          if (cacheAge < ANALYSIS_CACHE_FRESH_MS) {
+            // 三分鐘內的成功結果不再次觸發耗時分析，按「重新整理」可強制更新。
+            setStatus('已載入最近 3 分鐘內的本機快取；需要最新資料請按「重新整理」。', false);
+            return;
+          }
+        } catch (error) {
+          // 快取雖通過格式檢查但無法渲染時，改向後端取新資料。
+          adminData = null;
+          analysisLastSavedAt = 0;
+          document.getElementById('mainContent').style.display = 'none';
+        }
+      }
+
+      // 有快取時：先顯示舊結果再背景同步；無快取時：正常載入。
+      reloadData();
+    }
+
     function reloadData() {
-      // 單次報表讀取只送出一個請求；不在逾時後自動重送以免加重 GAS 負載。
+      // 同一分頁同時只能有一筆分析請求；失敗後不自動重試，以免加重 GAS 負載。
       if (isAnalysisLoading) return;
       if (!FamilyBibleApi || typeof FamilyBibleApi.call !== 'function') {
         setStatus('API 呼叫器未初始化，請重新整理頁面後再試。', true);
@@ -1049,7 +1244,12 @@
       isAnalysisLoading = true;
       if (reloadButton) reloadButton.disabled = true;
       showRetryButton(false);
-      setStatus(hadData ? '正在更新分析資料，更新完成前保留目前畫面…' : '資料載入中…', false);
+      setStatus(
+        hadData
+          ? '目前顯示已取得的資料，正在向 GAS 更新最新分析…'
+          : '正在向 GAS 取得分析資料（首次載入可能較久）…',
+        false
+      );
       if (!hadData) mainContent.style.display = 'none';
       hideSuggestions();
 
@@ -1058,31 +1258,37 @@
         onSlow: function() {
           setStatus(
             hadData
-              ? 'GAS 分析資料處理時間較長，仍在等待回應；目前畫面保留舊資料。'
-              : 'GAS 正在處理分析資料，等待後端回應中…',
+              ? '仍未收到 GAS 最新回應；畫面保留已取得的資料，請稍候。'
+              : '超過 12 秒尚未收到 GAS 回應；無法確定後端是否正在運算，請稍候。',
             false
           );
         }
       })
         .then(function(data) {
-          if (!data || !Array.isArray(data.groups) || !data.summary) {
+          if (!isUsableAnalysisData(data)) {
             throw new Error('GAS 已回應，但分析資料格式不完整（缺少 groups 或 summary）。');
           }
 
-          adminData = data;
-          filteredGroups = data.groups;
-          document.getElementById('updateTime').textContent = '更新時間：' + (data.generatedAt || '未提供');
-
-          // Chart.js 需在區塊可見時建立，不能在 display:none 的容器內初始化。
-          mainContent.style.display = 'block';
-          initFilters();
-          renderAll();
+          const savedAt = Date.now();
+          displayAnalysisData(data, false, savedAt);
           setStatus('', false);
           showRetryButton(false);
+
+          // 儲存失敗不影響已取得的資料或其他功能。
+          AdminAnalysisCache.write(data, savedAt).then(function(saved) {
+            if (!saved) console.warn('管理分析資料可顯示，但瀏覽器禁止保留本機快取。');
+          }).catch(function(error) {
+            console.warn('管理分析本機快取儲存失敗：', error);
+          });
         })
         .catch(function(error) {
           const reason = error && error.message ? error.message : String(error);
-          setStatus(reason + (hadData ? '\n目前仍可檢視前一次載入的資料。' : ''), true);
+          setStatus(
+            reason + (hadData
+              ? '\n目前保留先前資料（快取儲存時間：' + formatAnalysisSavedTime(analysisLastSavedAt) + '）。資料可能已過期。'
+              : '\n尚無可用的本機快取，請按「重新嘗試載入」。'),
+            true
+          );
           showRetryButton(true);
         })
         .finally(function() {
@@ -1297,7 +1503,7 @@
         escapeHtml(text.slice(index + key.length));
     }
 
-    function applyFilters() {
+    function applyFilters(skipRender) {
       const careArea = document.getElementById('careAreaFilter').value;
       const bigArea = document.getElementById('bigAreaFilter').value;
       const status = document.getElementById('statusFilter').value;
@@ -1325,6 +1531,8 @@
 
         return true;
       });
+
+      if (skipRender === true) return;
 
       renderSummary();
       renderGroupTable();
