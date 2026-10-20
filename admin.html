@@ -1539,6 +1539,36 @@
         });
     }
 
+    /**
+     * 已完成章數優先使用後端傳回的章數。
+     * 舊 API 若只提供新約總完成率，使用「書卷分析」的總章數換算。
+     * 對 260 章的新約計畫，百分比即使保留 1 位小數仍可還原整數章數。
+     */
+    function getCompletedChapterCount(group) {
+      if (!group) return '-';
+
+      const completed = group.completedTotal;
+      if (completed !== null && completed !== undefined && completed !== '') {
+        const value = Number(completed);
+        if (Number.isSafeInteger(value) && value >= 0) return value;
+      }
+
+      const books = adminData && Array.isArray(adminData.bookAnalysis)
+        ? adminData.bookAnalysis
+        : [];
+      if (!books.length) return '-';
+
+      const totalChapters = books.reduce(function(sum, book) {
+        return sum + Number(book.totalChapters || 0);
+      }, 0);
+      const percent = Number(group.totalPercent);
+
+      if (!Number.isSafeInteger(totalChapters) || totalChapters <= 0 ||
+          !Number.isFinite(percent) || percent < 0) return '-';
+
+      return Math.round(totalChapters * percent / 100);
+    }
+
     function renderCareList() {
       if (!adminData) return;
 
@@ -1554,6 +1584,7 @@
             <col style="width:15%">
             <col style="width:7%">
             <col style="width:14%">
+            <col style="width:8%">
             <col style="width:8%">
             <col style="width:9%">
             <col style="width:7%">
@@ -1571,6 +1602,7 @@
               <th>孩子</th>
               <th>組內孩子數</th>
               <th>陪讀者累計</th>
+              <th>完成章數</th>
               <th>完成率</th>
               <th>目前位置</th>
               <th>回報次數</th>
@@ -1591,6 +1623,7 @@
                   <td>${escapeHtml(row.childDisplay)}</td>
                   <td>${row.childCount}</td>
                   <td>${escapeHtml(row.readerCareLoadText || '-')}</td>
+                  <td>${getCompletedChapterCount(row)}</td>
                   <td>${row.totalPercent}%</td>
                   <td>${escapeHtml(row.currentPosition)}</td>
                   <td>${row.reportCount}</td>
@@ -1890,6 +1923,7 @@
             <col style="width:10%">
             <col style="width:18%">
             <col style="width:9%">
+            <col style="width:8%">
             <col style="width:9%">
             <col style="width:10%">
             <col style="width:7%">
@@ -1906,6 +1940,7 @@
               <th>陪讀者</th>
               <th>孩子</th>
               <th>陪讀型態</th>
+              <th>完成章數</th>
               <th>完成率</th>
               <th>目前位置</th>
               <th>回報次數</th>
@@ -1929,6 +1964,7 @@
                     <div class="small">陪讀者累計：${escapeHtml(row.readerCareLoadText || '-')}</div>
                   </td>
                   <td>${loadBadge(row.childLoadBucket)}</td>
+                  <td>${getCompletedChapterCount(row)}</td>
                   <td class="progress-cell">
                     ${row.totalPercent}%
                     <div class="progress-bg">
