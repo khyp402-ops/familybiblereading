@@ -257,6 +257,15 @@
       color: var(--red);
     }
 
+    .retry-bar {
+      text-align: center;
+      margin: -4px 0 22px;
+    }
+
+    .retry-bar[hidden] {
+      display: none;
+    }
+
     .summary-grid {
       position: relative;
       z-index: 1;
@@ -655,6 +664,9 @@
     </section>
 
     <div id="status" class="status">資料載入中...</div>
+    <div id="retryBar" class="retry-bar" hidden>
+      <button id="retryLoadButton" type="button" onclick="reloadData()">重新嘗試載入</button>
+    </div>
 
     <section id="mainContent" style="display:none;">
       <div class="toolbar">
@@ -689,7 +701,7 @@
           <div id="suggestionBox" class="suggestion-box"></div>
         </div>
 
-        <button onclick="reloadData()">重新整理</button>
+        <button id="reloadButton" type="button" onclick="reloadData()">重新整理</button>
         <button class="secondary" onclick="exportCareList()">匯出關懷名單</button>
       </div>
 
@@ -839,8 +851,16 @@
 <script>
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyZjv5XvmzZ2GHBXBUzuwBbw9MR1LPkgbGfGLfjEgCVrT9WBoH3u1f60-8k-x_GBffQSg/exec';
 
+    // JSONP 的逾時僅表示前端尚未收到回呼，不能單憑此訊息判定 URL 或部署權限錯誤。
+    const ANALYSIS_REQUEST_TIMEOUT_MS = 60000;
+    const EXPORT_REQUEST_TIMEOUT_MS = 45000;
+    const SLOW_REQUEST_NOTICE_MS = 12000;
+
     const FamilyBibleApi = {
-      call: function(action, payload) {
+      call: function(action, payload, options) {
+        const opts = options || {};
+        const timeoutMs = opts.timeoutMs || ANALYSIS_REQUEST_TIMEOUT_MS;
+
         return new Promise(function(resolve, reject) {
           const apiUrl = String(GAS_WEB_APP_URL || '').trim();
 
@@ -851,7 +871,6 @@
 
           const callbackName = '__adminAnalyticsCallback_' + Date.now() + '_' + Math.random().toString(36).slice(2);
           const params = new URLSearchParams();
-
           params.set('action', action);
           params.set('callback', callbackName);
 
@@ -861,39 +880,61 @@
 
           const script = document.createElement('script');
           const separator = apiUrl.indexOf('?') === -1 ? '?' : '&';
-          const timeoutId = window.setTimeout(function() {
-            cleanup();
-            reject(new Error('GAS API 連線逾時。請確認 Web App URL、部署權限、入口系統 action 路由。'));
-          }, 30000);
-
-          window[callbackName] = function(response) {
-            cleanup();
-
-            if (response && response.error) {
-              reject(new Error(response.message || 'GAS API 執行失敗'));
-              return;
-            }
-
-            resolve(response || {});
-          };
-
-          script.onerror = function() {
-            cleanup();
-            reject(new Error('無法連線 GAS API。請確認 GAS Web App /exec 網址正確，且部署為可存取。'));
-          };
+          let settled = false;
+          let timeoutId = null;
+          let slowNoticeId = null;
 
           function cleanup() {
             window.clearTimeout(timeoutId);
-
-            if (script.parentNode) {
-              script.parentNode.removeChild(script);
-            }
-
+            window.clearTimeout(slowNoticeId);
+            script.onload = null;
+            script.onerror = null;
+            if (script.parentNode) script.parentNode.removeChild(script);
             try {
               delete window[callbackName];
             } catch (error) {
               window[callbackName] = undefined;
             }
+          }
+
+          function finish(error, response) {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            if (error) reject(error);
+            else resolve(response);
+          }
+
+          window[callbackName] = function(response) {
+            if (response && response.error) {
+              finish(new Error(response.message || 'GAS API 執行失敗'));
+              return;
+            }
+            finish(null, response || {});
+          };
+
+          // 有載入但未呼叫 callback，通常是 GAS 回傳的並非有效 JSONP。
+          script.onload = function() {
+            if (!settled) {
+              finish(new Error('GAS 已傳回內容，但未執行 JSONP 回呼。請檢查 doGet 的 action 路由與 callback 輸出。'));
+            }
+          };
+
+          script.onerror = function() {
+            finish(new Error('GAS API 請求無法載入。請檢查網路、Web App /exec 網址及部署存取權限。'));
+          };
+
+          timeoutId = window.setTimeout(function() {
+            finish(new Error(
+              'GAS「' + action + '」超過 ' + Math.round(timeoutMs / 1000) +
+              ' 秒未收到回應；可能是後端查詢過慢、執行中斷或網路問題。請檢查 GAS 執行紀錄。'
+            ));
+          }, timeoutMs);
+
+          if (typeof opts.onSlow === 'function') {
+            slowNoticeId = window.setTimeout(function() {
+              if (!settled) opts.onSlow();
+            }, SLOW_REQUEST_NOTICE_MS);
           }
 
           script.src = apiUrl + separator + params.toString();
@@ -907,6 +948,7 @@
     let filteredGroups = [];
     let chartInstances = {};
     let currentSuggestions = [];
+    let isAnalysisLoading = false;
 
     const pieValueLabelPlugin = {
       id: 'pieValueLabelPlugin',
@@ -987,30 +1029,65 @@
       }
     });
 
+    function showRetryButton(show) {
+      const bar = document.getElementById('retryBar');
+      if (bar) bar.hidden = !show;
+    }
+
     function reloadData() {
+      // 單次報表讀取只送出一個請求；不在逾時後自動重送以免加重 GAS 負載。
+      if (isAnalysisLoading) return;
       if (!FamilyBibleApi || typeof FamilyBibleApi.call !== 'function') {
         setStatus('API 呼叫器未初始化，請重新整理頁面後再試。', true);
+        showRetryButton(true);
         return;
       }
 
-      setStatus('資料載入中...', false);
-      document.getElementById('mainContent').style.display = 'none';
+      const hadData = !!adminData;
+      const mainContent = document.getElementById('mainContent');
+      const reloadButton = document.getElementById('reloadButton');
+      isAnalysisLoading = true;
+      if (reloadButton) reloadButton.disabled = true;
+      showRetryButton(false);
+      setStatus(hadData ? '正在更新分析資料，更新完成前保留目前畫面…' : '資料載入中…', false);
+      if (!hadData) mainContent.style.display = 'none';
       hideSuggestions();
 
-      FamilyBibleApi.call('getAdminAnalysisData')
+      FamilyBibleApi.call('getAdminAnalysisData', null, {
+        timeoutMs: ANALYSIS_REQUEST_TIMEOUT_MS,
+        onSlow: function() {
+          setStatus(
+            hadData
+              ? 'GAS 分析資料處理時間較長，仍在等待回應；目前畫面保留舊資料。'
+              : 'GAS 正在處理分析資料，等待後端回應中…',
+            false
+          );
+        }
+      })
         .then(function(data) {
-          adminData = data || {};
-          filteredGroups = adminData.groups || [];
+          if (!data || !Array.isArray(data.groups) || !data.summary) {
+            throw new Error('GAS 已回應，但分析資料格式不完整（缺少 groups 或 summary）。');
+          }
 
-          document.getElementById('updateTime').textContent = '更新時間：' + (adminData.generatedAt || '');
+          adminData = data;
+          filteredGroups = data.groups;
+          document.getElementById('updateTime').textContent = '更新時間：' + (data.generatedAt || '未提供');
 
+          // Chart.js 需在區塊可見時建立，不能在 display:none 的容器內初始化。
+          mainContent.style.display = 'block';
           initFilters();
           renderAll();
           setStatus('', false);
-          document.getElementById('mainContent').style.display = 'block';
+          showRetryButton(false);
         })
-        .catch(function(err) {
-          setStatus(err && err.message ? err.message : String(err), true);
+        .catch(function(error) {
+          const reason = error && error.message ? error.message : String(error);
+          setStatus(reason + (hadData ? '\n目前仍可檢視前一次載入的資料。' : ''), true);
+          showRetryButton(true);
+        })
+        .finally(function() {
+          isAnalysisLoading = false;
+          if (reloadButton) reloadButton.disabled = false;
         });
     }
 
@@ -2115,7 +2192,7 @@
         groupIds: (filteredGroups || []).map(function(group) {
           return group.group;
         })
-      })
+      }, { timeoutMs: EXPORT_REQUEST_TIMEOUT_MS })
         .then(function(result) {
           btns.forEach(function(btn) {
             btn.disabled = false;
